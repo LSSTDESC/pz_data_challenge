@@ -1,0 +1,73 @@
+[project]
+name = "pz-data-challenge"
+description = "Photometric redshift data challenge"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+authors = [
+    { name = "The LSST DESC PZ WG", email = "echarles@slac.stanford.edu" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Natural Language :: English",
+    "Operating System :: POSIX"
+]
+
+dynamic = ["version"]
+dependencies = [
+    "qp-prob>=1.0.0",
+    "matplotlib",
+    "tables_io[full]",
+]
+# On a mac, install optional dependencies with `pip install '.[dev]'` (include the single quotes)
+[project.optional-dependencies]
+
+dev = [
+    "pytest",
+    "ruff",
+    "black",
+    "isort",
+    "mypy",
+]
+
+docs = [
+    "nbsphinx",
+    "sphinx", # Used to automatically generate documentation
+    "sphinx-autodoc-typehints", 
+    "sphinx_rtd_theme", # Used to render documentation
+    "sphinx-autoapi", # Used to automatically generate api documentation    
+    "sphinx-tabs", # Used to create tabbed content within the docs
+    "sphinx-click", # Used for command line interface docs
+]
+
+
+[build-system]
+requires = ["setuptools>=62", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/pz_data_challenge/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+ignore_missing_imports = true
+local_partial_types = true
+no_implicit_reexport = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_ignores = true

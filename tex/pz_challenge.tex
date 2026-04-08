@@ -1,0 +1,481 @@
+\documentclass[modern]{desc-tex/styles/lsstdescnote}
+
+\usepackage{xcolor}
+\newcommand{\eac}[1]{{\em Eric:  }{\color{red}{#1}}}
+
+% LATEX PACKAGES
+\usepackage{desc-tex/styles/lsstdesc_macros}
+
+\begin{document}
+
+\title{Photometric Redshift Data Challenge}
+\author{E.\ Charles}
+\author{Add Yourself} 
+\date{\today}
+
+\begin{abstract}
+ Addressing DESC science questions will require running analysis
+ pipelines on simulated data to ensure these pipelines work as
+ intended, characterize their performance, and compare them to inform
+ decisions on fiducial choices on data.  We are organizing the
+ photometric redshift (PZ) data challenge to asses the current status
+ of PZ algoritms and analysis pipelines.   This document describes the
+ format of the PZ challenge, including the data that participants will
+ use, the types of tasks that they will be asked to do, and the metric
+ and criteria by which submission will be assseed.
+ \end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+Redshift inference is a key measurement for multiple DESC science
+goals and redshift uncertainty is one of the leading contributors to
+overall uncertainty on cosmological models from imaging survey
+data. Precursor surveys took a variety of approaches to this problem,
+accounting for differences in underlying data as well as modeling
+approaches. In all cases, redshift uncertainty was significantly
+larger than DESC Science Requirements listed in the LSST DESC Science
+Requirements Document.
+
+This state-of-the-art motivates a data challenge to characterize and
+improve existing methods, as well as provide infrastructure for the
+development of improved methods. Overall, this requires generating
+uniform input catalogs to use and infrastructure for comparing output
+redshift posteriors to each other and to simulated truth catalogs.
+
+
+\section{Challenge Format}
+
+The PZ data challenge comprises a set of tasks for participants.
+These task will be used to evaluate how ready various algorithms are
+to be used for cutting edge analysis.  Readiness will be evaluated on
+a few different fronts.  1) Does the algorithm meet performance
+requirements?  2) Is it robust, flexible and relatively easy to use on
+different datasets?  3) Is it scalable up to the scales we will need
+to use it at.
+
+This document and the associated web pages describe the data being
+provided to participants, the task they will be asked to perform, and
+the metrics by which the algorithms readiness will be evaluated.
+
+
+\subsection{Scope and Timeline}
+
+The data challenge will include two major parts, with a set of
+task emulating increasingly realistic scenarios in each part.   The
+first part, $p(z)$ estimation, will focus on estimating the redshift of
+individual objets.   The second part, tomogrpahy and $n(z)$ estimation
+will focus on assigning object to tomographic bins and estimating the
+distribution of redshifts in each bin.
+
+The data challenge will run from April 13, 2026 to August 7, 2026.
+The first set of data and tasks related to $p(z)$ estimation will be
+released on April 13.  A second set of data and tasks related to
+$n(z)$ estimation will be released on June 1.
+
+Preliminary results will be released on August 14, 2026, with a
+techincal note summarize those result to follow shortly thereafter and
+a comprehensive journal publication to follow later.
+
+
+\subsection{Challgenge Data}
+
+The preparation of the challenge data is described in the appendices.
+The data is available as \texttt{tar} archives on the data challenge site.
+
+Each task set in the data challenge has an associated set of files.
+Typically these will be a collection of training files that contain
+photometric data and reference redsfhits and a second set of files
+that contain photometric data but do not include redshifts.   Each
+task set will invovle estimating something about the redshifts or
+redshift distributions in the test files.
+
+Typically there will be several training and test files for a
+particular test set, covering different scenarios and using different
+input simulations.
+
+
+\subsection{Challenge Tasks and Submission Types}
+
+The challenge is organized as a series of sets tasks using
+increasingly realistic representations of the data.   In general, each
+set of task includes 3 tasks.
+
+\begin{enumerate}
+  \item{Estimate either per-object $p(z)$ or ensemble $n(z)$
+      distributions for a set of different scenarios and provide the
+      estimates in a specfied format.}
+  \item{Provide trained models for the different scenarios, and a
+      generic script that can be used generate the estimates from task
+      1 on an arbitrary dataset.}    
+  \item{Provide a generic script that can be used generate the
+      generate the models and estimates from tasks 1 and 2 on
+      arbitrary datasets.}
+\end{enumerate}
+
+
+\subsection{Input data format}
+
+The input data for the challenge are presented in hdf5 files.
+The naming convention for the files is
+\texttt{\{challenge\}\_\{taskset\}\_\{simulation\}\_\{label\}\_\{scenario\}.hdf5}.
+The meaning for the various fields are descrbied in
+Tab.~\ref{tab:file_fields}.   The columns in the files are described
+in Tab.~\ref{tab:columns}.
+
+\eac{Do we mention tables\_io for conversion}
+
+
+\begin{table}[ht]
+\centering
+\caption{\label{tab:file_fields}\small Fields in .}
+\begin{tabular}{ll}
+  \hline\hline  
+  field & Description \\ \hline
+  challenge & Challenge associated to file \\
+  taskset & Task set associated to file \\
+  simulation & Simulation used to produce file \\
+  label & File label (e.g., ``test'', ``training'' \\
+  scenario & Data Scenario \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[ht]
+\centering
+\caption{\label{tab:columns}\small Contents of input files.}
+\begin{tabular}{ll}
+  \hline\hline
+  Column & Description \\ \hline  
+  redshift & True redshift (training files only) \\
+  ra & Right Accension (training files only) \\
+  dec & Declination (training files only) \\
+  object\_id & Unique Object ID\\
+  mag\_\{band\}\_lsst & Magnitude in LSST \{band\} \\
+  mag\_\{band\}\_lsst\_err & Magnitude uncertainty in LSST \{band\} \\
+  mag\_\{band\}\_roman & Magnitude in Roman \{band\} \\
+  mag\_\{band\}\_roman\_err & Magnitude uncertainty in Roman \{band\} \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+
+\subsection{Data format for per-object $p(z)$ estimates}
+
+The $p(z)$ estimates should be submitted as in \texttt{qp} format,
+which allows users to specific a complete $p(z)$ distribution for
+each object, as well as summary statistics for each object.   
+
+The \texttt{qp} packages supports several different representation of
+$p(z)$, such as different functional forms as well as interpolated
+grids, histograms, and others.  
+
+For users unfamiliar with \texttt{qp} we highly recommend representing
+the $p(z)$ either an interpolated grid, or a Gaussian mixture model.
+
+\begin{verbatim}
+# Interpolated grid
+import qp
+import numpy as np
+# Define the x-grid.  Note that we put all the
+# p(z) on the same x-grid
+xvals = np.array([0,0.5,1,1.5,2])
+# Define the y-values.  Note we provide n_grid_points x n_objects 
+# values, as we need to provide a y-value at each grid point 
+# for each object.
+yvals = np.array(
+ [
+   [0.01,0.2,0.3,0.2,0.01],
+   [0.1,0.3,0.5,0.2,0.05]
+ ]
+)
+ens = qp.interp.create_ensemble(xvals,yvals)
+\end{verbatim}
+
+\begin{verbatim}
+# Mixture model
+import qp
+import numpy as np
+# Define the means, standard deviations and weights.
+# These should each have shape n_objectws, n_components.
+# In this case we are defining 3 objects with 2-Gaussian 
+# representations.
+# For each object the weights should sum to 1, or they
+# will be normalized.
+means = [[0.3, 0.4], [0.5, 0.5], [0.6, 0.8]]
+stds = [[0.2, 0.4], [0.1, 0.3], [0.05, 0.3]]
+weights = [[0.8, 0.2], [0.7, 0.3], [0.8, 0.2]]
+ens = qp.mixmod.create_ensemble(means=means,stds=stds,weights=weights)
+\end{verbatim}
+
+The submission files should use the same file name conventions defined
+in Tab.~\ref{tab:file_fields}.   The labels will typically be
+\texttt{pz\_estimate} or \texttt{pz\_model}, and will be specified in
+the descriptions of the various tasks, e.g., 
+\texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_estimate\_yr1.hdf5} or
+\texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_model\_yr1.pkl}.
+
+
+%\subsection{Data format for tomographic bin assignments}
+
+%\eac{Details about data packaging}
+
+
+%\subsection{Data format for ensemble $n(z)$ estimates}
+
+%\eac{Details about data packaging}
+
+
+\subsection{Format for estimation only scripts and trained models}
+
+For the second sub-task, providing trained models and a script to run
+estimation using those trained models, submitters should start with
+the \texttt{run\_estimate.sh} example script, and modify the
+portions of the script to install their packages, download their
+models, and run the estimation on the appropriate test files.  
+
+Once they have tested the script, submitters should open a pull
+request to add \texttt{run\_estimate.sh}
+
+
+
+\subsection{Format for training and estimation scripts}
+
+For the second sub-task, providin a script to train models and run
+estimation using those trained models, submitters should start with
+the \texttt{run\_train\_and\_estimate.sh}  example script and modify the portions of the script to install
+their packages, download their models, and run the estimation on the
+appropriate test files.  
+
+
+\section{Metrics and Assesment Criteria}
+
+
+\subsection{Metrics for per-object point-estimates}
+
+\eac{Bias, scatter and MAD}
+
+
+\subsection{Metrics for per-object $p(z)$ distributions}
+
+\eac{PIT-QQ related metrics}
+
+
+\subsection{Metrics for per-object estimation computational performance}
+
+\eac{Training time, per-object estimation time, model size, estimate data volume per-object}
+
+
+%\subsection{Metrics for bin assignement}
+
+%\eac{Efficiency and purity}
+
+
+%\subsection{Metrics for ensemble $n(z)$ estimation}
+
+%\eac{Bias, width, simplified fisher forecast}
+
+
+%\subsection{Metrics for ensemble estimation performance}
+
+%\eac{Training time, per-object estimation time, model size}
+
+
+
+\section{Challenge Tasks related to $p(z)$ estimation}\label{sec:tasks}
+
+\subsection{Task set 1:  estimate redshifts using representative
+  training samples}
+
+The first, simplest, task is to estaimate redshifts using
+representative training samples.  I.e., the training samples are drawn
+for the same distibutions as the test samples.  For this task set we
+did not use an of the spectroscopic selection emulation, but simply
+applied a uniform magnitude cut $i < 23$ in selecting objects for both
+the training and test samples.
+
+The four 
+\texttt{pz\_challenge\_taskset\_1\_\{simulation\}\_training\_\{scenario\}.hdf5}
+files are the training sets for the ``Flagship'' and ``Cardinal''
+simulations, and emulating 1 year and 10 years of LSST data under
+expected observing strategy and conditions.  These files have true
+redshifts to serve as labels.
+
+The corresponding 
+\texttt{pz\_challenge\_taskset\_1\_\{simulation\}\_test\_\{scenario\}.hdf5}
+files were drawn from the same distributions.  The true redshifts have
+been removed from these files.   The task is to assign $p(z)$
+estimates for all the objects in thse 4 test files.
+
+
+
+\subsection{Task set 2:  estimate redshifts on non-representative
+  samples}
+
+The second, slightly more challenging, task is to estimate redshifts
+using non-representative training samples.  I.e., the training samples
+are not drawn for the same distibutions as the test samples.  For this task set we
+applied the spectroscopic selection emulation for the train set, but
+retained all the objects down to $i < 25.4$ in the test set.
+Accordingly, the training set will not be representative of the
+fainter objects in the test set.   This reflects that spectroscopic redshifts
+are typically significantly more diffiicult to obtain than photometry.
+
+The four 
+\texttt{pz\_challenge\_taskset\_1\_\{simulation\}\_training\_\{scenario\}.hdf5}
+files are the training sets for the ``Flagship'' and ``Cardinal''
+simulations, and emulating 1 year and 10 years of LSST data under
+expected observing strategy and condition and with spectroscopic
+selections emulated.
+
+The corresponding 
+\texttt{pz\_challenge\_taskset\_1\_\{simulation\}\_test\_\{scenario\}.hdf5}
+files were drawn from the distributions of all objects down to $i <
+25.4$, and the true redshifts have been removed from these files. 
+The task is to assign $p(z)$ estimates for all the objects in thse 4 test files.
+
+
+
+
+%\subsection{Task set 3:  estimate redshifts on non-representative
+ % samples with some mis-labeled redshifts}
+
+
+%\subsection{Task set 4:  estimate redshifts on non-representative
+ % samples with some mis-labeled redshifts and blended objects}
+
+
+
+%\section{Challenge Tasks related to $n(z)$ estimation}
+
+
+%\subsection{Task set 1:  assign objects to fixed tomographic bins and
+%  estimate the n(z) distribution in each bin}
+
+
+%\subsection{Task set 2:  assign objects to arbitrary n(z) bins and
+%  estimate the n(z) distribution for each bin}
+
+
+
+\appendix
+
+\section{Input simulations}
+
+The challenge employs simulated galaxy catalogs derived from two
+complementary N-body cosmological simulations: the Cardinal
+simulations and the Flagship simulation. These synthetic datasets
+provide a controlled environment where the true redshifts are known by
+construction, enabling rigorous validation of photometric redshift
+algorithms and systematic assessment of their performance
+characteristics.
+
+The Cardinal simulations comprise a suite of high-resolution N-body
+simulations specifically designed to explore the sensitivity of
+cosmological observables to variations in fundamental cosmological
+parameters.   The simulations employ state-of-the-art semi-analytic
+models to populate dark matter halos with galaxies, incorporating
+realistic prescriptions for star formation, dust attenuation, and
+spectral energy distribution modeling.
+
+The Flagship simulation represents a single, ultra-large cosmological
+simulation run with fiducial cosmological parameters consistent with
+current observational constraints. With a volume exceeding several
+cubic gigaparsecs, the Flagship provides statistical power to probe
+rare objects and the high-mass end of the galaxy population. Its
+primary purpose in the photometric redshift challenge is to provide a
+realistic mock catalog that captures the full complexity of galaxy
+populations across cosmic time, including correlations between galaxy
+properties, environmental dependencies, and the intricate
+relationships between spectral features and redshift.
+
+Together, these complementary simulation suites enable challenge
+participants to test both the accuracy and the robustness of their
+photometric redshift estimation methods under realistic observational
+conditions.
+
+\section{Emulating observational effects}
+
+To bridge the gap between the idealized simulation outputs and
+realistic survey observations, we employ the RAIL (Redshift Assessment
+Infrastructure Layers) software package to emulate observational
+effects. RAIL provides a modular framework for injecting realistic
+photometric uncertainties, applying survey-specific selection
+functions, and simulating the measurement errors characteristic of
+modern large-scale imaging surveys. This processing ensures that the
+simulated galaxy catalogs reflect the complexities of actual
+observations, including magnitude-dependent photometric scatter,
+incomplete sky coverage, and the effects of source blending in crowded
+fields, thereby providing a more stringent and realistic test bed for
+photometric redshift estimation algorithms.
+
+\subsection{Photometric Smearing}
+
+Central to our observational emulation is RAIL's wraping of the
+photometric error module, photErr, which we have extended and wrapped
+to account for realistic observing strategies and time-dependent
+survey conditions. The standard photErr module provides basic
+photometric error modeling based on magnitude-dependent noise
+characteristics, but our enhanced version incorporates additional
+complexity including spatially-varying depth maps. This
+wrapper accesses detailed operational simulation outputs that emulate
+the expected LSST survey strategy.
+
+Our photErr implementation computes photometric uncertainties by
+combining the intrinsic Poisson noise from source photons with
+realistic models of sky background, readout noise, and other
+systematic contributions.  For each simulated galaxy, use the expected
+co-addition depth to derive final photometric error estimates. This
+approach captures the heterogeneous nature of survey depth across the
+footprint, where some regions benefit from numerous high-quality
+exposures while others may be observed only during poor
+conditions. The resulting photometric uncertainties vary realistically
+with position on the sky, band-dependent limiting magnitudes, and
+local observing history, providing challenge participants with mock
+catalogs whose noise properties more closely match those expected from
+the actual survey.
+
+\subsection{Spectroscopic and narrow-band photo-metric redshift
+  selection}
+
+RAIL can emulate the selection functions of several different
+spectroscopic redshift surverys, including VVDSf02, zCOSMOS,
+DEEP2\_LSST, and the DESI BGS, ELG and LRG samples.
+
+We can also use RAIL to emulate narrow-band photometric surveys,
+include small amounts of mis-labeled reference redshifts.
+
+
+\section{Preparing Training and Test and Reserved datasets}
+
+All of the data prepration was performed using the
+\texttt{rail\_projects} and \texttt{rail\_package\_config} packages
+for bookkeeping and reproducibility.
+
+\begin{table}[ht]
+\centering
+\caption{\label{tab:prep_scripts}\small Scripts used
+  in data preparation.}
+\begin{tabular}{lll}
+\hline \hline
+Script & Command Run & Purpose \\ \hline
+  do\_00\_reduce & rail-project reduce &  Reduce input truth catalogs \\
+  &  &   (mag. cut and drop columns) \\ 
+do\_01\_build  & rail-project build & Build configurations to run \\
+  &  &   truth-to-observed pipeline \\
+do\_02\_t2o & rail-project run truth-to-observed & Run truth-to-observed \\
+  &  & pipelines to make degraded catalogs \\ 
+do\_03\_merge & rail-project merge &  Combine spectroscopic selections \\
+do\_04\_subselect & rail-project subsample &  Make train/test files \\
+  from catalogs \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+
+\end{document}
+

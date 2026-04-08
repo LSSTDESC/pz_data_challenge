@@ -1,0 +1,253 @@
+# Information about a filter bands
+# For each band this is just a name and a reddening
+# parameter: a_env.   
+
+# The name is used for lookup and should be unique.
+# It should match the name of the associated filter file.
+#
+# These are typically found in:
+# rail_base/src/rail/examples_data/estimation_data/data/FILTER
+#
+# The a_env parameter can be computed from filter 
+# curves using code in `rail_astro_tools`:
+#
+# https://github.com/LSSTDESC/rail_astro_tools/blob/main/src/rail/tools/filter_tools.py
+Bands:
+  - Band:
+      name: comcam_u
+      a_env: 4.81
+  - Band:
+      name: comcam_g
+      a_env: 3.64
+  - Band:
+      name: comcam_r
+      a_env: 2.70
+  - Band:
+      name: comcam_i
+      a_env: 2.06
+  - Band:
+      name: comcam_z
+      a_env: 1.58
+  - Band:
+      name: comcam_y
+      a_env: 1.31
+  - Band:
+      name: DC2LSST_u
+      a_env: 4.81
+  - Band:
+      name: DC2LSST_g
+      a_env: 3.64
+  - Band:
+      name: DC2LSST_r
+      a_env: 2.70
+  - Band:
+      name: DC2LSST_i
+      a_env: 2.06
+  - Band:
+      name: DC2LSST_z
+      a_env: 1.58
+  - Band:
+      name: DC2LSST_y
+      a_env: 1.31
+  - Band:
+      name: euclid_H
+      a_env: 0.47
+  - Band:
+      name: euclid_J
+      a_env: 0.76
+  - Band:
+      name: euclid_Y
+      a_env: 1.10
+  - Band:
+      name: euclid_vis
+      a_env: 2.24
+  - Band:
+      name: hsc_g
+      a_env: 3.64
+  - Band:
+      name: hsc_r
+      a_env: 2.70
+  - Band:
+      name: hsc_i
+      a_env: 2.06
+  - Band:
+      name: hsc_z
+      a_env: 1.58
+  - Band:
+      name: hsc_y
+      a_env: 1.31
+  - Band:
+      name: roman_K213
+      a_env: 0.37
+  - Band:
+      name: roman_F184
+      a_env: 0.47
+  - Band:
+      name: roman_H158
+      a_env: 0.60
+  - Band:
+      name: roman_W146
+      a_env: 0.68
+  - Band:
+      name: roman_J129
+      a_env: 0.83
+  - Band:
+      name: roman_Y106
+      a_env: 1.14
+  - Band:
+      name: roman_Z087
+      a_env: 1.57
+# These are just copied from the comcam values and should be updated
+  - Band:
+      name: DECam_g
+      a_env: 3.64
+  - Band:
+      name: DECam_r
+      a_env: 2.70
+  - Band:
+      name: DECam_i
+      a_env: 2.06
+  - Band:
+      name: DECam_z
+      a_env: 1.58
+  - Band:
+      name: DECam_y
+      a_env: 1.31
+      
+#
+# Particulars about specific catalogs.
+# 
+# These keep track of things like the mapping between band names and columns,
+# names of special columns like the objectId and the 'true' redshift, guard
+# values used to specify non-detections or non-observations.
+#
+# The mapping between bands and magnitude, magnitude error columns
+# is constructed by looping over the band_list add resolving
+# mag_column_template and mag_err_column_template.
+#
+# Similarly, the mapping between bands and filters is constructed
+# by looping over the band_list add resolving filter_template.
+#
+# The `bands` field is used to provide band-specific overrides.
+# At a minimum this must include 5-sigma limiting magnitdues.
+#
+# But it may also include specfic overrides for the names of the
+# mag_column, mag_err_columns and filter template file, for example when a
+# subset of band_list entries do not follow the patterns in the templates.
+#
+CatalogTags:
+  - CatalogTag:
+      # This is for rubin only data in the data challenge
+      name: "cardinal_rubin"
+      mag_column_template: "mag_{band}_lsst"
+      mag_err_column_template: "mag_{band}_lsst_err"
+      filter_template: "DC2LSST_{band}"
+      band_list: ['u', 'g', 'r', 'i', 'z', 'y', 'W1']
+      bands:
+        u:
+          mag_limit: 26.4
+        g:
+          mag_limit: 27.8
+        r:
+          mag_limit: 27.1
+        i:
+          mag_limit: 26.7
+        z:
+          mag_limit: 25.8
+        y:
+          mag_limit: 24.6
+        W1:
+          filter: WISE_W1
+          mag_column_name: "mag_w1_wise"
+          mag_err_column_name: "mag_w1_wise_err"
+          mag_limit: 26.5
+  - CatalogTag:
+      # This is for the roman rubin sims, which don't have the euclids band yet
+      name: "cardinal_roman_rubin"
+      mag_column_template: "mag_{band}_lsst"
+      mag_err_column_template: "mag_{band}_lsst_err"
+      filter_template: "DC2LSST_{band}"
+      band_list: ['u', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H']
+      bands:
+        u:
+          mag_limit: 26.4
+        g:
+          mag_limit: 27.8
+        r:
+          mag_limit: 27.1
+        i:
+          mag_limit: 26.7
+        z:
+          mag_limit: 25.8
+        y:
+          mag_limit: 24.6
+        Y:
+          filter: roman_Y106
+          mag_column_name: "mag_Y_roman"
+          mag_err_column_name: "mag_Y_roman_err"
+          mag_limit: 26.5
+        J:
+          filter: roman_J129
+          mag_column_name: "mag_J_roman"
+          mag_err_column_name: "mag_J_roman_err"
+          mag_limit: 26.5
+        H:
+          filter: roman_H158
+          mag_column_name: "mag_H_roman"
+          mag_err_column_name: "mag_H_roman_err"
+          mag_limit: 26.5
+  - CatalogTag:
+      # This is for rubin only data in the data challenge
+      name: "flagship_rubin"
+      mag_column_template: "mag_{band}_lsst"
+      mag_err_column_template: "mag_{band}_lsst_err"
+      filter_template: "DC2LSST_{band}"
+      band_list: ['u', 'g', 'r', 'i', 'z', 'y']
+      bands:
+        u:
+          mag_limit: 26.4
+        g:
+          mag_limit: 27.8
+        r:
+          mag_limit: 27.1
+        i:
+          mag_limit: 26.7
+        z:
+          mag_limit: 25.8
+        y:
+          mag_limit: 24.6
+  - CatalogTag:
+      # This is for the roman rubin sims, which don't have the euclids band yet
+      name: "flagship_roman_rubin"
+      mag_column_template: "mag_{band}_lsst"
+      mag_err_column_template: "mag_{band}_lsst_err"
+      filter_template: "DC2LSST_{band}"
+      band_list: ['u', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H']
+      bands:
+        u:
+          mag_limit: 26.4
+        g:
+          mag_limit: 27.8
+        r:
+          mag_limit: 27.1
+        i:
+          mag_limit: 26.7
+        z:
+          mag_limit: 25.8
+        y:
+          mag_limit: 24.6
+        Y:
+          filter: roman_Y106
+          mag_column_name: "mag_Y_roman"
+          mag_err_column_name: "mag_Y_roman_err"
+          mag_limit: 26.5
+        J:
+          filter: roman_J129
+          mag_column_name: "mag_J_roman"
+          mag_err_column_name: "mag_J_roman_err"
+          mag_limit: 26.5
+        H:
+          filter: roman_H158
+          mag_column_name: "mag_H_roman"
+          mag_err_column_name: "mag_H_roman_err"
+          mag_limit: 26.5
