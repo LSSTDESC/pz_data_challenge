@@ -149,10 +149,26 @@ in Tab.~\ref{tab:columns}.
 \subsection{Installing and setting up the \texttt{pz\_data\_challenge}
   package}
 
+The \texttt{pz\_data\_challenge} can be set up with a few small
+variants on the standard \texttt{github} package setup procedure.
+
+\begin{verbatim}
+# Create a conda environment
+conda create --name pzdc python=3.13
+
+# Clone the pz_data_challenge repository
+git clone git@github.com:LSSTDESC/pz_data_challenge.git
+# or git clone https://github.com/LSSTDESC/pz_data_challenge.git
+
+# Go into the directory
+cd pz_data_challenge
+
+# Install the code in "editable" mode
+pip intall -e ".[dev]"
+\end{verbatim}
 
 
-
-\subsection{Challenge Tasks and Submission Mechanism}
+\subsection{Challenge sub tasks types}
 
 The challenge is organized as a series of sets tasks using
 increasingly realistic representations of the data.   In general, each
@@ -170,29 +186,10 @@ set of task includes 3 sub-tasks.
       arbitrary datasets.}
 \end{enumerate}
 
-The $p(z)$ estimates in task 1 and the trained models in task 2 should be provided
-in a compressed \texttt{tar} file.
-
-Submission will take the form a pull request on the
-\texttt{pz\_data\_challenge} repository, and will include:
-
-\begin{enumerate}
-  \item{A file \texttt{tests/test\_{submission}.py} that include the
-      URL from which the compressed \texttt{tar} should be downloaded
-      as well as the python functions for sub-tasks 2 and 3.}
-   \item{A file \texttt{requirements\_{submission}.txt} that include
-       \texttt{pip} package names of any packages that need to be
-       installed in order to run the functions in sub-tasks 2 and 3.}
-   \item{A one line edit to \texttt{.github/workflows/submit.yaml} to
-       include the submission in the test matrix.}
-\end{enumerate}
-
-And example of a submission is provided at
-\texttt{https://github.com/LSSTDESC/pz_data_challenge/pull/1}.
-The file \texttt{tests/test\_template.py} provides a template for
-submissions, with empty placeholder functions for sub-tasks 2 and 3
-for each task set.
-
+The $p(z)$ estimates in sub-task 1 and the trained models in sub-task 2 should be provided
+in a compressed \texttt{tar} file, which are described below.  Templates and instructions for the
+python functions needed for sub-tasks 2 and 3 will be provided and are
+described below.
 
 
 \subsection{Data format for per-object $p(z)$ estimates}
@@ -251,6 +248,87 @@ the descriptions of the various tasks, e.g.,
 \texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_model\_yr1.pkl}.
 
 
+\subsection{Format for estimation only python functions and trained models}
+
+For the second sub-task, submissions should provide trained models and
+a implement a function to run estimation using those trained models on
+the test files provided for each task set.  The functon will look something like this:
+
+\begin{verbatim}
+def run_taskset_1_estimation_only(
+    model_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # do stuff and write p(z) estimates to "output_file"
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+def run_taskset_2_estimation_only(
+    model_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # do stuff and write p(z) estimates to "output_file"
+\end{verbatim}
+
+Templates for these functions are provided in the 
+
+\subsection{Format for training and estimation scripts}
+
+For the third sub-task, submissions should implement a function to
+train models and run  estimation using those trained models on the
+training and test files provided for each task set.  The functon will
+look something like this:
+
+\begin{verbatim}
+def run_taskset_1_training_and_estimation(
+    train_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # train a model using the "train_file" and make p(z) estimates 
+    # and write them to "output_file"
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+def run_taskset_2_training_and_estimation(
+    train_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # train a model using the "train_file" and make p(z) estimates
+    # and write them to "output_file"
+\end{verbatim}
+
+
+\subsection{Submission mechanism}
+
+Submission will take the form a pull request on the
+\texttt{pz\_data\_challenge} repository, and will include:
+
+\begin{enumerate}
+  \item{A file \texttt{tests/test\_{submission}.py} that include the
+      URL from which the compressed \texttt{tar} should be downloaded
+      as well as the python functions for sub-tasks 2 and 3.}
+   \item{A file \texttt{requirements\_{submission}.txt} that includes
+       \texttt{pip} package names of any packages that need to be
+       installed in order to run the functions in sub-tasks 2 and 3.}
+   \item{A one line edit to \texttt{.github/workflows/submit.yaml} to
+       include the submission in the test matrix.}
+\end{enumerate}
+
+And example of a submission is provided at
+\texttt{https://github.com/LSSTDESC/pz_data_challenge/pull/1}.
+The file \texttt{tests/test\_template.py} provides a template for
+submissions, with empty placeholder functions for sub-tasks 2 and 3
+for each task set.
+
+
 %\subsection{Data format for tomographic bin assignments}
 
 %\eac{Details about data packaging}
@@ -259,27 +337,6 @@ the descriptions of the various tasks, e.g.,
 %\subsection{Data format for ensemble $n(z)$ estimates}
 
 %\eac{Details about data packaging}
-
-
-\subsection{Format for estimation only scripts and trained models}
-
-For the second sub-task, providing trained models and a function to run
-estimation using those trained models.   In short, the 
-
-
-Once they have tested the script, submitters should open a pull
-request to add \texttt{run\_estimate.sh}
-
-
-
-\subsection{Format for training and estimation scripts}
-
-For the second sub-task, providin a script to train models and run
-estimation using those trained models, submitters should start with
-the \texttt{run\_train\_and\_estimate.sh}  example script and modify the portions of the script to install
-their packages, download their models, and run the estimation on the
-appropriate test files.  
-
 
 \section{Metrics and Assesment Criteria}
 
