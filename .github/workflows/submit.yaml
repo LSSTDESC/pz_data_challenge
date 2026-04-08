@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
-        submission: ['example']
+        submission: ['example', 'snazzy']
 
     steps:
       - uses: actions/checkout@v3
