@@ -1,4 +1,6 @@
 pdflatex pz_challenge
+bibtex pz_challenge
+pdflatex pz_challenge
 pdflatex pz_challenge
 
 pandoc -t rst pz_challenge.tex --output index.rst

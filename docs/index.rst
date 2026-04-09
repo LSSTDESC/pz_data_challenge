@@ -513,6 +513,8 @@ All of the data prepration was performed using the ``rail_projects`` and
       | from catalogs   |                        |                        |
       +-----------------+------------------------+------------------------+
 
+.. container:: flushleft
+
 .. |image| image:: figures/color_color_redshift_taskset_1_cardinal_10yr.png
    :width: 45.0%
 .. |image1| image:: figures/color_color_redshift_taskset_1_flagship_10yr.png
