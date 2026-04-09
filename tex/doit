@@ -1,2 +1,4 @@
 pdflatex pz_challenge
 pdflatex pz_challenge
+
+pandoc -t rst pz_challenge.tex --output ../docs/index.rst

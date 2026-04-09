@@ -15,6 +15,29 @@ development of improved methods. Overall, this requires generating
 uniform input catalogs to use and infrastructure for comparing output
 redshift posteriors to each other and to simulated truth catalogs.
 
+Photometric redshift basics
+===========================
+
+Much of the information used to estimate photometric redshifts derives
+from the ’Balmer-break’ present in the rest frame of many spectra at 400
+nm. And the break crosses into different optical filters with increasing
+redshift, the differences in magnitudes between filters carries
+information about the redshift, see, e.g.,
+Fig. `[fig:pz_redshift_basics] <#fig:pz_redshift_basics>`__. This can
+also be seen when plotting redshifts as a funciton of derived colors,
+i.e., differences in magnitudes between filters, see e.g.,
+Fig. `[fig:color_color_redshift] <#fig:color_color_redshift>`__.
+
+.. container:: figure*
+
+   .. image:: figures/static_balmer.png
+      :alt: image
+      :width: 80.0%
+
+.. container:: figure*
+
+   |image| |image1|
+
 Challenge Format
 ================
 
@@ -48,8 +71,8 @@ Preliminary results will be released on August 14, 2026, with a
 techincal note summarize those result to follow shortly thereafter and a
 comprehensive journal publication to follow later.
 
-Challgenge Data
----------------
+Challgenge Input Data
+---------------------
 
 The preparation of the challenge data is described in the appendices.
 The data is available as ``tar`` archives on the data challenge site.
@@ -64,24 +87,6 @@ distributions in the test files.
 Typically there will be several training and test files for a particular
 test set, covering different scenarios and using different input
 simulations.
-
-Challenge Tasks and Submission Types
-------------------------------------
-
-The challenge is organized as a series of sets tasks using increasingly
-realistic representations of the data. In general, each set of task
-includes 3 tasks.
-
-#. Estimate either per-object :math:`p(z)` or ensemble :math:`n(z)`
-   distributions for a set of different scenarios and provide the
-   estimates in a specfied format.
-
-#. Provide trained models for the different scenarios, and a generic
-   script that can be used generate the estimates from task 1 on an
-   arbitrary dataset.
-
-#. Provide a generic script that can be used generate the generate the
-   models and estimates from tasks 1 and 2 on arbitrary datasets.
 
 Input data format
 -----------------
@@ -98,17 +103,17 @@ Tab. `2 <#tab:columns>`__.
 .. container::
    :name: tab:file_fields
 
-   .. table:: Fields in .
+   .. table:: Field in the the input files names.
 
-      ========== ====================================
+      ========== ==========================================================
       field      Description
-      ========== ====================================
+      ========== ==========================================================
       challenge  Challenge associated to file
       taskset    Task set associated to file
-      simulation Simulation used to produce file
-      label      File label (e.g., “test”, “training”
-      scenario   Data Scenario
-      ========== ====================================
+      simulation Simulation used to produce file (“cardinal” or “flagship”)
+      label      File label (e.g., “test”, “training”)
+      scenario   Data Scenario (e.g., “1yr”, “10yr”)
+      ========== ==========================================================
 
 .. container::
    :name: tab:columns
@@ -127,6 +132,50 @@ Tab. `2 <#tab:columns>`__.
       mag_{band}_roman     Magnitude in Roman {band}
       mag_{band}_roman_err Magnitude uncertainty in Roman {band}
       ==================== =====================================
+
+Installing and setting up the ``pz_data_challenge`` package
+-----------------------------------------------------------
+
+The ``pz_data_challenge`` can be set up with a few small variants on the
+standard ``github`` package setup procedure.
+
+::
+
+   # Create a conda environment
+   conda create --name pzdc python=3.13
+
+   # Clone the pz_data_challenge repository
+   git clone git@github.com:LSSTDESC/pz_data_challenge.git
+   # or git clone https://github.com/LSSTDESC/pz_data_challenge.git
+
+   # Go into the directory
+   cd pz_data_challenge
+
+   # Install the code in "editable" mode
+   pip intall -e ".[dev]"
+
+Challenge sub tasks types
+-------------------------
+
+The challenge is organized as a series of sets tasks using increasingly
+realistic representations of the data. In general, each set of task
+includes 3 sub-tasks.
+
+#. Estimate either per-object :math:`p(z)` or ensemble :math:`n(z)`
+   distributions for a set of different scenarios and provide the
+   estimates in a specfied format.
+
+#. Provide trained models for the different scenarios, and a python
+   function that can be used generate the estimates from sub-task 1 on
+   an arbitrary dataset.
+
+#. Provide a python function that can be used to generate the models and
+   estimates from sub-tasks 1 and 2 on arbitrary datasets.
+
+The :math:`p(z)` estimates in sub-task 1 and the trained models in
+sub-task 2 should be provided in a compressed ``tar`` file, which are
+described below. Templates and instructions for the python functions
+needed for sub-tasks 2 and 3 will be provided and are described below.
 
 Data format for per-object :math:`p(z)` estimates
 -------------------------------------------------
@@ -184,26 +233,87 @@ descriptions of the various tasks, e.g.,
 ``pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5`` or
 ``pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl``.
 
-Format for estimation only scripts and trained models
------------------------------------------------------
+Format for estimation only python functions and trained models
+--------------------------------------------------------------
 
-For the second sub-task, providing trained models and a script to run
-estimation using those trained models, submitters should start with the
-``run_estimate.sh`` example script, and modify the portions of the
-script to install their packages, download their models, and run the
-estimation on the appropriate test files.
+For the second sub-task, submissions should provide trained models and a
+implement a function to run estimation using those trained models on the
+test files provided for each task set. The functon will look something
+like this:
 
-Once they have tested the script, submitters should open a pull request
-to add ``run_estimate.sh``
+::
+
+   def run_taskset_1_estimation_only(
+       model_file: str | Path,
+       test_file: str | Path,
+       output_file: str | Path,
+   ) -> None:
+       # do stuff and write p(z) estimates to "output_file"
+
+or
+
+::
+
+   def run_taskset_2_estimation_only(
+       model_file: str | Path,
+       test_file: str | Path,
+       output_file: str | Path,
+   ) -> None:
+       # do stuff and write p(z) estimates to "output_file"
+
+Templates for these functions are provided in the
 
 Format for training and estimation scripts
 ------------------------------------------
 
-For the second sub-task, providin a script to train models and run
-estimation using those trained models, submitters should start with the
-``run_train_and_estimate.sh`` example script and modify the portions of
-the script to install their packages, download their models, and run the
-estimation on the appropriate test files.
+For the third sub-task, submissions should implement a function to train
+models and run estimation using those trained models on the training and
+test files provided for each task set. The functon will look something
+like this:
+
+::
+
+   def run_taskset_1_training_and_estimation(
+       train_file: str | Path,
+       test_file: str | Path,
+       output_file: str | Path,
+   ) -> None:
+       # train a model using the "train_file" and make p(z) estimates 
+       # and write them to "output_file"
+
+or
+
+::
+
+   def run_taskset_2_training_and_estimation(
+       train_file: str | Path,
+       test_file: str | Path,
+       output_file: str | Path,
+   ) -> None:
+       # train a model using the "train_file" and make p(z) estimates
+       # and write them to "output_file"
+
+Submission mechanism
+--------------------
+
+Submission will take the form a pull request on the
+``pz_data_challenge`` repository, and will include:
+
+#. A file ``tests/test_``\ ``submission``\ ``.py`` that include the URL
+   from which the compressed ``tar`` should be downloaded as well as the
+   python functions for sub-tasks 2 and 3.
+
+#. A file ``requirements_``\ ``submission``\ ``.txt`` that includes
+   ``pip`` package names of any packages that need to be installed in
+   order to run the functions in sub-tasks 2 and 3.
+
+#. A one line edit to ``.github/workflows/submit.yaml`` to include the
+   submission in the test matrix.
+
+And example of a submission is provided at
+``https://github.com/LSSTDESC/pz_data_challenge/pull/1``. The file
+``tests/test_template.py`` provides a template for submissions, with
+empty placeholder functions for sub-tasks 2 and 3 for each task set.
 
 Metrics and Assesment Criteria
 ==============================
@@ -402,3 +512,8 @@ All of the data prepration was performed using the ``rail_projects`` and
       +-----------------+------------------------+------------------------+
       | from catalogs   |                        |                        |
       +-----------------+------------------------+------------------------+
+
+.. |image| image:: figures/color_color_redshift_taskset_1_cardinal_10yr.png
+   :width: 45.0%
+.. |image1| image:: figures/color_color_redshift_taskset_1_flagship_10yr.png
+   :width: 45.0%
