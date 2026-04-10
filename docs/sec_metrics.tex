@@ -1,0 +1,110 @@
+\section{Metrics and Assessment Criteria}
+
+We will use a number of different metrics to assess the performance of
+the submitted algorithms. Many of these metrics, as well as the
+motivations behind them, are defined and discussed in
+Ref.~\cite{therailteam2025}.
+
+\subsection{Metrics for per-object point estimates}
+
+Performance on per-object point estimates, i.e., providing a single
+best estimate of the redshift of each object in the test sample. All
+of our point-estimate metrics first compute the scaled residual,
+$\Delta_i$, between the point estimate for each object, $z_{p,i}$, and
+the true redshift for that object, $z_{t,i}$:
+
+\begin{equation}
+    \Delta_i = \frac{z_{p,i}-z_{t,i}}{1+z_{t,i}}.
+\end{equation}
+
+We then use this to construct the following metrics; see
+Ref.~\cite{therailteam2025} for more details:
+
+\begin{itemize}
+    \item \texttt{Bias} is simply the median of $\Delta_i$.
+    \item \texttt{OutlierRate} is the fraction of the $\Delta$ distribution
+      outside of $[0, {\rm max}(0.06, 3\sigma_{\rm iqr})]$.
+    \item \texttt{SigmaMAD} is an estimate of the standard deviation of
+      the median absolute deviation (MAD), which is computed as      
+    \begin{equation}
+    {\sigma_{\rm MAD}} = 1.4862\,{\rm median}(|\Delta_i - {\rm median}(\Delta)|).
+    \end{equation}
+\end{itemize}
+
+
+\subsection{Metrics for per-object $p(z)$ distributions}
+
+We will also assess the algorithm's ability to provide a precise and
+accurate estimate of the posterior distribution, $p(z)$, for each
+object using the following metrics.
+
+\begin{itemize}
+    \item{Conditional Density Loss (\texttt{CDELoss}): We implement
+      the method in \cite{2017arXiv170408095I} to compute this metric.
+      A better estimation should return a smaller CDE loss.}
+    \item{Probability Integral Transform (PIT): This is the
+        cumulative distribution function of the photo-$z$ PDF evaluated
+        at the galaxy's true redshift for each galaxy in the catalog,
+        i.e., ${\rm PIT} = \int_{0}^{z_t} p(z)\, dz$.
+      Following Ref.~\cite{schmidt_evaluation_2020}, we provide the PIT-QQ
+      (quantile-quantile) diagram, where the PIT distribution is
+      directly compared to the ideal uniform distribution. 
+      A diagonal PIT-QQ diagram indicates a good estimation.          
+      An example of the PIT-QQ plot is shown in
+      Section~\ref{sec:examples:gs}.
+      We will then use three metrics to quantify how well the PIT
+      distribution matches the ideal: the Kolmogorov-Smirnov (KS)
+      test, the Root Mean Square Error (RMSE), and the
+      Kullback-Leibler divergence (KL divergence).}
+\end{itemize}
+
+
+\subsection{Metrics for computational usability and performance}
+
+We will assess relevant aspects of the computational performance that
+will affect usability and scaling. 
+
+\begin{itemize}
+\item{\textbf{Ease of use}: We will assess whether the algorithm is easy to
+    install and can be run on the different task sets without needing
+    excessively complicated additional configuration files.}
+\item{\textbf{Training time}: How quickly the algorithm trains models,
+    and how this scales with the training sample size. Here we
+    mainly want to ensure that the training time will not dominate the
+    iteration cycle. Taking several minutes to train on 100k objects
+    is fine; taking hours to do so would be problematic.}
+\item{\textbf{Model size}: How large the trained model files are,
+    and how this scales with the training sample size. Again, we
+    mainly want to ensure that the model size will not tax our resources.
+    If the model files are an order of magnitude larger than the input
+    data files, we might worry.}
+\item{\textbf{Estimation time}: How quickly the algorithm estimates
+    redshifts per object. This will determine the use cases for
+    which we might use the algorithm. We can run an algorithm that
+    takes a few ms per object on all of the billions of galaxies we
+    will have in the final LSST sample; for an algorithm that takes a
+    few seconds per object, we would probably be constrained to only
+    run it on much smaller particular datasets for specific science
+    cases, such as samples of supernovae or strongly lensed objects.}
+\item{\textbf{Output data size per object}: How large the output
+    files with the $p(z)$ estimates are. For a \texttt{qp}
+    interpolated grid representation with 300 points, these
+    would be about 2.4 kB per object, which is large but manageable,
+    whereas for a Gaussian mixture model with 5 Gaussians, this would
+    be close to 120 bytes per object.}
+\end{itemize}
+
+%\subsection{Metrics for bin assignment}
+
+%\eac{Efficiency and purity}
+
+
+%\subsection{Metrics for ensemble $n(z)$ estimation}
+
+%\eac{Bias, width, simplified fisher forecast}
+
+
+%\subsection{Metrics for ensemble estimation performance}
+
+%\eac{Training time, per-object estimation time, model size}
+

@@ -1,0 +1,193 @@
+\section{Challenge Submissions}
+
+\subsection{Challenge subtask types}
+
+The challenge is organized as a series of sets of tasks using
+increasingly realistic representations of the data. In general, each
+set of tasks includes 3 subtasks.
+
+\begin{enumerate}
+  \item{Estimate either per-object $p(z)$ or ensemble $n(z)$
+      distributions for a set of different scenarios and provide the
+      estimates in a specified format.}
+  \item{Provide trained models for the different scenarios and a
+      Python function that can be used to generate the estimates from subtask
+      1 on an arbitrary dataset.}    
+  \item{Provide a Python function that can be used to
+      generate the models and estimates from subtasks 1 and 2 on
+      arbitrary datasets.}
+\end{enumerate}
+
+The $p(z)$ estimates in subtask 1 and the trained models in subtask 2 should be provided
+in a compressed \texttt{tar} file, which are described below. Templates and instructions for the
+Python functions needed for subtasks 2 and 3 will be provided and are
+described below.
+
+
+\subsection{Data format for per-object $p(z)$ estimates}
+
+The $p(z)$ estimates should be submitted in \texttt{qp} format,
+which allows users to specify a complete $p(z)$ distribution for
+each object, as well as summary statistics for each object.
+
+The \texttt{qp} package supports several different representations of
+$p(z)$, such as different functional forms as well as interpolated
+grids, histograms, and others.
+
+For users unfamiliar with \texttt{qp}, we highly recommend representing
+the $p(z)$ as either an interpolated grid or a Gaussian mixture model.
+
+\begin{verbatim}
+# Interpolated grid
+import qp
+import numpy as np
+# Define the x-grid. Note that we put all the
+# p(z) on the same x-grid
+xvals = np.array([0,0.5,1,1.5,2])
+# Define the y-values. Note we provide n_grid_points x n_objects 
+# values, as we need to provide a y-value at each grid point 
+# for each object.
+yvals = np.array(
+ [
+   [0.01,0.2,0.3,0.2,0.01],
+   [0.1,0.3,0.5,0.2,0.05]
+ ]
+)
+ens = qp.interp.create_ensemble(xvals,yvals)
+\end{verbatim}
+
+\begin{verbatim}
+# Mixture model
+import qp
+import numpy as np
+# Define the means, standard deviations, and weights.
+# These should each have shape n_objects, n_components.
+# In this case we are defining 3 objects with 2-Gaussian 
+# representations.
+# For each object the weights should sum to 1, or they
+# will be normalized.
+means = [[0.3, 0.4], [0.5, 0.5], [0.6, 0.8]]
+stds = [[0.2, 0.4], [0.1, 0.3], [0.05, 0.3]]
+weights = [[0.8, 0.2], [0.7, 0.3], [0.8, 0.2]]
+ens = qp.mixmod.create_ensemble(means=means,stds=stds,weights=weights)
+\end{verbatim}
+
+The submission files should use the same file name conventions defined
+in Tab.~\ref{tab:file_fields}. The labels will typically be
+\texttt{pz\_estimate} or \texttt{pz\_model} and will be specified in
+the descriptions of the various tasks, e.g., 
+\texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_estimate\_yr1.hdf5} or
+\texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_model\_yr1.pkl}.
+
+
+\subsection{Format for estimation-only Python functions and trained models}
+
+For the second subtask, submissions should provide trained models and
+implement a function to run estimation using those trained models on
+the test files provided for each task set. The function will look something like this:
+
+\begin{verbatim}
+def run_taskset_1_estimation_only(
+    model_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # do stuff and write p(z) estimates to "output_file"
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+def run_taskset_2_estimation_only(
+    model_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # do stuff and write p(z) estimates to "output_file"
+\end{verbatim}
+
+Templates for these functions are provided in the file \texttt{tests/test\_template.py}.
+
+
+\subsection{Format for training and estimation scripts}
+
+For the third subtask, submissions should implement a function to
+train models and run estimation using those trained models on the
+training and test files provided for each task set. The function will
+look something like this:
+
+\begin{verbatim}
+def run_taskset_1_training_and_estimation(
+    train_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # train a model using the "train_file" and make p(z) estimates 
+    # and write them to "output_file"
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+def run_taskset_2_training_and_estimation(
+    train_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    # train a model using the "train_file" and make p(z) estimates
+    # and write them to "output_file"
+\end{verbatim}
+
+Templates for these functions are provided in the file
+\texttt{tests/test\_template.py}.
+
+
+\subsection{Submission mechanism}
+
+Submissions will take the form of a pull request on the
+\texttt{pz\_data\_challenge} repository and will include:
+
+\begin{enumerate}
+  \item{A file \texttt{tests/test\_\{submission\}.py} that includes the
+      URL from which the compressed \texttt{tar} file should be downloaded
+      as well as the Python functions for subtasks 2 and 3.}
+   \item{A file \texttt{requirements\_\{submission\}.txt} that includes
+       \texttt{pip} package names of any packages that need to be
+       installed in order to run the functions in subtasks 2 and 3.}
+   \item{A file \texttt{.github/workflows/submit\_\{submission\}.yaml} to
+       run the submission validation in a GitHub action.}
+\end{enumerate}
+
+An example of a submission is provided at
+\texttt{https://github.com/LSSTDESC/pz\_data\_challenge/pull/3}.
+The files \texttt{tests/test\_template.py} and \texttt{.github/workflows/test\_template.yaml} 
+provide a template for submissions, with empty placeholder functions for subtasks 2 and 3
+for each task set, and a standardized GitHub action to validate the
+submission.
+
+
+\subsection{Submission validation}
+
+The wrapping functions provided in the \texttt{tests/test\_template.py}
+file implement a number of checks on the data. Specifically, for each
+expected file they check that:
+
+\begin{enumerate}
+    \item{the file exists;}
+    \item{the file contains a valid \texttt{qp} ensemble;}
+    \item{the \texttt{qp} ensemble includes ancillary data;}
+    \item{the ancillary data includes a 'zmode' column with redshift
+        estimates;}
+    \item{the ancillary data includes an 'object\_id' column;}
+    \item{the object\_ids in the submission file match the associated
+        test file.}
+\end{enumerate}
+
+If any of these checks fail, the GitHub action triggered by the
+submission will fail and report the cause of the failure.
+
+
+\subsection{Submission aids}
+
+\eac{add stuff here}
+

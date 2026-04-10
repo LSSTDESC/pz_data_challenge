@@ -72,6 +72,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.mathjax',
     'nbsphinx',
+    "sphinx_subfigure",
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinx.ext.githubpages',
@@ -109,6 +110,17 @@ pygments_style = 'sphinx'
 
 # Allow NB to fail
 nbsphinx_allow_errors = True
+
+# number the figures
+numfig = True
+
+numfig_format = {
+    'subfigure': 'Fig. %s',
+    'figure': 'Fig. %s',
+    'table': 'Table %s',
+    'code-block': 'Listing %s',
+    'section': 'Section %s'
+}
 
 
 # use type hints in autodoc

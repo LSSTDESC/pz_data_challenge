@@ -1,16 +1,17 @@
 Introduction
 ============
 
-Redshift inference is a key measurement for multiple DESC science goals
+Redshift inference is a key measurement for multiple DESC science goals,
 and redshift uncertainty is one of the leading contributors to overall
 uncertainty on cosmological models from imaging survey data. Precursor
 surveys took a variety of approaches to this problem, accounting for
 differences in underlying data as well as modeling approaches. In all
-cases, redshift uncertainty was significantly larger than DESC Science
-Requirements listed in the LSST DESC Science Requirements Document.
+cases, redshift uncertainty was significantly larger than the DESC
+Science Requirements listed in the LSST DESC Science Requirements
+Document.
 
-This state-of-the-art motivates a data challenge to characterize and
-improve existing methods, as well as provide infrastructure for the
+This state of the art motivates a data challenge to characterize and
+improve existing methods, as well as to provide infrastructure for the
 development of improved methods. Overall, this requires generating
 uniform input catalogs to use and infrastructure for comparing output
 redshift posteriors to each other and to simulated truth catalogs.
@@ -18,14 +19,23 @@ redshift posteriors to each other and to simulated truth catalogs.
 Photometric redshift basics
 ===========================
 
+Photometric redshift estimation involves taking a catalog of galaxies
+for which we have observations in several different filters and have
+measured the brightness of the galaxies in those bands, and using that
+information to estimate the redshift of the galaxies. For LSST we expect
+to have measurements in 6 bands: ’u’, ’g’, ’r’, ’i’, ’z’, and ’y’,
+covering a wavelength range from approximately 320 to 1600 nanometers.
+For the Roman space telescope, this will extend from about 500 to 2300
+nanometers.
+
 Much of the information used to estimate photometric redshifts derives
-from the ’Balmer-break’ present in the rest frame of many spectra at 400
-nm. And the break crosses into different optical filters with increasing
-redshift, the differences in magnitudes between filters carries
-information about the redshift, see, e.g.,
+from the ’Balmer break’ present in the rest frame of many spectra at 400
+nm. As the break crosses into different optical filters with increasing
+redshift, the differences in magnitudes between filters carry
+information about the redshift; see, e.g.,
 Fig. `[fig:pz_redshift_basics] <#fig:pz_redshift_basics>`__. This can
-also be seen when plotting redshifts as a funciton of derived colors,
-i.e., differences in magnitudes between filters, see e.g.,
+also be seen when plotting redshifts as a function of derived colors,
+i.e., differences in magnitudes between filters; see, e.g.,
 Fig. `[fig:color_color_redshift] <#fig:color_color_redshift>`__.
 
 .. container:: figure*
@@ -38,63 +48,92 @@ Fig. `[fig:color_color_redshift] <#fig:color_color_redshift>`__.
 
    |image| |image1|
 
+This overly simple picture is complicated somewhat by the fact that
+different galaxies have different intrinsic spectra and colors, as seen
+in Fig. `[fig:color_redshift] <#fig:color_redshift>`__.
+
+.. container:: figure*
+
+   .. image:: figures/gr_vs_sz_sidebyside.jpg
+      :alt: image
+      :width: 80.0%
+
+This is further complicated by the fact that reference redshifts,
+typically obtained by spectroscopy, slitless spectroscopy (i.e., GRISM
+measurements), or narrowband photometric measurements, are not a
+representative sample, as they are much easier to obtain for brighter
+objects. Depending on the method used to obtain the reference redshifts,
+they are also susceptible to errors such as confusing different spectral
+lines or confusion of blended objects. Some of the tasks in this data
+challenge encourage participants to try to address these complications.
+
 Challenge Format
 ================
 
-The PZ data challenge comprises a set of tasks for participants. These
-task will be used to evaluate how ready various algorithms are to be
-used for cutting edge analysis. Readiness will be evaluated on a few
-different fronts. 1) Does the algorithm meet performance requirements?
-2) Is it robust, flexible and relatively easy to use on different
-datasets? 3) Is it scalable up to the scales we will need to use it at.
+The PZ data challenge comprises a series of sets of tasks for
+participants. These submissions will be evaluated to determine how ready
+various algorithms are to be used for cutting-edge analysis based on how
+well they perform on the various tasks. Readiness will be evaluated on a
+few different fronts: 1) Does the algorithm meet performance
+requirements? 2) Is it robust, flexible, and relatively easy to use on
+different datasets? 3) Is it scalable up to the scales we will need to
+use it at?
 
 This document and the associated web pages describe the data being
-provided to participants, the task they will be asked to perform, and
-the metrics by which the algorithms readiness will be evaluated.
+provided to participants, the tasks they will be asked to perform, and
+the metrics by which the algorithm readiness will be evaluated.
 
 Scope and Timeline
 ------------------
 
-The data challenge will include two major parts, with a set of task
+The data challenge will include two major parts, with a set of tasks
 emulating increasingly realistic scenarios in each part. The first part,
 :math:`p(z)` estimation, will focus on estimating the redshift of
-individual objets. The second part, tomogrpahy and :math:`n(z)`
-estimation will focus on assigning object to tomographic bins and
+individual objects. The second part, tomography and :math:`n(z)`
+estimation, will focus on assigning objects to tomographic bins and
 estimating the distribution of redshifts in each bin.
 
 The data challenge will run from April 13, 2026 to August 7, 2026. The
 first set of data and tasks related to :math:`p(z)` estimation will be
-released on April 13. A second set of data and tasks related to
-:math:`n(z)` estimation will be released on June 1.
+released on April 13. A second set of data and tasks related to more
+realistic :math:`p(z)` estimation scenarios and :math:`n(z)` estimation
+will be released on June 1.
 
 Preliminary results will be released on August 14, 2026, with a
-techincal note summarize those result to follow shortly thereafter and a
-comprehensive journal publication to follow later.
+technical note summarizing those results to follow shortly thereafter
+and a comprehensive journal publication to follow later.
 
-Challgenge Input Data
----------------------
+Submission mechanism
+--------------------
+
+Submission will take the form of pull request in the
+``pz_data_challenge`` repository. Detailed instructions on how to submit
+an entry are provided is Sec. `10.2 <#>`__ of this document.
+
+Challenge Input Data
+====================
 
 The preparation of the challenge data is described in the appendices.
-The data is available as ``tar`` archives on the data challenge site.
+The data are available as ``tar`` archives on the data challenge site.
 
 Each task set in the data challenge has an associated set of files.
 Typically these will be a collection of training files that contain
-photometric data and reference redsfhits and a second set of files that
+photometric data and reference redshifts, and a second set of files that
 contain photometric data but do not include redshifts. Each task set
-will invovle estimating something about the redshifts or redshift
+will involve estimating something about the redshifts or redshift
 distributions in the test files.
 
 Typically there will be several training and test files for a particular
-test set, covering different scenarios and using different input
+task set, covering different scenarios and using different input
 simulations.
 
 Input data format
 -----------------
 
-The input data for the challenge are presented in hdf5 files. The naming
+The input data for the challenge are presented in HDF5 files. The naming
 convention for the files is
 ``{challenge}_{taskset}_{simulation}_{label}_{scenario}.hdf5``. The
-meaning for the various fields are descrbied in
+meanings of the various fields are described in
 Tab. `1 <#tab:file_fields>`__. The columns in the files are described in
 Tab. `2 <#tab:columns>`__.
 
@@ -103,16 +142,16 @@ Tab. `2 <#tab:columns>`__.
 .. container::
    :name: tab:file_fields
 
-   .. table:: Field in the the input files names.
+   .. table:: Fields in the input file names.
 
       ========== ==========================================================
-      field      Description
+      Field      Description
       ========== ==========================================================
-      challenge  Challenge associated to file
-      taskset    Task set associated to file
+      challenge  Challenge associated with file
+      taskset    Task set associated with file
       simulation Simulation used to produce file (“cardinal” or “flagship”)
       label      File label (e.g., “test”, “training”)
-      scenario   Data Scenario (e.g., “1yr”, “10yr”)
+      scenario   Data scenario (e.g., “1yr”, “10yr”)
       ========== ==========================================================
 
 .. container::
@@ -124,9 +163,9 @@ Tab. `2 <#tab:columns>`__.
       Column               Description
       ==================== =====================================
       redshift             True redshift (training files only)
-      ra                   Right Accension (training files only)
+      ra                   Right ascension (training files only)
       dec                  Declination (training files only)
-      object_id            Unique Object ID
+      object_id            Unique object ID
       mag_{band}_lsst      Magnitude in LSST {band}
       mag_{band}_lsst_err  Magnitude uncertainty in LSST {band}
       mag_{band}_roman     Magnitude in Roman {band}
@@ -136,15 +175,15 @@ Tab. `2 <#tab:columns>`__.
 Installing and setting up the ``pz_data_challenge`` package
 -----------------------------------------------------------
 
-The ``pz_data_challenge`` can be set up with a few small variants on the
-standard ``github`` package setup procedure.
+The ``pz_data_challenge`` package can be set up with a few small
+variants on the standard ``GitHub`` package setup procedure.
 
 ::
 
    # Create a conda environment
    conda create --name pzdc python=3.13
 
-   # Clone the pz_data_challenge repository
+   # Clone the pz_data_challenge repository (or your fork of the repository)
    git clone git@github.com:LSSTDESC/pz_data_challenge.git
    # or git clone https://github.com/LSSTDESC/pz_data_challenge.git
 
@@ -152,54 +191,60 @@ standard ``github`` package setup procedure.
    cd pz_data_challenge
 
    # Install the code in "editable" mode
-   pip intall -e ".[dev]"
+   pip install -e ".[dev]"
 
-Challenge sub tasks types
--------------------------
+   # Download the public data using the script provided
+   python examples/download_public.py
 
-The challenge is organized as a series of sets tasks using increasingly
-realistic representations of the data. In general, each set of task
-includes 3 sub-tasks.
+Challenge Submissions
+=====================
+
+Challenge subtask types
+-----------------------
+
+The challenge is organized as a series of sets of tasks using
+increasingly realistic representations of the data. In general, each set
+of tasks includes 3 subtasks.
 
 #. Estimate either per-object :math:`p(z)` or ensemble :math:`n(z)`
    distributions for a set of different scenarios and provide the
-   estimates in a specfied format.
+   estimates in a specified format.
 
-#. Provide trained models for the different scenarios, and a python
-   function that can be used generate the estimates from sub-task 1 on
+#. Provide trained models for the different scenarios and a Python
+   function that can be used to generate the estimates from subtask 1 on
    an arbitrary dataset.
 
-#. Provide a python function that can be used to generate the models and
-   estimates from sub-tasks 1 and 2 on arbitrary datasets.
+#. Provide a Python function that can be used to generate the models and
+   estimates from subtasks 1 and 2 on arbitrary datasets.
 
-The :math:`p(z)` estimates in sub-task 1 and the trained models in
-sub-task 2 should be provided in a compressed ``tar`` file, which are
-described below. Templates and instructions for the python functions
-needed for sub-tasks 2 and 3 will be provided and are described below.
+The :math:`p(z)` estimates in subtask 1 and the trained models in
+subtask 2 should be provided in a compressed ``tar`` file, which are
+described below. Templates and instructions for the Python functions
+needed for subtasks 2 and 3 will be provided and are described below.
 
 Data format for per-object :math:`p(z)` estimates
 -------------------------------------------------
 
-The :math:`p(z)` estimates should be submitted as in ``qp`` format,
-which allows users to specific a complete :math:`p(z)` distribution for
-each object, as well as summary statistics for each object.
+The :math:`p(z)` estimates should be submitted in ``qp`` format, which
+allows users to specify a complete :math:`p(z)` distribution for each
+object, as well as summary statistics for each object.
 
-The ``qp`` packages supports several different representation of
+The ``qp`` package supports several different representations of
 :math:`p(z)`, such as different functional forms as well as interpolated
 grids, histograms, and others.
 
-For users unfamiliar with ``qp`` we highly recommend representing the
-:math:`p(z)` either an interpolated grid, or a Gaussian mixture model.
+For users unfamiliar with ``qp``, we highly recommend representing the
+:math:`p(z)` as either an interpolated grid or a Gaussian mixture model.
 
 ::
 
    # Interpolated grid
    import qp
    import numpy as np
-   # Define the x-grid.  Note that we put all the
+   # Define the x-grid. Note that we put all the
    # p(z) on the same x-grid
    xvals = np.array([0,0.5,1,1.5,2])
-   # Define the y-values.  Note we provide n_grid_points x n_objects 
+   # Define the y-values. Note we provide n_grid_points x n_objects 
    # values, as we need to provide a y-value at each grid point 
    # for each object.
    yvals = np.array(
@@ -215,8 +260,8 @@ For users unfamiliar with ``qp`` we highly recommend representing the
    # Mixture model
    import qp
    import numpy as np
-   # Define the means, standard deviations and weights.
-   # These should each have shape n_objectws, n_components.
+   # Define the means, standard deviations, and weights.
+   # These should each have shape n_objects, n_components.
    # In this case we are defining 3 objects with 2-Gaussian 
    # representations.
    # For each object the weights should sum to 1, or they
@@ -228,17 +273,17 @@ For users unfamiliar with ``qp`` we highly recommend representing the
 
 The submission files should use the same file name conventions defined
 in Tab. `1 <#tab:file_fields>`__. The labels will typically be
-``pz_estimate`` or ``pz_model``, and will be specified in the
+``pz_estimate`` or ``pz_model`` and will be specified in the
 descriptions of the various tasks, e.g.,
 ``pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5`` or
 ``pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl``.
 
-Format for estimation only python functions and trained models
+Format for estimation-only Python functions and trained models
 --------------------------------------------------------------
 
-For the second sub-task, submissions should provide trained models and a
+For the second subtask, submissions should provide trained models and
 implement a function to run estimation using those trained models on the
-test files provided for each task set. The functon will look something
+test files provided for each task set. The function will look something
 like this:
 
 ::
@@ -261,14 +306,15 @@ or
    ) -> None:
        # do stuff and write p(z) estimates to "output_file"
 
-Templates for these functions are provided in the
+Templates for these functions are provided in the file
+``tests/test_template.py``.
 
 Format for training and estimation scripts
 ------------------------------------------
 
-For the third sub-task, submissions should implement a function to train
+For the third subtask, submissions should implement a function to train
 models and run estimation using those trained models on the training and
-test files provided for each task set. The functon will look something
+test files provided for each task set. The function will look something
 like this:
 
 ::
@@ -293,65 +339,175 @@ or
        # train a model using the "train_file" and make p(z) estimates
        # and write them to "output_file"
 
+Templates for these functions are provided in the file
+``tests/test_template.py``.
+
+.. _submission-mechanism-1:
+
 Submission mechanism
 --------------------
 
-Submission will take the form a pull request on the
-``pz_data_challenge`` repository, and will include:
+Submissions will take the form of a pull request on the
+``pz_data_challenge`` repository and will include:
 
-#. A file ``tests/test_``\ ``submission``\ ``.py`` that include the URL
-   from which the compressed ``tar`` should be downloaded as well as the
-   python functions for sub-tasks 2 and 3.
+#. A file ``tests/test_{submission}.py`` that includes the URL from
+   which the compressed ``tar`` file should be downloaded as well as the
+   Python functions for subtasks 2 and 3.
 
-#. A file ``requirements_``\ ``submission``\ ``.txt`` that includes
-   ``pip`` package names of any packages that need to be installed in
-   order to run the functions in sub-tasks 2 and 3.
+#. A file ``requirements_{submission}.txt`` that includes ``pip``
+   package names of any packages that need to be installed in order to
+   run the functions in subtasks 2 and 3.
 
-#. A one line edit to ``.github/workflows/submit.yaml`` to include the
-   submission in the test matrix.
+#. A file ``.github/workflows/submit_{submission}.yaml`` to run the
+   submission validation in a GitHub action.
 
-And example of a submission is provided at
-``https://github.com/LSSTDESC/pz_data_challenge/pull/1``. The file
-``tests/test_template.py`` provides a template for submissions, with
-empty placeholder functions for sub-tasks 2 and 3 for each task set.
+An example of a submission is provided at
+``https://github.com/LSSTDESC/pz_data_challenge/pull/3``. The files
+``tests/test_template.py`` and ``.github/workflows/test_template.yaml``
+provide a template for submissions, with empty placeholder functions for
+subtasks 2 and 3 for each task set, and a standardized GitHub action to
+validate the submission.
 
-Metrics and Assesment Criteria
-==============================
+Submission validation
+---------------------
 
-Metrics for per-object point-estimates
---------------------------------------
+The wrapping functions provided in the ``tests/test_template.py`` file
+implement a number of checks on the data. Specifically, for each
+expected file they check that:
+
+#. the file exists;
+
+#. the file contains a valid ``qp`` ensemble;
+
+#. the ``qp`` ensemble includes ancillary data;
+
+#. the ancillary data includes a ’zmode’ column with redshift estimates;
+
+#. the ancillary data includes an ’object_id’ column;
+
+#. the object_ids in the submission file match the associated test file.
+
+If any of these checks fail, the GitHub action triggered by the
+submission will fail and report the cause of the failure.
+
+Submission aids
+---------------
 
 *Eric:*
+
+Metrics and Assessment Criteria
+===============================
+
+We will use a number of different metrics to assess the performance of
+the submitted algorithms. Many of these metrics, as well as the
+motivations behind them, are defined and discussed in
+Ref. :raw-latex:`\cite{therailteam2025}`.
+
+Metrics for per-object point estimates
+--------------------------------------
+
+Performance on per-object point estimates, i.e., providing a single best
+estimate of the redshift of each object in the test sample. All of our
+point-estimate metrics first compute the scaled residual,
+:math:`\Delta_i`, between the point estimate for each object,
+:math:`z_{p,i}`, and the true redshift for that object, :math:`z_{t,i}`:
+
+.. math:: \Delta_i = \frac{z_{p,i}-z_{t,i}}{1+z_{t,i}}.
+
+We then use this to construct the following metrics; see
+Ref. :raw-latex:`\cite{therailteam2025}` for more details:
+
+-  ``Bias`` is simply the median of :math:`\Delta_i`.
+
+-  ``OutlierRate`` is the fraction of the :math:`\Delta` distribution
+   outside of :math:`[0, {\rm max}(0.06, 3\sigma_{\rm iqr})]`.
+
+-  ``SigmaMAD`` is an estimate of the standard deviation of the median
+   absolute deviation (MAD), which is computed as
+
+   .. math:: {\sigma_{\rm MAD}} = 1.4862\,{\rm median}(|\Delta_i - {\rm median}(\Delta)|).
 
 Metrics for per-object :math:`p(z)` distributions
 -------------------------------------------------
 
-*Eric:*
+We will also assess the algorithm’s ability to provide a precise and
+accurate estimate of the posterior distribution, :math:`p(z)`, for each
+object using the following metrics.
 
-Metrics for per-object estimation computational performance
------------------------------------------------------------
+-  Conditional Density Loss (``CDELoss``): We implement the method in
+   :raw-latex:`\cite{2017arXiv170408095I}` to compute this metric. A
+   better estimation should return a smaller CDE loss.
 
-*Eric:*
+-  Probability Integral Transform (PIT): This is the cumulative
+   distribution function of the photo-:math:`z` PDF evaluated at the
+   galaxy’s true redshift for each galaxy in the catalog, i.e.,
+   :math:`{\rm PIT} = \int_{0}^{z_t} p(z)\, dz`. Following
+   Ref. :raw-latex:`\cite{schmidt_evaluation_2020}`, we provide the
+   PIT-QQ (quantile-quantile) diagram, where the PIT distribution is
+   directly compared to the ideal uniform distribution. A diagonal
+   PIT-QQ diagram indicates a good estimation. An example of the PIT-QQ
+   plot is shown in Section `[sec:examples:gs] <#sec:examples:gs>`__. We
+   will then use three metrics to quantify how well the PIT distribution
+   matches the ideal: the Kolmogorov-Smirnov (KS) test, the Root Mean
+   Square Error (RMSE), and the Kullback-Leibler divergence (KL
+   divergence).
+
+Metrics for computational usability and performance
+---------------------------------------------------
+
+We will assess relevant aspects of the computational performance that
+will affect usability and scaling.
+
+-  **Ease of use**: We will assess whether the algorithm is easy to
+   install and can be run on the different task sets without needing
+   excessively complicated additional configuration files.
+
+-  **Training time**: How quickly the algorithm trains models, and how
+   this scales with the training sample size. Here we mainly want to
+   ensure that the training time will not dominate the iteration cycle.
+   Taking several minutes to train on 100k objects is fine; taking hours
+   to do so would be problematic.
+
+-  **Model size**: How large the trained model files are, and how this
+   scales with the training sample size. Again, we mainly want to ensure
+   that the model size will not tax our resources. If the model files
+   are an order of magnitude larger than the input data files, we might
+   worry.
+
+-  **Estimation time**: How quickly the algorithm estimates redshifts
+   per object. This will determine the use cases for which we might use
+   the algorithm. We can run an algorithm that takes a few ms per object
+   on all of the billions of galaxies we will have in the final LSST
+   sample; for an algorithm that takes a few seconds per object, we
+   would probably be constrained to only run it on much smaller
+   particular datasets for specific science cases, such as samples of
+   supernovae or strongly lensed objects.
+
+-  **Output data size per object**: How large the output files with the
+   :math:`p(z)` estimates are. For a ``qp`` interpolated grid
+   representation with 300 points, these would be about 2.4 kB per
+   object, which is large but manageable, whereas for a Gaussian mixture
+   model with 5 Gaussians, this would be close to 120 bytes per object.
 
 .. _`sec:tasks`:
 
 Challenge Tasks related to :math:`p(z)` estimation
 ==================================================
 
-Task set 1: estimate redshifts using representative training samples
+Task set 1: Estimate redshifts using representative training samples
 --------------------------------------------------------------------
 
-The first, simplest, task is to estaimate redshifts using representative
-training samples. I.e., the training samples are drawn for the same
-distibutions as the test samples. For this task set we did not use an of
-the spectroscopic selection emulation, but simply applied a uniform
-magnitude cut :math:`i < 23` in selecting objects for both the training
-and test samples.
+The first, simplest task is to estimate redshifts using representative
+training samples. I.e., the training samples are drawn from the same
+distributions as the test samples. For this task set we did not use any
+of the spectroscopic selection emulation, but simply applied a uniform
+magnitude cut of :math:`i < 23` in selecting objects for both the
+training and test samples.
 
 The four
 ``pz_challenge_taskset_1_{simulation}_training_{scenario}.hdf5`` files
-are the training sets for the “Flagship” and “Cardinal” simulations, and
-emulating 1 year and 10 years of LSST data under expected observing
+are the training sets for the “Flagship” and “Cardinal” simulations,
+emulating 1 year and 10 years of LSST data under the expected observing
 strategy and conditions. These files have true redshifts to serve as
 labels.
 
@@ -359,33 +515,63 @@ The corresponding
 ``pz_challenge_taskset_1_{simulation}_test_{scenario}.hdf5`` files were
 drawn from the same distributions. The true redshifts have been removed
 from these files. The task is to assign :math:`p(z)` estimates for all
-the objects in thse 4 test files.
+the objects in these 4 test files.
 
-Task set 2: estimate redshifts on non-representative samples
+The subtasks in this task set are:
+
+#. Estimate :math:`p(z)` for each object in each of the test files and
+   provide the estimates in a downloadable ``tar`` file.
+
+#. Provide pre-trained models appropriate to each of the training files
+   and implement a Python function (``run_taskset_1_estimation_only``)
+   to use those pre-trained models to estimate :math:`p(z)` for each
+   object in the associated test files.
+
+#. Implement a Python function
+   (``run_taskset_1_training_and_estimation``) to train a model for each
+   training file and use that model to estimate :math:`p(z)` for each
+   object in the associated test files.
+
+Task set 2: Estimate redshifts on non-representative samples
 ------------------------------------------------------------
 
-The second, slightly more challenging, task is to estimate redshifts
+The second, slightly more challenging task is to estimate redshifts
 using non-representative training samples. I.e., the training samples
-are not drawn for the same distibutions as the test samples. For this
-task set we applied the spectroscopic selection emulation for the train
-set, but retained all the objects down to :math:`i < 25.4` in the test
-set. Accordingly, the training set will not be representative of the
-fainter objects in the test set. This reflects that spectroscopic
-redshifts are typically significantly more diffiicult to obtain than
+are not drawn from the same distributions as the test samples. For this
+task set we applied the spectroscopic selection emulation for the
+training set, but retained all the objects down to :math:`i < 25.4` in
+the test set. Accordingly, the training set will not be representative
+of the fainter objects in the test set. This reflects that spectroscopic
+redshifts are typically significantly more difficult to obtain than
 photometry.
 
 The four
-``pz_challenge_taskset_1_{simulation}_training_{scenario}.hdf5`` files
-are the training sets for the “Flagship” and “Cardinal” simulations, and
-emulating 1 year and 10 years of LSST data under expected observing
-strategy and condition and with spectroscopic selections emulated.
+``pz_challenge_taskset_2_{simulation}_training_{scenario}.hdf5`` files
+are the training sets for the “Flagship” and “Cardinal” simulations,
+emulating 1 year and 10 years of LSST data under the expected observing
+strategy and conditions and with spectroscopic selections emulated.
 
 The corresponding
-``pz_challenge_taskset_1_{simulation}_test_{scenario}.hdf5`` files were
+``pz_challenge_taskset_2_{simulation}_test_{scenario}.hdf5`` files were
 drawn from the distributions of all objects down to :math:`i <
 25.4`, and the true redshifts have been removed from these files. The
-task is to assign :math:`p(z)` estimates for all the objects in thse 4
+task is to assign :math:`p(z)` estimates for all the objects in these 4
 test files.
+
+The subtasks in this task set are:
+
+#. Estimate :math:`p(z)` for each object in each of the test files and
+   provide the estimates in a downloadable ``tar`` file.
+
+#. Provide pre-trained models appropriate to each of the training files
+   and implement a Python function (``run_taskset_2_estimation_only``)
+   to use those pre-trained models to estimate :math:`p(z)` for each
+   object in the associated test files.
+
+#. Implement a Python function
+   (``run_taskset_2_training_and_estimation``) to train a model for each
+   training file and use that model to estimate :math:`p(z)` for each
+   object in the associated test files.
 
 Input simulations
 =================
@@ -435,25 +621,25 @@ large-scale imaging surveys. This processing ensures that the simulated
 galaxy catalogs reflect the complexities of actual observations,
 including magnitude-dependent photometric scatter, incomplete sky
 coverage, and the effects of source blending in crowded fields, thereby
-providing a more stringent and realistic test bed for photometric
+providing a more stringent and realistic testbed for photometric
 redshift estimation algorithms.
 
 Photometric Smearing
 --------------------
 
-Central to our observational emulation is RAIL’s wraping of the
+Central to our observational emulation is RAIL’s wrapping of the
 photometric error module, photErr, which we have extended and wrapped to
 account for realistic observing strategies and time-dependent survey
 conditions. The standard photErr module provides basic photometric error
 modeling based on magnitude-dependent noise characteristics, but our
-enhanced version incorporates additional complexity including
-spatially-varying depth maps. This wrapper accesses detailed operational
+enhanced version incorporates additional complexity including spatially
+varying depth maps. This wrapper accesses detailed operational
 simulation outputs that emulate the expected LSST survey strategy.
 
 Our photErr implementation computes photometric uncertainties by
 combining the intrinsic Poisson noise from source photons with realistic
 models of sky background, readout noise, and other systematic
-contributions. For each simulated galaxy, use the expected co-addition
+contributions. For each simulated galaxy, we use the expected coadded
 depth to derive final photometric error estimates. This approach
 captures the heterogeneous nature of survey depth across the footprint,
 where some regions benefit from numerous high-quality exposures while
@@ -463,57 +649,103 @@ band-dependent limiting magnitudes, and local observing history,
 providing challenge participants with mock catalogs whose noise
 properties more closely match those expected from the actual survey.
 
-Spectroscopic and narrow-band photo-metric redshift selection
--------------------------------------------------------------
+Spectroscopic and narrowband photometric redshift selection
+-----------------------------------------------------------
 
 RAIL can emulate the selection functions of several different
-spectroscopic redshift surverys, including VVDSf02, zCOSMOS, DEEP2_LSST,
-and the DESI BGS, ELG and LRG samples.
+spectroscopic redshift surveys, including VVDSf02, zCOSMOS, DEEP2_LSST,
+and the DESI BGS, ELG, and LRG samples.
 
-We can also use RAIL to emulate narrow-band photometric surveys, include
-small amounts of mis-labeled reference redshifts.
+We can also use RAIL to emulate narrowband photometric surveys and
+include small amounts of mislabeled reference redshifts.
 
-Preparing Training and Test and Reserved datasets
-=================================================
+.. _`sec:tasks`:
 
-All of the data prepration was performed using the ``rail_projects`` and
-``rail_package_config`` packages for bookkeeping and reproducibility.
+Challenge Tasks related to :math:`p(z)` estimation
+==================================================
 
-.. container::
-   :name: tab:prep_scripts
+.. _task-set-1-estimate-redshifts-using-representative-training-samples-1:
 
-   .. table:: Scripts used in data preparation.
+Task set 1: Estimate redshifts using representative training samples
+--------------------------------------------------------------------
 
-      +-----------------+------------------------+------------------------+
-      | Script          | Command Run            | Purpose                |
-      +=================+========================+========================+
-      | do_00_reduce    | rail-project reduce    | Reduce input truth     |
-      |                 |                        | catalogs               |
-      +-----------------+------------------------+------------------------+
-      |                 |                        | (mag. cut and drop     |
-      |                 |                        | columns)               |
-      +-----------------+------------------------+------------------------+
-      | do_01_build     | rail-project build     | Build configurations   |
-      |                 |                        | to run                 |
-      +-----------------+------------------------+------------------------+
-      |                 |                        | truth-to-observed      |
-      |                 |                        | pipeline               |
-      +-----------------+------------------------+------------------------+
-      | do_02_t2o       | rail-project run       | Run truth-to-observed  |
-      |                 | truth-to-observed      |                        |
-      +-----------------+------------------------+------------------------+
-      |                 |                        | pipelines to make      |
-      |                 |                        | degraded catalogs      |
-      +-----------------+------------------------+------------------------+
-      | do_03_merge     | rail-project merge     | Combine spectroscopic  |
-      |                 |                        | selections             |
-      +-----------------+------------------------+------------------------+
-      | do_04_subselect | rail-project subsample | Make train/test files  |
-      +-----------------+------------------------+------------------------+
-      | from catalogs   |                        |                        |
-      +-----------------+------------------------+------------------------+
+The first, simplest task is to estimate redshifts using representative
+training samples. I.e., the training samples are drawn from the same
+distributions as the test samples. For this task set we did not use any
+of the spectroscopic selection emulation, but simply applied a uniform
+magnitude cut of :math:`i < 23` in selecting objects for both the
+training and test samples.
 
-.. container:: flushleft
+The four
+``pz_challenge_taskset_1_{simulation}_training_{scenario}.hdf5`` files
+are the training sets for the “Flagship” and “Cardinal” simulations,
+emulating 1 year and 10 years of LSST data under the expected observing
+strategy and conditions. These files have true redshifts to serve as
+labels.
+
+The corresponding
+``pz_challenge_taskset_1_{simulation}_test_{scenario}.hdf5`` files were
+drawn from the same distributions. The true redshifts have been removed
+from these files. The task is to assign :math:`p(z)` estimates for all
+the objects in these 4 test files.
+
+The subtasks in this task set are:
+
+#. Estimate :math:`p(z)` for each object in each of the test files and
+   provide the estimates in a downloadable ``tar`` file.
+
+#. Provide pre-trained models appropriate to each of the training files
+   and implement a Python function (``run_taskset_1_estimation_only``)
+   to use those pre-trained models to estimate :math:`p(z)` for each
+   object in the associated test files.
+
+#. Implement a Python function
+   (``run_taskset_1_training_and_estimation``) to train a model for each
+   training file and use that model to estimate :math:`p(z)` for each
+   object in the associated test files.
+
+.. _task-set-2-estimate-redshifts-on-non-representative-samples-1:
+
+Task set 2: Estimate redshifts on non-representative samples
+------------------------------------------------------------
+
+The second, slightly more challenging task is to estimate redshifts
+using non-representative training samples. I.e., the training samples
+are not drawn from the same distributions as the test samples. For this
+task set we applied the spectroscopic selection emulation for the
+training set, but retained all the objects down to :math:`i < 25.4` in
+the test set. Accordingly, the training set will not be representative
+of the fainter objects in the test set. This reflects that spectroscopic
+redshifts are typically significantly more difficult to obtain than
+photometry.
+
+The four
+``pz_challenge_taskset_2_{simulation}_training_{scenario}.hdf5`` files
+are the training sets for the “Flagship” and “Cardinal” simulations,
+emulating 1 year and 10 years of LSST data under the expected observing
+strategy and conditions and with spectroscopic selections emulated.
+
+The corresponding
+``pz_challenge_taskset_2_{simulation}_test_{scenario}.hdf5`` files were
+drawn from the distributions of all objects down to :math:`i <
+25.4`, and the true redshifts have been removed from these files. The
+task is to assign :math:`p(z)` estimates for all the objects in these 4
+test files.
+
+The subtasks in this task set are:
+
+#. Estimate :math:`p(z)` for each object in each of the test files and
+   provide the estimates in a downloadable ``tar`` file.
+
+#. Provide pre-trained models appropriate to each of the training files
+   and implement a Python function (``run_taskset_2_estimation_only``)
+   to use those pre-trained models to estimate :math:`p(z)` for each
+   object in the associated test files.
+
+#. Implement a Python function
+   (``run_taskset_2_training_and_estimation``) to train a model for each
+   training file and use that model to estimate :math:`p(z)` for each
+   object in the associated test files.
 
 .. |image| image:: figures/color_color_redshift_taskset_1_cardinal_10yr.png
    :width: 45.0%

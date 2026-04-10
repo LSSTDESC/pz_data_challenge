@@ -1,0 +1,87 @@
+\section{Challenge Input Data}
+
+The preparation of the challenge data is described in the appendices.
+The data are available as \texttt{tar} archives on the data challenge site.
+
+Each task set in the data challenge has an associated set of files.
+Typically these will be a collection of training files that contain
+photometric data and reference redshifts, and a second set of files
+that contain photometric data but do not include redshifts. Each
+task set will involve estimating something about the redshifts or
+redshift distributions in the test files.
+
+Typically there will be several training and test files for a
+particular task set, covering different scenarios and using different
+input simulations.
+
+
+\subsection{Input data format}
+
+The input data for the challenge are presented in HDF5 files.
+The naming convention for the files is
+\texttt{\{challenge\}\_\{taskset\}\_\{simulation\}\_\{label\}\_\{scenario\}.hdf5}.
+The meanings of the various fields are described in
+Tab.~\ref{tab:file_fields}. The columns in the files are described
+in Tab.~\ref{tab:columns}.
+
+\eac{Do we mention tables\_io for conversion}
+
+\begin{table}[ht]
+\centering
+\caption{\label{tab:file_fields}\small Fields in the input file names.}
+\begin{tabular}{ll}
+  \hline\hline  
+  Field & Description \\ \hline
+  challenge & Challenge associated with file \\
+  taskset & Task set associated with file \\
+  simulation & Simulation used to produce file (``cardinal'' or ``flagship'') \\
+  label & File label (e.g., ``test'', ``training'') \\
+  scenario & Data scenario (e.g., ``1yr'', ``10yr'') \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[ht]
+\centering
+\caption{\label{tab:columns}\small Contents of input files.}
+\begin{tabular}{ll}
+  \hline\hline
+  Column & Description \\ \hline  
+  redshift & True redshift (training files only) \\
+  ra & Right ascension (training files only) \\
+  dec & Declination (training files only) \\
+  object\_id & Unique object ID\\
+  mag\_\{band\}\_lsst & Magnitude in LSST \{band\} \\
+  mag\_\{band\}\_lsst\_err & Magnitude uncertainty in LSST \{band\} \\
+  mag\_\{band\}\_roman & Magnitude in Roman \{band\} \\
+  mag\_\{band\}\_roman\_err & Magnitude uncertainty in Roman \{band\} \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Installing and setting up the \texttt{pz\_data\_challenge}
+  package}
+
+The \texttt{pz\_data\_challenge} package can be set up with a few small
+variants on the standard \texttt{GitHub} package setup procedure.
+
+\begin{verbatim}
+# Create a conda environment
+conda create --name pzdc python=3.13
+
+# Clone the pz_data_challenge repository (or your fork of the repository)
+git clone git@github.com:LSSTDESC/pz_data_challenge.git
+# or git clone https://github.com/LSSTDESC/pz_data_challenge.git
+
+# Go into the directory
+cd pz_data_challenge
+
+# Install the code in "editable" mode
+pip install -e ".[dev]"
+
+# Download the public data using the script provided
+python examples/download_public.py
+\end{verbatim}
+

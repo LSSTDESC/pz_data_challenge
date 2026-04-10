@@ -12,7 +12,7 @@ from pz_data_challenge import submit_utils
 # Change these to match the name of the submission
 # and a URL to download the sumission data files
 # and needed model files
-SUBMISSION_NAME: str = ""
+SUBMISSION_NAME: str = "__SUBMISSION_NAME__"
 SUBMISSION_URL: str = ""
 
 # don't change these
@@ -28,8 +28,10 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
     If all the submission data are in a tar file with the
     proper structure you should not need to change this function.
     """
-
+    
     if not os.path.exists(SUBMIT_DIR):
+        if not SUBMISSION_URL:
+            raise ValueError(f"SUBMISSION_URL in tests/test_{SUBMISSION_NAME}.py has not been set")
         submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
 
     def teardown_submit_area() -> None:
