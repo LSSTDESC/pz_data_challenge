@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
-        submission: ['null', '__SUBMISSION_NAME__']
+        submission: ['__SUBMISSION_NAME__']
 
     steps:
       - uses: actions/checkout@v3

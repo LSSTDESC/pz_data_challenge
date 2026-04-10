@@ -193,5 +193,5 @@ def check_manifest_dict(manifest_dict: dict[str, Any]) -> None:
         if key.find("time") >= 0:
             continue
         if 7 not in checks:
-            raise ValueError(f"Checks failed for {key} {list(value)}")
+            raise ValueError(f"Checks failed for {key} {list(checks)}")
 
