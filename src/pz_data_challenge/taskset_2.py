@@ -28,7 +28,7 @@ def run_taskset_2(
                 submit_dir, f"pz_challenge_taskset_1_{sim}_pz_estimate_{scenario}.hdf5"
             )
             model_file = os.path.join(
-                submit_dir, f"pz_challenge_taskset_1_{sim}_pz_model_{scenario}.hdf5"
+                submit_dir, f"pz_challenge_taskset_1_{sim}_pz_model_{scenario}.pkl"
             )
             training_file = os.path.join(
                 public_area, f"pz_challenge_taskset_1_{sim}_training_{scenario}.hdf5"
