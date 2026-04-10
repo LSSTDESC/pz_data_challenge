@@ -61,28 +61,3 @@ in Tab.~\ref{tab:columns}.
 \end{tabular}
 \end{table}
 
-
-\subsection{Installing and setting up the \texttt{pz\_data\_challenge}
-  package}
-
-The \texttt{pz\_data\_challenge} package can be set up with a few small
-variants on the standard \texttt{GitHub} package setup procedure.
-
-\begin{verbatim}
-# Create a conda environment
-conda create --name pzdc python=3.13
-
-# Clone the pz_data_challenge repository (or your fork of the repository)
-git clone git@github.com:LSSTDESC/pz_data_challenge.git
-# or git clone https://github.com/LSSTDESC/pz_data_challenge.git
-
-# Go into the directory
-cd pz_data_challenge
-
-# Install the code in "editable" mode
-pip install -e ".[dev]"
-
-# Download the public data using the script provided
-python examples/download_public.py
-\end{verbatim}
-

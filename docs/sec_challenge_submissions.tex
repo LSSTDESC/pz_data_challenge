@@ -107,10 +107,11 @@ def run_taskset_2_estimation_only(
     # do stuff and write p(z) estimates to "output_file"
 \end{verbatim}
 
-Templates for these functions are provided in the file \texttt{tests/test\_template.py}.
+Templates for these functions are provided in the file
+\texttt{tests/test\_\{submission\}.py} created as part of the setup.
 
 
-\subsection{Format for training and estimation scripts}
+\subsection{Format for training and estimation Python functions}
 
 For the third subtask, submissions should implement a function to
 train models and run estimation using those trained models on the
@@ -140,7 +141,7 @@ def run_taskset_2_training_and_estimation(
 \end{verbatim}
 
 Templates for these functions are provided in the file
-\texttt{tests/test\_template.py}.
+\texttt{tests/test\_\{submission\}.py} created as part of the setup.
 
 
 \subsection{Submission mechanism}
@@ -151,25 +152,32 @@ Submissions will take the form of a pull request on the
 \begin{enumerate}
   \item{A file \texttt{tests/test\_\{submission\}.py} that includes the
       URL from which the compressed \texttt{tar} file should be downloaded
-      as well as the Python functions for subtasks 2 and 3.}
-   \item{A file \texttt{requirements\_\{submission\}.txt} that includes
-       \texttt{pip} package names of any packages that need to be
-       installed in order to run the functions in subtasks 2 and 3.}
+      as well as the Python functions for subtasks 2 and 3.   When
+      created this will contain empty placeholder functions that will
+      need to be implemented.}
+   \item{A file \texttt{requirements\_\{submission\}.txt} that should
+       be modified to include \texttt{pip} package names of any
+       packages that need to be installed in order to run the
+       functions in subtasks 2 and 3.}     
    \item{A file \texttt{.github/workflows/submit\_\{submission\}.yaml} to
-       run the submission validation in a GitHub action.}
+       run the submission validation in a GitHub action.  This should
+       not need to be modified.}
 \end{enumerate}
 
+All three of these files are created by the
+\texttt{scripts/prepare\_submission.py} script.  
+
+You will need modify the \texttt{tests/test\_\{submission\}.py} to
+give the location of the \texttt{tar} file containing the PZ estimates
+and trained models.
+
 An example of a submission is provided at
-\texttt{https://github.com/LSSTDESC/pz\_data\_challenge/pull/3}.
-The files \texttt{tests/test\_template.py} and \texttt{.github/workflows/test\_template.yaml} 
-provide a template for submissions, with empty placeholder functions for subtasks 2 and 3
-for each task set, and a standardized GitHub action to validate the
-submission.
+\texttt{https://github.com/LSSTDESC/pz\_data\_challenge/pull/6}.
 
 
 \subsection{Submission validation}
 
-The wrapping functions provided in the \texttt{tests/test\_template.py}
+The wrapping functions provided in the \texttt{tests/test\_\{submission\}.py}
 file implement a number of checks on the data. Specifically, for each
 expected file they check that:
 
@@ -187,8 +195,72 @@ expected file they check that:
 If any of these checks fail, the GitHub action triggered by the
 submission will fail and report the cause of the failure.
 
+The easiest way to test that you have correctly implemented the
+required functions is simply to run these commands.
+
+\begin{verbatim}
+# Make sure that you have installed any packages you need
+pip install -r requirement_{submission_name}.txt
+
+# Run the functions you have provided as unit tests
+py.test tests/test_{submission_name}.py
+\end{verbatim}
+
+if this succeeds, you can use a provided script to help you open the
+pull request for your submisison.
+
+\begin{verbatim}
+# run the submission helper script.
+python scripts/submit.py {submission_name}
+\end{verbatim}
+
+Note that the help script only prints the required commands, it does
+not run them.  In short the command are:
+
+\begin{verbatim}
+# Check status of your local git clone by running git status. And Make
+# sure that you are on the branch submit/{submission_name}
+# and do not have any files added or modified
+git status
+
+# Add your files to git
+git add .github/workflows/submit_example.yaml requirements_example.txt tests/test_example.py
+
+# Commit your files to your branch: 
+git commit -m "Submitting {submission_name}" .github/workflows/submit_{submission_name}.yaml requirements_{submission_name}.txt tests/test_{submission_name}.py
+
+# Push your commit
+git push --set-upstream origin submit/{submission_name}
+
+# Pushing to git should give you a URL that you can visit to create a pull request, for example
+#   https://github.com/LSSTDESC/pz_data_challenge/pull/new/submit/example
+# Visit that URL and create a pull request, then add the 'submission' label to the PR
+# Finally, make sure that the github action validating your submission succeeds and fix any issues
+\end{verbatim}
+
 
 \subsection{Submission aids}
 
-\eac{add stuff here}
+A few scripts are provided to help you.
 
+\begin{itemize}
+  \item{\texttt{scripts/download\_public.py}:  downloads and unpacks
+      the public data.}    
+  \item{\texttt{scripts/prepare\_submission.py}:  sets up your area for
+      a submission, creates the needed files from templates and
+      downloads the public data.   Suggests that you create a branch
+      for you submission.}
+  \item{\texttt{scripts/remove\_submission\_files.py}:  removes the
+      submission files if you need to start over.}
+  \item{\texttt{scripts/run\_metrics.py}:  run perfomance metrics on
+      files in a = submission you have created.}    
+  \item{\texttt{py.test tests/test\_\{submission\_name\}.py}:  validates
+      all the parts of your submission, checking that you have created
+      all the required files and that they are properly formatted.}
+\end{itemize}
+      
+
+  
+
+
+      

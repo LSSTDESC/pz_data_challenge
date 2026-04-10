@@ -35,10 +35,47 @@ technical note summarizing those results to follow shortly thereafter and
 a comprehensive journal publication to follow later.
 
 
+\subsection{Installing and setting up the \texttt{pz\_data\_challenge}
+  package}
+
+The \texttt{pz\_data\_challenge} package will provide participants with tools
+to access data, set up submissions, estimate performance metrics and
+format submissions.  This can be set up with a few small
+variants on the standard \texttt{GitHub} package setup procedure.
+Before starting you should pick a name for your submission, e.g., ``example''.
+
+\begin{verbatim}
+# Create a conda environment
+conda create --name pzdc python=3.13
+
+# Clone the pz_data_challenge repository (or your fork of the repository)
+git clone git@github.com:LSSTDESC/pz_data_challenge.git
+# or git clone https://github.com/LSSTDESC/pz_data_challenge.git
+
+# Go into the directory
+cd pz_data_challenge
+
+# Install the code in "editable" mode
+pip install -e ".[dev]"
+
+# Use the provided script to set up your submission.
+# Here you should provide the name of your submission
+python scripts/prepare_submission.py <submission_name>
+\end{verbatim}
+
+This final step will copy the input data files to
+\texttt{pz\_data\_challenge/public}, and set up the three files you will
+need to submit your entry.
+
+The notebooks in the \texttt{pz\_data\_challenge/nb} area give examples
+of how to access the data and create some of the diagnositic plots
+that were used to validate the data.
+
+
 \subsection{Submission mechanism}
 
 Submission will take the form of pull request in the
 \texttt{pz\_data\_challenge} repository.  Detailed instructions on how
 to submit an entry are provided in
-Sec.~\ref{{sec:challenge_submissions} of this document.
-  
+Sec.~\ref{sec:challenge_submissions} of this document.
+

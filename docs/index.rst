@@ -1,8 +1,10 @@
+.. _intro:
+
 Introduction
 ============
 
-Redshift inference is a key measurement for multiple DESC science goals,
-and redshift uncertainty is one of the leading contributors to overall
+Redshift inference is a key element of many DESC science goals, and
+redshift uncertainty is one of the leading contributors to overall
 uncertainty on cosmological models from imaging survey data. Precursor
 surveys took a variety of approaches to this problem, accounting for
 differences in underlying data as well as modeling approaches. In all
@@ -15,6 +17,8 @@ improve existing methods, as well as to provide infrastructure for the
 development of improved methods. Overall, this requires generating
 uniform input catalogs to use and infrastructure for comparing output
 redshift posteriors to each other and to simulated truth catalogs.
+
+.. _redshift_basics:
 
 Photometric redshift basics
 ===========================
@@ -32,11 +36,7 @@ Much of the information used to estimate photometric redshifts derives
 from the ’Balmer break’ present in the rest frame of many spectra at 400
 nm. As the break crosses into different optical filters with increasing
 redshift, the differences in magnitudes between filters carry
-information about the redshift; see, e.g.,
-Fig. `[fig:pz_redshift_basics] <#fig:pz_redshift_basics>`__. This can
-also be seen when plotting redshifts as a function of derived colors,
-i.e., differences in magnitudes between filters; see, e.g.,
-Fig. `[fig:color_color_redshift] <#fig:color_color_redshift>`__.
+information about the redshift;
 
 .. container:: figure*
 
@@ -44,13 +44,15 @@ Fig. `[fig:color_color_redshift] <#fig:color_color_redshift>`__.
       :alt: image
       :width: 80.0%
 
+This can also be seen when plotting redshifts as a function of derived colors,
+i.e., differences in magnitudes between filters;
+
 .. container:: figure*
 
    |image| |image1|
 
 This overly simple picture is complicated somewhat by the fact that
-different galaxies have different intrinsic spectra and colors, as seen
-in Fig. `[fig:color_redshift] <#fig:color_redshift>`__.
+different galaxies have different intrinsic spectra and colors:
 
 .. container:: figure*
 
@@ -67,11 +69,13 @@ they are also susceptible to errors such as confusing different spectral
 lines or confusion of blended objects. Some of the tasks in this data
 challenge encourage participants to try to address these complications.
 
+.. _challenge_format:
+
 Challenge Format
 ================
 
 The PZ data challenge comprises a series of sets of tasks for
-participants. These submissions will be evaluated to determine how ready
+participants. Submissions will be evaluated to determine how ready
 various algorithms are to be used for cutting-edge analysis based on how
 well they perform on the various tasks. Readiness will be evaluated on a
 few different fronts: 1) Does the algorithm meet performance
@@ -80,8 +84,9 @@ different datasets? 3) Is it scalable up to the scales we will need to
 use it at?
 
 This document and the associated web pages describe the data being
-provided to participants, the tasks they will be asked to perform, and
-the metrics by which the algorithm readiness will be evaluated.
+provided to participants, the tasks they will be asked to perform, the
+expected format for submission and the metrics by which the algorithm
+readiness will be evaluated.
 
 Scope and Timeline
 ------------------
@@ -103,12 +108,51 @@ Preliminary results will be released on August 14, 2026, with a
 technical note summarizing those results to follow shortly thereafter
 and a comprehensive journal publication to follow later.
 
+Installing and setting up the ``pz_data_challenge`` package
+-----------------------------------------------------------
+
+The ``pz_data_challenge`` package will provide participants with tools
+to access data, set up submissions, estimate performance metrics and
+format submissions. This can be set up with a few small variants on the
+standard ``GitHub`` package setup procedure. Before starting you should
+pick a name for your submission, e.g., “example”.
+
+::
+
+   # Create a conda environment
+   conda create --name pzdc python=3.13
+
+   # Clone the pz_data_challenge repository (or your fork of the repository)
+   git clone git@github.com:LSSTDESC/pz_data_challenge.git
+   # or git clone https://github.com/LSSTDESC/pz_data_challenge.git
+
+   # Go into the directory
+   cd pz_data_challenge
+
+   # Install the code in "editable" mode
+   pip install -e ".[dev]"
+
+   # Use the provided script to set up your submission.
+   # Here you should provide the name of your submission
+   python scripts/prepare_submission.py <submission_name>
+
+This final step will copy the input data files to
+``pz_data_challenge/public``, and set up the three files you will need
+to submit your entry.
+
+The notebooks in the ``pz_data_challenge/nb`` area give examples of how
+to access the data and create some of the diagnositic plots that were
+used to validate the data.
+
 Submission mechanism
 --------------------
 
 Submission will take the form of pull request in the
 ``pz_data_challenge`` repository. Detailed instructions on how to submit
-an entry are provided is Sec. `10.2 <#>`__ of this document.
+an entry are provided in Sec. :ref:`5 <challenge_submissions>` of this
+document.
+
+.. _challenge_input_data:
 
 Challenge Input Data
 ====================
@@ -133,14 +177,10 @@ Input data format
 The input data for the challenge are presented in HDF5 files. The naming
 convention for the files is
 ``{challenge}_{taskset}_{simulation}_{label}_{scenario}.hdf5``. The
-meanings of the various fields are described in
-Tab. `1 <#tab:file_fields>`__. The columns in the files are described in
-Tab. `2 <#tab:columns>`__.
-
-*Eric:*
+meanings of the various fields are:
 
 .. container::
-   :name: tab:file_fields
+   :name: file_fields
 
    .. table:: Fields in the input file names.
 
@@ -154,8 +194,11 @@ Tab. `2 <#tab:columns>`__.
       scenario   Data scenario (e.g., “1yr”, “10yr”)
       ========== ==========================================================
 
+
+The columns in the files are:
+      
 .. container::
-   :name: tab:columns
+   :name: columns
 
    .. table:: Contents of input files.
 
@@ -172,29 +215,7 @@ Tab. `2 <#tab:columns>`__.
       mag_{band}_roman_err Magnitude uncertainty in Roman {band}
       ==================== =====================================
 
-Installing and setting up the ``pz_data_challenge`` package
------------------------------------------------------------
-
-The ``pz_data_challenge`` package can be set up with a few small
-variants on the standard ``GitHub`` package setup procedure.
-
-::
-
-   # Create a conda environment
-   conda create --name pzdc python=3.13
-
-   # Clone the pz_data_challenge repository (or your fork of the repository)
-   git clone git@github.com:LSSTDESC/pz_data_challenge.git
-   # or git clone https://github.com/LSSTDESC/pz_data_challenge.git
-
-   # Go into the directory
-   cd pz_data_challenge
-
-   # Install the code in "editable" mode
-   pip install -e ".[dev]"
-
-   # Download the public data using the script provided
-   python examples/download_public.py
+.. _challenge_submissions:
 
 Challenge Submissions
 =====================
@@ -272,7 +293,7 @@ For users unfamiliar with ``qp``, we highly recommend representing the
    ens = qp.mixmod.create_ensemble(means=means,stds=stds,weights=weights)
 
 The submission files should use the same file name conventions defined
-in Tab. `1 <#tab:file_fields>`__. The labels will typically be
+in Tab. `1 <file_fields>`__. The labels will typically be
 ``pz_estimate`` or ``pz_model`` and will be specified in the
 descriptions of the various tasks, e.g.,
 ``pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5`` or
@@ -307,10 +328,10 @@ or
        # do stuff and write p(z) estimates to "output_file"
 
 Templates for these functions are provided in the file
-``tests/test_template.py``.
+``tests/test_{submission}.py`` created as part of the setup.
 
-Format for training and estimation scripts
-------------------------------------------
+Format for training and estimation Python functions
+---------------------------------------------------
 
 For the third subtask, submissions should implement a function to train
 models and run estimation using those trained models on the training and
@@ -340,39 +361,44 @@ or
        # and write them to "output_file"
 
 Templates for these functions are provided in the file
-``tests/test_template.py``.
+``tests/test_{submission}.py`` created as part of the setup.
 
 .. _submission-mechanism-1:
 
-Submission mechanism
---------------------
+Submission mechanism details
+----------------------------
 
 Submissions will take the form of a pull request on the
 ``pz_data_challenge`` repository and will include:
 
 #. A file ``tests/test_{submission}.py`` that includes the URL from
    which the compressed ``tar`` file should be downloaded as well as the
-   Python functions for subtasks 2 and 3.
+   Python functions for subtasks 2 and 3. When created this will contain
+   empty placeholder functions that will need to be implemented.
 
-#. A file ``requirements_{submission}.txt`` that includes ``pip``
-   package names of any packages that need to be installed in order to
-   run the functions in subtasks 2 and 3.
+#. A file ``requirements_{submission}.txt`` that should be modified to
+   include ``pip`` package names of any packages that need to be
+   installed in order to run the functions in subtasks 2 and 3.
 
 #. A file ``.github/workflows/submit_{submission}.yaml`` to run the
-   submission validation in a GitHub action.
+   submission validation in a GitHub action. This should not need to be
+   modified.
+
+All three of these files are created by the
+``scripts/prepare_submission.py`` script.
+
+You will need modify the ``tests/test_{submission}.py`` to give the
+location of the ``tar`` file containing the PZ estimates and trained
+models.
 
 An example of a submission is provided at
-``https://github.com/LSSTDESC/pz_data_challenge/pull/3``. The files
-``tests/test_template.py`` and ``.github/workflows/test_template.yaml``
-provide a template for submissions, with empty placeholder functions for
-subtasks 2 and 3 for each task set, and a standardized GitHub action to
-validate the submission.
+``https://github.com/LSSTDESC/pz_data_challenge/pull/6``.
 
 Submission validation
 ---------------------
 
-The wrapping functions provided in the ``tests/test_template.py`` file
-implement a number of checks on the data. Specifically, for each
+The wrapping functions provided in the ``tests/test_{submission}.py``
+file implement a number of checks on the data. Specifically, for each
 expected file they check that:
 
 #. the file exists;
@@ -390,18 +416,80 @@ expected file they check that:
 If any of these checks fail, the GitHub action triggered by the
 submission will fail and report the cause of the failure.
 
+The easiest way to test that you have correctly implemented the required
+functions is simply to run these commands.
+
+::
+
+   # Make sure that you have installed any packages you need
+   pip install -r requirement_{submission_name}.txt
+
+   # Run the functions you have provided as unit tests
+   py.test tests/test_{submission_name}.py
+
+if this succeeds, you can use a provided script to help you open the
+pull request for your submisison.
+
+::
+
+   # run the submission helper script.
+   python scripts/submit.py {submission_name}
+
+Note that the help script only prints the required commands, it does not
+run them. In short the command are:
+
+::
+
+   # Check status of your local git clone by running git status. And Make
+   # sure that you are on the branch submit/{submission_name}
+   # and do not have any files added or modified
+   git status
+
+   # Add your files to git
+   git add .github/workflows/submit_example.yaml requirements_example.txt tests/test_example.py
+
+   # Commit your files to your branch: 
+   git commit -m "Submitting {submission_name}" .github/workflows/submit_{submission_name}.yaml requirements_{submission_name}.txt tests/test_{submission_name}.py
+
+   # Push your commit
+   git push --set-upstream origin submit/{submission_name}
+
+   # Pushing to git should give you a URL that you can visit to create a pull request, for example
+   #   https://github.com/LSSTDESC/pz_data_challenge/pull/new/submit/example
+   # Visit that URL and create a pull request, then add the 'submission' label to the PR
+   # Finally, make sure that the github action validating your submission succeeds and fix any issues
+
 Submission aids
 ---------------
 
-*Eric:*
+A few scripts are provided to help you.
+
+-  ``scripts/download_public.py``: downloads and unpacks the public
+   data.
+
+-  ``scripts/prepare_submission.py``: sets up your area for a
+   submission, creates the needed files from templates and downloads the
+   public data. Suggests that you create a branch for you submission.
+
+-  ``scripts/remove_submission_files.py``: removes the submission files
+   if you need to start over.
+
+-  ``scripts/run_metrics.py``: run perfomance metrics on files in a =
+   submission you have created.
+
+-  ``py.test tests/test_{submission_name}.py``: validates all the parts
+   of your submission, checking that you have created all the required
+   files and that they are properly formatted.
+
+.. _metrics:
 
 Metrics and Assessment Criteria
 ===============================
 
 We will use a number of different metrics to assess the performance of
 the submitted algorithms. Many of these metrics, as well as the
-motivations behind them, are defined and discussed in
-Ref. :raw-latex:`\cite{therailteam2025}`.
+motivations behind them, are defined and discussed in `[1] <https://arxiv.org/abs/2505>`_
+
 
 Metrics for per-object point estimates
 --------------------------------------
@@ -415,7 +503,7 @@ point-estimate metrics first compute the scaled residual,
 .. math:: \Delta_i = \frac{z_{p,i}-z_{t,i}}{1+z_{t,i}}.
 
 We then use this to construct the following metrics; see
-Ref. :raw-latex:`\cite{therailteam2025}` for more details:
+`[1] <https://arxiv.org/abs/2505>`_ for more details:
 
 -  ``Bias`` is simply the median of :math:`\Delta_i`.
 
@@ -435,19 +523,18 @@ accurate estimate of the posterior distribution, :math:`p(z)`, for each
 object using the following metrics.
 
 -  Conditional Density Loss (``CDELoss``): We implement the method in
-   :raw-latex:`\cite{2017arXiv170408095I}` to compute this metric. A
+   `[2] <https://ui.adsabs.harvard.edu/abs/2017arXiv170408095I>`_ to compute this metric. A
    better estimation should return a smaller CDE loss.
 
 -  Probability Integral Transform (PIT): This is the cumulative
    distribution function of the photo-:math:`z` PDF evaluated at the
    galaxy’s true redshift for each galaxy in the catalog, i.e.,
    :math:`{\rm PIT} = \int_{0}^{z_t} p(z)\, dz`. Following
-   Ref. :raw-latex:`\cite{schmidt_evaluation_2020}`, we provide the
+   `[3] <https://academic.oup.com/mnras/article/499/2/1587/5905416>`_, we provide the
    PIT-QQ (quantile-quantile) diagram, where the PIT distribution is
    directly compared to the ideal uniform distribution. A diagonal
    PIT-QQ diagram indicates a good estimation. An example of the PIT-QQ
-   plot is shown in Section `[sec:examples:gs] <#sec:examples:gs>`__. We
-   will then use three metrics to quantify how well the PIT distribution
+   plot is shown below.  We will then use three metrics to quantify how well the PIT distribution
    matches the ideal: the Kolmogorov-Smirnov (KS) test, the Root Mean
    Square Error (RMSE), and the Kullback-Leibler divergence (KL
    divergence).
@@ -489,7 +576,7 @@ will affect usability and scaling.
    object, which is large but manageable, whereas for a Gaussian mixture
    model with 5 Gaussians, this would be close to 120 bytes per object.
 
-.. _`sec:tasks`:
+.. _tasks:
 
 Challenge Tasks related to :math:`p(z)` estimation
 ==================================================
@@ -573,6 +660,8 @@ The subtasks in this task set are:
    training file and use that model to estimate :math:`p(z)` for each
    object in the associated test files.
 
+.. _input_sims:
+
 Input simulations
 =================
 
@@ -607,6 +696,8 @@ Together, these complementary simulation suites enable challenge
 participants to test both the accuracy and the robustness of their
 photometric redshift estimation methods under realistic observational
 conditions.
+
+.. _emulating_observations:
 
 Emulating observational effects
 ===============================
@@ -659,93 +750,48 @@ and the DESI BGS, ELG, and LRG samples.
 We can also use RAIL to emulate narrowband photometric surveys and
 include small amounts of mislabeled reference redshifts.
 
-.. _`sec:tasks`:
+.. _prep_process:
 
-Challenge Tasks related to :math:`p(z)` estimation
-==================================================
+Preparing Training, Test, and Reserved Datasets
+===============================================
 
-.. _task-set-1-estimate-redshifts-using-representative-training-samples-1:
+All of the data preparation was performed using the ``rail_projects``
+and ``rail_package_config`` packages for bookkeeping and
+reproducibility.
 
-Task set 1: Estimate redshifts using representative training samples
---------------------------------------------------------------------
+.. container::
+   :name: prep_scripts
 
-The first, simplest task is to estimate redshifts using representative
-training samples. I.e., the training samples are drawn from the same
-distributions as the test samples. For this task set we did not use any
-of the spectroscopic selection emulation, but simply applied a uniform
-magnitude cut of :math:`i < 23` in selecting objects for both the
-training and test samples.
+   .. table:: Scripts used in data preparation.
 
-The four
-``pz_challenge_taskset_1_{simulation}_training_{scenario}.hdf5`` files
-are the training sets for the “Flagship” and “Cardinal” simulations,
-emulating 1 year and 10 years of LSST data under the expected observing
-strategy and conditions. These files have true redshifts to serve as
-labels.
-
-The corresponding
-``pz_challenge_taskset_1_{simulation}_test_{scenario}.hdf5`` files were
-drawn from the same distributions. The true redshifts have been removed
-from these files. The task is to assign :math:`p(z)` estimates for all
-the objects in these 4 test files.
-
-The subtasks in this task set are:
-
-#. Estimate :math:`p(z)` for each object in each of the test files and
-   provide the estimates in a downloadable ``tar`` file.
-
-#. Provide pre-trained models appropriate to each of the training files
-   and implement a Python function (``run_taskset_1_estimation_only``)
-   to use those pre-trained models to estimate :math:`p(z)` for each
-   object in the associated test files.
-
-#. Implement a Python function
-   (``run_taskset_1_training_and_estimation``) to train a model for each
-   training file and use that model to estimate :math:`p(z)` for each
-   object in the associated test files.
-
-.. _task-set-2-estimate-redshifts-on-non-representative-samples-1:
-
-Task set 2: Estimate redshifts on non-representative samples
-------------------------------------------------------------
-
-The second, slightly more challenging task is to estimate redshifts
-using non-representative training samples. I.e., the training samples
-are not drawn from the same distributions as the test samples. For this
-task set we applied the spectroscopic selection emulation for the
-training set, but retained all the objects down to :math:`i < 25.4` in
-the test set. Accordingly, the training set will not be representative
-of the fainter objects in the test set. This reflects that spectroscopic
-redshifts are typically significantly more difficult to obtain than
-photometry.
-
-The four
-``pz_challenge_taskset_2_{simulation}_training_{scenario}.hdf5`` files
-are the training sets for the “Flagship” and “Cardinal” simulations,
-emulating 1 year and 10 years of LSST data under the expected observing
-strategy and conditions and with spectroscopic selections emulated.
-
-The corresponding
-``pz_challenge_taskset_2_{simulation}_test_{scenario}.hdf5`` files were
-drawn from the distributions of all objects down to :math:`i <
-25.4`, and the true redshifts have been removed from these files. The
-task is to assign :math:`p(z)` estimates for all the objects in these 4
-test files.
-
-The subtasks in this task set are:
-
-#. Estimate :math:`p(z)` for each object in each of the test files and
-   provide the estimates in a downloadable ``tar`` file.
-
-#. Provide pre-trained models appropriate to each of the training files
-   and implement a Python function (``run_taskset_2_estimation_only``)
-   to use those pre-trained models to estimate :math:`p(z)` for each
-   object in the associated test files.
-
-#. Implement a Python function
-   (``run_taskset_2_training_and_estimation``) to train a model for each
-   training file and use that model to estimate :math:`p(z)` for each
-   object in the associated test files.
+      +-----------------+------------------------+------------------------+
+      | Script          | Command Run            | Purpose                |
+      +=================+========================+========================+
+      | do_00_reduce    | rail-project reduce    | Reduce input truth     |
+      |                 |                        | catalogs               |
+      +-----------------+------------------------+------------------------+
+      |                 |                        | (mag. cut and drop     |
+      |                 |                        | columns)               |
+      +-----------------+------------------------+------------------------+
+      | do_01_build     | rail-project build     | Build configurations   |
+      |                 |                        | to run                 |
+      +-----------------+------------------------+------------------------+
+      |                 |                        | truth-to-observed      |
+      |                 |                        | pipeline               |
+      +-----------------+------------------------+------------------------+
+      | do_02_t2o       | rail-project run       | Run truth-to-observed  |
+      |                 | truth-to-observed      |                        |
+      +-----------------+------------------------+------------------------+
+      |                 |                        | pipelines to make      |
+      |                 |                        | degraded catalogs      |
+      +-----------------+------------------------+------------------------+
+      | do_03_merge     | rail-project merge     | Combine spectroscopic  |
+      |                 |                        | selections             |
+      +-----------------+------------------------+------------------------+
+      | do_04_subselect | rail-project subsample | Make train/test files  |
+      +-----------------+------------------------+------------------------+
+      |                 |                        | from catalogs          |
+      +-----------------+------------------------+------------------------+
 
 .. |image| image:: figures/color_color_redshift_taskset_1_cardinal_10yr.png
    :width: 45.0%
