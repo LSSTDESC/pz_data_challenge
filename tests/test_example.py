@@ -13,7 +13,7 @@ from pz_data_challenge import submit_utils
 # and a URL to download the sumission data files
 # and needed model files
 SUBMISSION_NAME: str = "example"
-SUBMISSION_URL: str = ""
+SUBMISSION_URL: str = "https://s3df.slac.stanford.edu/people/echarles/submit_example.tgz"
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
