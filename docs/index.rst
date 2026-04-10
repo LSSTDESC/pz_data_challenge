@@ -1,3 +1,40 @@
+*******************************************************
+Welcome to the Photometric Redshift (PZ) Data Challenge
+*******************************************************
+
+The Dark Energy Science Collaboration (DESC) invites researchers, data
+scientists, and astronomers to participate in the Photometric Redshift
+(PZ) Data Challenge, a collaborative effort to advance methods for
+estimating the distances to distant galaxies. Photometric redshifts,
+derived from multi-band brightness measurements, are essential for
+cosmological surveys like the Legacy Survey of Space and
+Time (LSST), enabling us to map the universe's structure and probe the
+nature of dark energy. This challenge provides a unique opportunity to
+test and benchmark algorithms on realistic simulated data, compare
+approaches across diverse methodologies—from template fitting to
+machine learning—and help shape the tools that will unlock discoveries
+from next-generation sky surveys.
+
+The challenge is framed as a series of sets of PZ estimations tasks
+using increasingly realistic data.
+
+`Set up the pz_data_challenge package and download challenge data <installation_and_setup_>`_
+
+`Information about the input data <challenge_input_data_>`_
+
+`How to submit an entry to the challegne <challenge_submissions_>`_
+
+`Description of challenge tasks <tasks_>`_
+
+`Assesmement Metrics <metrics_>`_
+
+`Details about challenge data preparation <challenge_data_prep_>`_
+
+
+**********************
+Background Information
+**********************
+
 .. _intro:
 
 Introduction
@@ -71,6 +108,11 @@ challenge encourage participants to try to address these complications.
 
 .. _challenge_format:
 
+
+***************************************
+Information about the PZ Data Challenge
+***************************************
+
 Challenge Format
 ================
 
@@ -107,6 +149,9 @@ will be released on June 1.
 Preliminary results will be released on August 14, 2026, with a
 technical note summarizing those results to follow shortly thereafter
 and a comprehensive journal publication to follow later.
+
+
+.. _installation_and_setup:
 
 Installing and setting up the ``pz_data_challenge`` package
 -----------------------------------------------------------
@@ -660,6 +705,13 @@ The subtasks in this task set are:
    training file and use that model to estimate :math:`p(z)` for each
    object in the associated test files.
 
+
+.. _challenge_data_prep:
+   
+********************************************
+Information about Challenge Data Preparation
+********************************************
+   
 .. _input_sims:
 
 Input simulations

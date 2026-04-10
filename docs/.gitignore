@@ -25,6 +25,7 @@
 .pdf
 pz_challenge.pdf
 pz_challengeNotes.bib
+pz_challenge.rst
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
