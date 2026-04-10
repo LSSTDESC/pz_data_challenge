@@ -81,4 +81,4 @@ def run_taskset_1(
     submit_utils.pretty_print_manifest_dict(manifest_dict)
     submit_utils.pretty_print_time_dict(manifest_dict)
 
-    submit.check_manifest_dict(manifest_dict)
+    submit_utils.check_manifest_dict(manifest_dict)
