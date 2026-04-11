@@ -1,0 +1,5 @@
+pz-rail-base>=1.2.8
+pz-rail-bpz>=1.2.3
+desc-bpz>=0.3.2
+qp-prob>=1.0.0
+tables_io>=1.0.0
