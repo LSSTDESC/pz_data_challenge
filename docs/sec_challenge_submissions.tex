@@ -20,18 +20,18 @@ set of tasks includes 3 subtasks.
 \end{enumerate}
 
 The $p(z)$ estimates in subtask 1 and the trained models in subtask 2 should be provided
-in a compressed \texttt{tar} file, which are described below. Templates and instructions for the
+in a compressed \texttt{tar} file, which is described below.   Templates and instructions for the
 Python functions needed for subtasks 2 and 3 will be provided and are
 described below.
 
 
-\subsection{Data format for per-object $p(z)$ estimates}
+\subsection{\texorpdfstring{Data format for per-object $p(z)$ estimates}{Data format for per-object p(z) estimates}}
 
 The $p(z)$ estimates should be submitted in \texttt{qp} format,
 which allows users to specify a complete $p(z)$ distribution for
 each object, as well as summary statistics for each object.
 
-The \texttt{qp} package supports several different representations of
+The \texttt{qp} package~\cite{QP} supports several different representations of
 $p(z)$, such as different functional forms as well as interpolated
 grids, histograms, and others.
 
@@ -54,7 +54,8 @@ yvals = np.array(
    [0.1,0.3,0.5,0.2,0.05]
  ]
 )
-ens = qp.interp.create_ensemble(xvals,yvals)
+ensemble = qp.interp.create_ensemble(xvals,yvals)
+ensemble.write_to(<output_filename.hdf5>)
 \end{verbatim}
 
 \begin{verbatim}
@@ -70,15 +71,30 @@ import numpy as np
 means = [[0.3, 0.4], [0.5, 0.5], [0.6, 0.8]]
 stds = [[0.2, 0.4], [0.1, 0.3], [0.05, 0.3]]
 weights = [[0.8, 0.2], [0.7, 0.3], [0.8, 0.2]]
-ens = qp.mixmod.create_ensemble(means=means,stds=stds,weights=weights)
+ensemble = qp.mixmod.create_ensemble(means=means,stds=stds,weights=weights)
+ensemble.write_to(<output_filename.hdf5>)
 \end{verbatim}
 
 The submission files should use the same file name conventions defined
 in Tab.~\ref{tab:file_fields}. The labels will typically be
 \texttt{pz\_estimate} or \texttt{pz\_model} and will be specified in
-the descriptions of the various tasks, e.g., 
-\texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_estimate\_yr1.hdf5} or
+the descriptions of the various tasks, e.g.,
+
+\begin{verbatim}
+\texttt{pz\_challenge\_taskset\_1\_cardinal\-\_pz\_estimate\_yr1.hdf5}
+  or
 \texttt{pz\_challenge\_taskset\_1\_cardinal\_pz\_model\_yr1.pkl}.
+\end{verbatim}
+
+All of these files should then be joined into a \texttt{tar} file, which 
+should then be placed somewhere it can be download.  The URL for the
+\texttt{tar} should be specified in
+\texttt{tests/test\_\{submission\}.py}
+
+\begin{verbatim}
+SUBMISSION_NAME = "example"
+SUBMISSION_URL = "https://your.institution.edu/submit_example.tgz"
+\end{verbatim}
 
 
 \subsection{Format for estimation-only Python functions and trained models}
@@ -161,7 +177,8 @@ Submissions will take the form of a pull request on the
        functions in subtasks 2 and 3.}     
    \item{A file \texttt{.github/workflows/submit\_\{submission\}.yaml} to
        run the submission validation in a GitHub action.  This should
-       not need to be modified.}
+       not need to be modified unless the prerquisited installation
+       requires more than just \texttt{pip}  installing packages.}
 \end{enumerate}
 
 All three of these files are created by the
@@ -169,16 +186,16 @@ All three of these files are created by the
 
 You will need modify the \texttt{tests/test\_\{submission\}.py} to
 give the location of the \texttt{tar} file containing the PZ estimates
-and trained models.
+and trained models, and to implement the require functions.
 
-An example of a submission is provided at
-\texttt{https://github.com/LSSTDESC/pz\_data\_challenge/pull/6}.
+See \texttt{https://github.com/LSSTDESC/pz\_data\_challenge/pull/6}
+for an example of a submission.
 
 
 \subsection{Submission validation}
 
 The wrapping functions provided in the \texttt{tests/test\_\{submission\}.py}
-file implement a number of checks on the data. Specifically, for each
+file implement a number of \allowbreak checks on the data. Specifically, for each
 expected file they check that:
 
 \begin{enumerate}
@@ -218,24 +235,32 @@ Note that the help script only prints the required commands, it does
 not run them.  In short the command are:
 
 \begin{verbatim}
-# Check status of your local git clone by running git status. And Make
-# sure that you are on the branch submit/{submission_name}
-# and do not have any files added or modified
+# Check status of your local git clone by running git status, and make
+# sure that you are on the branch submit/{submission_name} and do not
+# have any files added or modified
 git status
 
 # Add your files to git
-git add .github/workflows/submit_example.yaml requirements_example.txt tests/test_example.py
+git add .github/workflows/submit_example.yaml
+  requirements_example.txt
+  tests/test_example.py
 
 # Commit your files to your branch: 
-git commit -m "Submitting {submission_name}" .github/workflows/submit_{submission_name}.yaml requirements_{submission_name}.txt tests/test_{submission_name}.py
+git commit -m "Submitting {submission_name}"
+  .github/workflows/submit_{submission_name}.yaml
+  requirements_{submission_name}.txt
+  tests/test_{submission_name}.py
 
 # Push your commit
 git push --set-upstream origin submit/{submission_name}
 
-# Pushing to git should give you a URL that you can visit to create a pull request, for example
+# Pushing to git should give you a URL that you can visit to create a
+# pull request, for example:
 #   https://github.com/LSSTDESC/pz_data_challenge/pull/new/submit/example
-# Visit that URL and create a pull request, then add the 'submission' label to the PR
-# Finally, make sure that the github action validating your submission succeeds and fix any issues
+# Visit that URL and create a pull request, then add the 'submission'
+# label to the PR.
+# Finally, make sure that the github action validating your submission
+# succeeds and fix any issues.
 \end{verbatim}
 
 
@@ -248,12 +273,12 @@ A few scripts are provided to help you.
       the public data.}    
   \item{\texttt{scripts/prepare\_submission.py}:  sets up your area for
       a submission, creates the needed files from templates and
-      downloads the public data.   Suggests that you create a branch
+      downloads the public data, and suggests that you create a branch
       for you submission.}
   \item{\texttt{scripts/remove\_submission\_files.py}:  removes the
       submission files if you need to start over.}
   \item{\texttt{scripts/run\_metrics.py}:  run perfomance metrics on
-      files in a = submission you have created.}    
+      files in a submission you have created.}    
   \item{\texttt{py.test tests/test\_\{submission\_name\}.py}:  validates
       all the parts of your submission, checking that you have created
       all the required files and that they are properly formatted.}
