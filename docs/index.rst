@@ -75,12 +75,17 @@ nm. As the break crosses into different optical filters with increasing
 redshift, the differences in magnitudes between filters carry
 information about the redshift;
 
-.. container:: figure*
+.. figure:: figures/static_balmer.png
+   :alt: image
+   :width: 80.0%
 
-   .. image:: figures/static_balmer.png
-      :alt: image
-      :width: 80.0%
-
+   A passive galaxy at different redshifts and how it will show up in various optical      
+   filters, giving us the ability to estimate its redshift and
+   therefore distance. For many galaxies, the so-called
+   'Balmer break' at 400 nm is a reliable feature that causes the
+   flux to drop severely in bluer filters. Figure and caption
+   by Jamie McCullough.
+	      
 This can also be seen when plotting redshifts as a function of derived colors,
 i.e., differences in magnitudes between filters;
 
@@ -88,15 +93,25 @@ i.e., differences in magnitudes between filters;
 
    |image| |image1|
 
+   Redshifts plotted as a function of r-i versus g-r colors for a sample of objects
+   in the cardinal (left) and flagship (right) simulations. These
+   are plotted for the data for task set 1, i.e., for a sample of
+   objects with i < 23.
+
+   
 This overly simple picture is complicated somewhat by the fact that
 different galaxies have different intrinsic spectra and colors:
 
-.. container:: figure*
+.. figure:: figures/gr_vs_sz_sidebyside.jpg
+   :alt: image
+   :width: 80.0%
 
-   .. image:: figures/gr_vs_sz_sidebyside.jpg
-      :alt: image
-      :width: 80.0%
-
+   Color (g-r) plotted as a function of
+   redshift for a sample of objects in the cardinal (top) and
+   flagship (bottom) simulations. These are plotted for the data
+   for task set 1, i.e., for a sample of objects with i < 23. The
+   overlaid lines show the templates for several different types of galaxies.
+	      
 This is further complicated by the fact that reference redshifts,
 typically obtained by spectroscopy, slitless spectroscopy (i.e., GRISM
 measurements), or narrowband photometric measurements, are not a
@@ -203,7 +218,8 @@ Challenge Input Data
 ====================
 
 The preparation of the challenge data is described in the appendices.
-The data are available as ``tar`` archives on the data challenge site.
+The data are available as a ``tar`` archive that is downloaded and
+unpacked as part of the ``pz_data_challenge`` setup procedure.
 
 Each task set in the data challenge has an associated set of files.
 Typically these will be a collection of training files that contain
@@ -259,6 +275,21 @@ The columns in the files are:
       mag_{band}_roman     Magnitude in Roman {band}
       mag_{band}_roman_err Magnitude uncertainty in Roman {band}
       ==================== =====================================
+
+We note that we use ``np.nan`` to in the magnitdude columns to signify non-detections.
+
+We note that the ``table-io`` package installed with
+``pz_data_challenge`` provides a command line interface
+to convert files from ``hdf5`` format to other formats such as
+``parquet`` tables or ``pandas`` data frames.
+
+::
+
+   # convert a hdf5 file to pandas dataframe in a parquet file
+   tables-io convert
+     --input public/pz_challenge_taskset_1_cardinal_test_10yr.hdf5
+     --output public/pz_challenge_taskset_1_cardinal_test_10yr.pq
+
 
 .. _challenge_submissions:
 
@@ -319,7 +350,8 @@ For users unfamiliar with ``qp``, we highly recommend representing the
       [0.1,0.3,0.5,0.2,0.05]
     ]
    )
-   ens = qp.interp.create_ensemble(xvals,yvals)
+   ensemble = qp.interp.create_ensemble(xvals,yvals)
+   ensemble.write_to(<output_filename.hdf5>)
 
 ::
 
@@ -336,6 +368,7 @@ For users unfamiliar with ``qp``, we highly recommend representing the
    stds = [[0.2, 0.4], [0.1, 0.3], [0.05, 0.3]]
    weights = [[0.8, 0.2], [0.7, 0.3], [0.8, 0.2]]
    ens = qp.mixmod.create_ensemble(means=means,stds=stds,weights=weights)
+   ensemble.write_to(<output_filename.hdf5>)
 
 The submission files should use the same file name conventions defined
 in Tab. `1 <file_fields>`__. The labels will typically be
@@ -343,6 +376,17 @@ in Tab. `1 <file_fields>`__. The labels will typically be
 descriptions of the various tasks, e.g.,
 ``pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5`` or
 ``pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl``.
+
+All of these files should then be joined into a ``tar`` file, which
+should then be placed somewhere it can be download. The URL for the
+``tar`` should be specified in ``tests/test_{submission}.py``
+
+::
+
+   SUBMISSION_NAME = "example"
+   SUBMISSION_URL = "https://your.institution.edu/submit_example.tgz"
+
+
 
 Format for estimation-only Python functions and trained models
 --------------------------------------------------------------
@@ -427,7 +471,8 @@ Submissions will take the form of a pull request on the
 
 #. A file ``.github/workflows/submit_{submission}.yaml`` to run the
    submission validation in a GitHub action. This should not need to be
-   modified.
+   modified unless the prerequisite installation requires more than just
+   ``pip`` installing packages.
 
 All three of these files are created by the
 ``scripts/prepare_submission.py`` script.
@@ -436,8 +481,8 @@ You will need modify the ``tests/test_{submission}.py`` to give the
 location of the ``tar`` file containing the PZ estimates and trained
 models.
 
-An example of a submission is provided at
-``https://github.com/LSSTDESC/pz_data_challenge/pull/6``.
+See `<https://github.com/LSSTDESC/pz_data_challenge/pull/6>`_ for an
+example of a submission.
 
 Submission validation
 ---------------------
@@ -485,24 +530,32 @@ run them. In short the command are:
 
 ::
 
-   # Check status of your local git clone by running git status. And Make
-   # sure that you are on the branch submit/{submission_name}
-   # and do not have any files added or modified
+   # Check status of your local git clone by running git status, and make
+   # sure that you are on the branch submit/{submission_name} and do not
+   # have any files added or modified
    git status
 
    # Add your files to git
-   git add .github/workflows/submit_example.yaml requirements_example.txt tests/test_example.py
+   git add .github/workflows/submit_example.yaml
+     requirements_example.txt
+     tests/test_example.py
 
    # Commit your files to your branch: 
-   git commit -m "Submitting {submission_name}" .github/workflows/submit_{submission_name}.yaml requirements_{submission_name}.txt tests/test_{submission_name}.py
+   git commit -m "Submitting {submission_name}"
+     .github/workflows/submit_{submission_name}.yaml
+     requirements_{submission_name}.txt
+     tests/test_{submission_name}.py
 
    # Push your commit
    git push --set-upstream origin submit/{submission_name}
 
-   # Pushing to git should give you a URL that you can visit to create a pull request, for example
+   # Pushing to git should give you a URL that you can visit to create a
+   # pull request, for example:
    #   https://github.com/LSSTDESC/pz_data_challenge/pull/new/submit/example
-   # Visit that URL and create a pull request, then add the 'submission' label to the PR
-   # Finally, make sure that the github action validating your submission succeeds and fix any issues
+   # Visit that URL and create a pull request, then add the 'submission'
+   # label to the PR.
+   # Finally, make sure that the github action validating your submission
+   # succeeds and fix any issues.
 
 Submission aids
 ---------------
