@@ -1,12 +1,35 @@
 import os
+import shutil
 import tarfile
 import tempfile
+import time
 from typing import Any
+import urllib.error
 import urllib.request
 from pathlib import Path
 
 import qp
 import tables_io
+
+
+_DOWNLOAD_RETRIES = 3
+_DOWNLOAD_TIMEOUT = 60
+_DOWNLOAD_RETRY_DELAY = 5
+
+
+def _download_to_tempfile(url: str) -> str:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".tar") as tmp_file:
+        tmp_path = tmp_file.name
+
+    try:
+        with urllib.request.urlopen(url, timeout=_DOWNLOAD_TIMEOUT) as response:
+            with open(tmp_path, "wb") as downloaded_file:
+                shutil.copyfileobj(response, downloaded_file)
+    except Exception:
+        os.unlink(tmp_path)
+        raise
+
+    return tmp_path
 
 
 def download_and_extract_tar(url: str, extract_to: str | Path = ".") -> None:
@@ -42,10 +65,23 @@ def download_and_extract_tar(url: str, extract_to: str | Path = ".") -> None:
     file. The downloaded tar file is stored in a temporary location and
     automatically deleted after extraction.
     """
-    # Download to temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".tar") as tmp_file:
-        tmp_path: str = tmp_file.name
-        urllib.request.urlretrieve(url, tmp_path)
+    last_error: Exception | None = None
+    tmp_path = ""
+
+    for attempt in range(1, _DOWNLOAD_RETRIES + 1):
+        try:
+            tmp_path = _download_to_tempfile(url)
+            break
+        except (TimeoutError, urllib.error.URLError, OSError) as error:
+            last_error = error
+            if attempt == _DOWNLOAD_RETRIES:
+                raise
+            time.sleep(_DOWNLOAD_RETRY_DELAY * attempt)
+
+    if not tmp_path:
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError(f"Failed to download tar archive from {url}")
 
     try:
         # Extract with automatic format detection
