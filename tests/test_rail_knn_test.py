@@ -86,7 +86,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
 
     catalog_utils.clear()
     catalog_utils.load_yaml("tests/catalogs.yaml")
-    catalog_utils.CatalogTag.apply(CATALOG_TAG)
+    catalog_utils.apply(CATALOG_TAG)
 
     return 0
 
