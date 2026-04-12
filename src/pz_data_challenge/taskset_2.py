@@ -25,26 +25,26 @@ def run_taskset_2(
             key = f"{sim}_{scenario}"
 
             submit_file = os.path.join(
-                submit_dir, f"pz_challenge_taskset_1_{sim}_pz_estimate_{scenario}.hdf5"
+                submit_dir, f"pz_challenge_taskset_2_{sim}_pz_estimate_{scenario}.hdf5"
             )
             model_file = os.path.join(
-                submit_dir, f"pz_challenge_taskset_1_{sim}_pz_model_{scenario}.pkl"
+                submit_dir, f"pz_challenge_taskset_2_{sim}_pz_model_{scenario}.pkl"
             )
             training_file = os.path.join(
-                public_area, f"pz_challenge_taskset_1_{sim}_training_{scenario}.hdf5"
+                public_area, f"pz_challenge_taskset_2_{sim}_training_{scenario}.hdf5"
             )
             test_file = os.path.join(
-                public_area, f"pz_challenge_taskset_1_{sim}_test_{scenario}.hdf5"
+                public_area, f"pz_challenge_taskset_2_{sim}_test_{scenario}.hdf5"
             )
             output_file_2 = os.path.join(
                 submit_dir,
                 "outputs_2",
-                f"pz_challenge_taskset_1_{sim}_pz_estimate_{scenario}.hdf5",
+                f"pz_challenge_taskset_2_{sim}_pz_estimate_{scenario}.hdf5",
             )
             output_file_3 = os.path.join(
                 submit_dir,
                 "outputs_3",
-                f"pz_challenge_taskset_1_{sim}_pz_estimate_{scenario}.hdf5",
+                f"pz_challenge_taskset_2_{sim}_pz_estimate_{scenario}.hdf5",
             )
 
             # Check on the premade submission files
