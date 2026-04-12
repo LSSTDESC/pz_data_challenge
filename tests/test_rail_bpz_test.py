@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from rail.core.data import TableHandle
 from rail.estimation.algos.bpz_lite import BPZliteEstimator, BPZliteInformer
+from rail.utils import catalog_utils
 
 from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
@@ -20,8 +21,7 @@ SUBMISSION_URL: str = (
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = "tests/public"
 
-BANDS = [f"mag_{b}_lsst" for b in "ugrizy"]
-ERR_BANDS = [f"mag_{b}_lsst_err" for b in "ugrizy"]
+CATALOG_TAG = "cardinal_roman_rubin"
 _CHUNK = 150_000
 _ZMAX = 3.0
 _NZ = 101
@@ -36,10 +36,6 @@ def _make_bpz_informer() -> BPZliteInformer:
         name="inform",
         hdf5_groupname="",
         output_hdfn=True,
-        bands=BANDS,
-        err_bands=ERR_BANDS,
-        ref_band="mag_i_lsst",
-        redshift_col="redshift",
         zmax=_ZMAX,
         nzbins=_NZ,
         chunk_size=_CHUNK,
@@ -53,9 +49,6 @@ def _make_bpz_estimator(model) -> BPZliteEstimator:
         model=model,
         hdf5_groupname="",
         output_mode="return",
-        bands=BANDS,
-        err_bands=ERR_BANDS,
-        ref_band="mag_i_lsst",
         nzbins=_NZ,
         zmax=_ZMAX,
         chunk_size=_CHUNK,
@@ -87,6 +80,10 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
         pass
 
     request.addfinalizer(teardown_submit_area)
+
+    catalog_utils.clear()
+    catalog_utils.load_yaml("tests/catalogs.yaml")
+    catalog_utils.CatalogTag.apply(CATALOG_TAG)
 
     return 0
 
