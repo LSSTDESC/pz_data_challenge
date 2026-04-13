@@ -30,6 +30,8 @@ using increasingly realistic data.
 
 `Details about challenge data preparation <challenge_data_prep_>`_
 
+`Write of up PZ Data Challenge documenation <https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/pz_challenge.pdf>`_
+
 
 **********************
 Background Information
@@ -902,3 +904,7 @@ reproducibility.
    :width: 45.0%
 .. |image1| image:: figures/color_color_redshift_taskset_1_flagship_10yr.png
    :width: 45.0%
+
+
+.. include:: validation.rst	   
+	   
