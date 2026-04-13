@@ -24,8 +24,12 @@ def train_and_estimate(
         "test", path=f"public/pz_challenge_{taskset}_{sim}_test_{scenario}.hdf5"
     )
 
-    model_path = f"example/pz_challenge_{taskset}_{sim}_pz_model_{scenario}.pkl"
-    output_path = f"example/pz_challenge_{taskset}_{sim}_pz_estimate_{scenario}.hdf5"
+    try:
+        os.makedirs("submission")
+    except:
+        pass
+    model_path = f"submission/pz_challenge_{taskset}_{sim}_pz_model_{scenario}.pkl"
+    output_path = f"submission/pz_challenge_{taskset}_{sim}_pz_estimate_{scenario}.hdf5"
 
     informer = sklearn_neurnet.SklNeurNetInformer.make_stage(
         name=f"inform_{taskset}_{sim}_{scenario}",

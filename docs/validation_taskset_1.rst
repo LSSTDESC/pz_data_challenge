@@ -45,19 +45,19 @@ Validation figures for taskset 1
 
 .. container:: image-gallery
    
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/gr_vs_ug.jpg
+   .. image:: figures/pz_challenge_taskset_1_training_10yr/gr_vs_ug_sidebyside.jpg
       :alt: image
       :width: 80.0%
 
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/ri_vs_gr.jpg
+   .. image:: figures/pz_challenge_taskset_1_training_10yr/ri_vs_gr_sidebyside.jpg
       :alt: image
       :width: 80.0%
    
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/iz_vs_ri.jpg
+   .. image:: figures/pz_challenge_taskset_1_training_10yr/iz_vs_ri_sidebyside.jpg
       :alt: image
       :width: 80.0%
 
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/zy_vs_iz.jpg
+   .. image:: figures/pz_challenge_taskset_1_training_10yr/zy_vs_iz_sidebyside.jpg
       :alt: image
       :width: 80.0%
 

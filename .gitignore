@@ -31,6 +31,7 @@ share/python-wheels/
 MANIFEST
 metric_plots
 submission
+evaluation
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
