@@ -28,8 +28,15 @@ def train_and_estimate(
         os.makedirs("submission")
     except:
         pass
+
+    try:
+        os.makedirs("evaluation")
+    except:
+        pass
+    
     model_path = f"submission/pz_challenge_{taskset}_{sim}_pz_model_{scenario}.pkl"
     output_path = f"submission/pz_challenge_{taskset}_{sim}_pz_estimate_{scenario}.hdf5"
+    evaluate_path = f"evaluation/pz_challenge_{taskset}_{sim}_pz_evaluation_{scenario}.hdf5"
 
     informer = sklearn_neurnet.SklNeurNetInformer.make_stage(
         name=f"inform_{taskset}_{sim}_{scenario}",
@@ -48,6 +55,18 @@ def train_and_estimate(
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
     pz_out.path = output_path
     pz_out.write()
+
+
+    evaluation = sklearn_neurnet.SklNeurNetEstimator.make_stage(
+        name=f"evaluation_{taskset}_{sim}_{scenario}",
+        model=model,
+        output_mode="return",
+    )
+    pz_evaluate = evaluation.estimate(train_data)
+    pz_evaluate.data.ancil["object_id"] = train_data()["object_id"].astype(int)
+    pz_evaluate.path = evaluate_path
+    pz_evaluate.write()
+    
 
 
 if __name__ == "__main__":

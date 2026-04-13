@@ -3,7 +3,7 @@ import os
 from pz_data_challenge import metrics
 
 DATADIR = 'public'
-SUBMISSION_DIR = 'submission'
+EVALUATION_DIR = 'evaluation'
 PLOTS_DIR = 'metric_plots'
 
 TASKSETS = ["taskset_1", "taskset_2"]
@@ -20,10 +20,10 @@ if __name__ == '__main__':
                 prefix = f"{taskset_}_{sim_}_{scenario_}"
                 
                 sub_data_dict = metrics.get_truth_and_qp_ensemble(
-                    DATADIR, SUBMISSION_DIR, taskset_, sim_, scenario_
+                    DATADIR, EVALUATION_DIR, taskset_, sim_, scenario_
                 )
                 test_data = sub_data_dict[f"{prefix}_test"]
-                submit_data = sub_data_dict[f"{prefix}_validate"]
+                submit_data = sub_data_dict[f"{prefix}_evaluate"]
                 
                 data_dict.update(
                     metrics.point_metrics_plot(f"{prefix}_point", test_data, submit_data)

@@ -22,13 +22,13 @@ def get_truth_and_qp_ensemble(
     key = f"{taskset}_{sim}_{scenario}"
     
     test_file = os.path.abspath(os.path.join(datadir, f"pz_challenge_{taskset}_{sim}_training_{scenario}.hdf5"))
-    validate_file = os.path.abspath(os.path.join(submission_dir, f"pz_challenge_{taskset}_{sim}_pz_validate_{scenario}.hdf5"))
+    validate_file = os.path.abspath(os.path.join(submission_dir, f"pz_challenge_{taskset}_{sim}_pz_evaluation_{scenario}.hdf5"))
 
     truth = tables_io.read(test_file)['redshift']
     qp_ensmble = qp.read(validate_file)
 
     data_dict[f"{key}_test"] = tables_io.read(test_file)
-    data_dict[f"{key}_validate"] = qp.read(validate_file)            
+    data_dict[f"{key}_evaluate"] = qp.read(validate_file)            
 
     return data_dict
 
