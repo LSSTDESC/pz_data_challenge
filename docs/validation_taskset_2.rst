@@ -27,20 +27,20 @@ Validation figures for taskset 2
 
 .. container:: image-gallery
 
-   .. image:: figures/pz_challenge_taskset_2_training_1yr/mag_number_counts_Rubin.jpg
+   .. image:: figures/pz_challenge_taskset_2_training_10yr/mag_number_counts_Rubin.jpg
       :width: 45.0%
 
-   .. image:: figures/pz_challenge_taskset_2_test_1yr/mag_number_counts_Rubin.jpg
+   .. image:: figures/pz_challenge_taskset_2_test_10yr/mag_number_counts_Rubin.jpg
       :width: 45.0%
 	      
-   .. image:: figures/pz_challenge_taskset_2_training_1yr/mag_number_counts_Roman.jpg
+   .. image:: figures/pz_challenge_taskset_2_training_10yr/mag_number_counts_Roman.jpg
       :width: 45.0%
 
-   .. image:: figures/pz_challenge_taskset_2_test_1yr/mag_number_counts_Roman.jpg
+   .. image:: figures/pz_challenge_taskset_2_test_10yr/mag_number_counts_Roman.jpg
       :width: 45.0%
 	       
    Number counts as a function of magnitude for Rubin (top) and Roman (bottom) bands
-   for 1 year training (left) and test (right) data sets.
+   for 10 year training (left) and test (right) data sets.
 
 
 .. container:: image-gallery
