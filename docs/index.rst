@@ -22,11 +22,11 @@ using increasingly realistic data.
 
 `Information about the input data <challenge_input_data_>`_
 
-`How to submit an entry to the challegne <challenge_submissions_>`_
+`How to submit an entry to the challenge <challenge_submissions_>`_
 
 `Description of challenge tasks <tasks_>`_
 
-`Assesmement Metrics <metrics_>`_
+`Assessment Metrics <metrics_>`_
 
 `Details about challenge data preparation <challenge_data_prep_>`_
 
@@ -204,7 +204,7 @@ This final step will copy the input data files to
 to submit your entry.
 
 The notebooks in the ``pz_data_challenge/nb`` area give examples of how
-to access the data and create some of the diagnositic plots that were
+to access the data and create some of the diagnostic plots that were
 used to validate the data.
 
 Submission mechanism
@@ -279,7 +279,7 @@ The columns in the files are:
       mag_{band}_roman_err Magnitude uncertainty in Roman {band}
       ==================== =====================================
 
-We note that we use ``np.nan`` to in the magnitdude columns to signify non-detections.
+We note that we use ``np.nan`` to in the magnitude columns to signify non-detections.
 
 We note that the ``table-io`` package installed with
 ``pz_data_challenge`` provides a command line interface
@@ -521,7 +521,7 @@ functions is simply to run these commands.
    py.test tests/test_{submission_name}.py
 
 if this succeeds, you can use a provided script to help you open the
-pull request for your submisison.
+pull request for your submission.
 
 ::
 
@@ -909,3 +909,11 @@ reproducibility.
 
 .. include:: validation.rst	   
 	   
+..  LocalWords:  pz_data_challenge slitless pzdc nb taskset hdf5 qp
+..  LocalWords:  _lsst _lsst_err table-io tables-io numpy xvals yvals
+..  LocalWords:  xvals,yvals stds means,stds stds,weights pz_estimate
+..  LocalWords:  pz_model github zmode iqr Kullback-Leibler coadded
+..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5
+..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl
+..  LocalWords:  pz_challenge_taskset_1_ pz_challenge_taskset_2_
+..  LocalWords:  gigaparsecs do_04_subselect
