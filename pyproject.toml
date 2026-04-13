@@ -24,6 +24,7 @@ dependencies = [
     "qp-prob>=1.0.0",
     "matplotlib",
     "tables_io[full]",
+    "pz-rail-projects",
 ]
 # On a mac, install optional dependencies with `pip install '.[dev]'` (include the single quotes)
 [project.optional-dependencies]
