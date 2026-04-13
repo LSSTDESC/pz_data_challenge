@@ -30,7 +30,7 @@ using increasingly realistic data.
 
 `Details about challenge data preparation <challenge_data_prep_>`_
 
-`Write of up PZ Data Challenge documenation <https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/pz_challenge.pdf>`_
+`Write of up PZ Data Challenge documentation <https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/pz_challenge.pdf>`_
 
 
 **********************
@@ -214,6 +214,7 @@ Submission will take the form of pull request in the
 ``pz_data_challenge`` repository. Detailed instructions on how to submit
 an entry are provided in Sec. :ref:`5 <challenge_submissions>` of this
 document.
+
 
 .. _challenge_input_data:
 
@@ -582,6 +583,16 @@ A few scripts are provided to help you.
    of your submission, checking that you have created all the required
    files and that they are properly formatted.
 
+
+Feedback after submission
+-------------------------
+
+Approximately every 2 weeks we will merge the various PRs that are passing the
+github actions, run performance metrics and update the website with information
+about their performance.
+   
+
+   
 .. _metrics:
 
 Metrics and Assessment Criteria
@@ -916,4 +927,4 @@ reproducibility.
 ..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5
 ..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl
 ..  LocalWords:  pz_challenge_taskset_1_ pz_challenge_taskset_2_
-..  LocalWords:  gigaparsecs do_04_subselect
+..  LocalWords:  gigaparsecs do_04_subselect validation.rst
