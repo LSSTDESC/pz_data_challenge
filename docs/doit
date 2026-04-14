@@ -3,4 +3,4 @@ bibtex pz_challenge
 pdflatex pz_challenge
 pdflatex pz_challenge
 
-pandoc -t rst read_the_docs.tex --output pz_challenge.rst
+pandoc -t rst pz_challenge.tex --output pz_challenge.rst
