@@ -13,6 +13,12 @@ from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
 from pz_data_challenge import submit_utils
 
+xbands = ['u','g','r','i','z','y']
+errbands = []
+for band in xbands:
+    errbands.append(f"mag_{band}_lsst_err")
+
+
 # Change these to match the name of the submission
 # and a URL to download the sumission data files
 # and needed model files
@@ -88,6 +94,8 @@ def run_taskset_1_estimation_only(
         name="estimate",
         hdf5_groupname="",
         model=model_file,
+        spectra_file="COSMOS_seds.list",
+        err_bands=errbands,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -126,6 +134,7 @@ def run_taskset_1_training_and_estimation(
     informer = BPZliteInformer.make_stage(
         name="inform",
         output_HDFN=True,
+        nt_array=[10,9,12],
     )
     model = informer.inform(train_data)
 
@@ -133,6 +142,8 @@ def run_taskset_1_training_and_estimation(
         name="estimate",
         model=model,
         hdf5_groupname="",
+        spectra_file="COSMOS_seds.list",
+        err_bands=errbands,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -171,6 +182,8 @@ def run_taskset_2_estimation_only(
         name="estimate",
         model=model_file,
         hdf5_groupname="",
+        spectra_file="COSMOS_seds.list",
+        err_bands=errbands,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -205,7 +218,8 @@ def run_taskset_2_training_and_estimation(
 
     informer = BPZliteInformer.make_stage(
         name="inform",
-        output_hdf5=True,
+        output_hdfn=True,
+        nt_array=[10,9,12],
     )
     model = informer.inform(train_data)
 
@@ -213,6 +227,8 @@ def run_taskset_2_training_and_estimation(
         name="estimate",
         model=model,
         hdf5_groupname="",
+        spectra_file="COSMOS_seds.list",
+        err_bands=errbands,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
