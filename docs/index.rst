@@ -378,8 +378,8 @@ The submission files should use the same file name conventions defined
 in Tab. `1 <file_fields>`__. The labels will typically be
 ``pz_estimate`` or ``pz_model`` and will be specified in the
 descriptions of the various tasks, e.g.,
-``pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5`` or
-``pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl``.
+``pz_challenge_taskset_1_cardinal_pz_estimate_1yr.hdf5`` or
+``pz_challenge_taskset_1_cardinal_pz_model_1yr.pkl``.
 
 All of these files should then be joined into a ``tar`` file, which
 should then be placed somewhere it can be download. The URL for the
@@ -924,7 +924,7 @@ reproducibility.
 ..  LocalWords:  _lsst _lsst_err table-io tables-io numpy xvals yvals
 ..  LocalWords:  xvals,yvals stds means,stds stds,weights pz_estimate
 ..  LocalWords:  pz_model github zmode iqr Kullback-Leibler coadded
-..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_estimate_yr1.hdf5
-..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_model_yr1.pkl
+..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_estimate_1yr.hdf5
+..  LocalWords:  pz_challenge_taskset_1_cardinal_pz_model_1yr.pkl
 ..  LocalWords:  pz_challenge_taskset_1_ pz_challenge_taskset_2_
 ..  LocalWords:  gigaparsecs do_04_subselect validation.rst
