@@ -2,5 +2,4 @@ pandas
 numpy
 scikit-learn
 tables-io
-qp
-
+qp-prob
