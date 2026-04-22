@@ -515,7 +515,7 @@ def evaluate_submission(
 
     # Evaluate the results
     if not os.environ.get('SKIP_EVALUATE'):
-        evaluate(
+        make_eval_plots_and_summarize(
             submission_name,
             submission_dir,
             results_dir,
