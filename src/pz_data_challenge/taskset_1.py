@@ -1,6 +1,7 @@
 import os
 import time
 from typing import Any, Callable
+import yaml
 
 from . import submit_utils
 
@@ -78,7 +79,11 @@ def run_taskset_1(
                     output_file_3, test_file
                 )
 
+
     submit_utils.pretty_print_manifest_dict(manifest_dict)
-    submit_utils.pretty_print_time_dict(manifest_dict)
+
+    stats_file = os.path.join(submit_dir, "stats_taskset1.yaml")
+    with open(stats_file, 'w', encoding='utf-8') as fout:
+        yaml.dump(manifest_dict, fout)
 
     submit_utils.check_manifest_dict(manifest_dict)
