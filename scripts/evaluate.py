@@ -13,7 +13,6 @@ SUBMISSION_TOP_DIR = 'submissions'
 RESULTS_TOP_DIR = 'results'
 
 
-
 if __name__ == '__main__':
 
     # sys.argv[0] is the script name, sys.argv[1:] are the arguments

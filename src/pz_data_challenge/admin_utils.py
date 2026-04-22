@@ -142,13 +142,12 @@ def merge_results_summaries(
     Creates a summary_{submission}.yaml file in RESULTS_TOP_DIR containing
     all results merged into a single dictionary.
     """
-    all_files = [
-        os.path.join(results_dir, f)
-        for f in os.listdir(results_dir)
-        if f.endswith('.yaml')
-    ]
-    
-    all_dict: Dict[str, Any] = {}
+def merge_results_summaries(results_dir, submission):
+
+    all_files = glob.glob(f"{results_dir}/*.yaml")
+    all_files += glob.glob(f"{results_dir}/*/*.yaml")
+
+    all_dict = {}
     for file_ in all_files:
         with open(file_) as fin:
             all_dict[file_.replace(f"{results_dir}/", '')] = yaml.safe_load(fin)
@@ -157,6 +156,69 @@ def merge_results_summaries(
     with open(summary_file, 'w', encoding='utf-8') as fout:
         yaml.dump(all_dict, fout)
 
+
+def make_submission_eval_plots(
+    reseved_data_dir: str,
+    submission_data_dir: str,
+    results_dir: str,
+) -> None:
+    """Generate evaluation plot
+    
+    Parameters
+    ----------
+    reserved_data_dir : str
+        Path to the reserved/validation data.
+    submission_data_dir : str
+        Path to the directory containing submission files.
+    results_dir : str
+        Path to the directory where results will be stored.
+    
+    Notes
+    -----
+    Processes three task outputs: default, outputs_2, and outputs_3.
+    Generates plots for each task and merges all results into a summary.
+    """
+
+    data_dict = {}
+    for taskset_ in TASKSETS:
+        for sim_ in SIMS:
+            for scenario_ in SCENARIOS:
+                prefix = f"{taskset_}_{sim_}_{scenario_}"
+
+                sub_data_dict = metrics.get_truth_and_qp_ensemble(
+                    reseved_data_dir, submission_data_dir, taskset_, sim_, scenario_, test_label='test', eval_label='pz_estimate',
+                )
+                test_data = sub_data_dict[f"{prefix}_test"]
+                submit_data = sub_data_dict[f"{prefix}_evaluate"]
+
+                data_dict.update(
+                    metrics.point_metrics_plot(f"{prefix}_point", test_data, submit_data)
+                )
+                data_dict.update(
+                    metrics.point_v_redshfit_plot(f"{prefix}_point_v_redshift", test_data, submit_data)
+                )
+                data_dict.update(
+                    metrics.point_v_mag_plot(f"{prefix}_point_v_mag", test_data, submit_data)
+                )
+                data_dict.update(
+                    metrics.plot_pit_prob_plot(f"{prefix}_pit_prob", test_data, submit_data)
+                )
+                data_dict.update(
+                    metrics.plot_pit_qq_plot(f"{prefix}_pit_qq", test_data, submit_data)
+                )
+
+    try:
+        os.makedirs(results_dir)
+    except Exception:
+        pass
+
+    for k, v in data_dict.items():
+        v.savefig(k.replace("0.0",""), results_dir)
+        v.savedata(results_dir)
+
+    print(f"\nSaved {len(data_dict)} plots to {results_dir}")
+
+        
 
 def make_eval_plots_and_summarize(
     submission_name: str,
@@ -218,7 +280,7 @@ def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
             for i_sim, sim_ in enumerate(SIMS):
                 for i_scenario, scenario_ in enumerate(SCENARIOS):
                     key = f"{task_}{taskset_}_{sim_}_{scenario_}"
-
+                    
                     temp_dict: Dict[str, Any] = dict(
                         taskset=i_taskset + 1,
                         task=i_task + 1,
@@ -349,10 +411,7 @@ def get_timing_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
         temp_dict = dict(
             taskset=i_taskset+1,                        
         )
-        try:
-            stats = results_data[key]
-        except:
-            breakpoint()
+        stats = results_data[key]
         for k, the_time in stats.items():
             if k.find('time') < 0:
                 continue
