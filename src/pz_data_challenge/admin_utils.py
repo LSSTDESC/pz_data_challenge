@@ -306,7 +306,7 @@ def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
             for i_sim, sim_ in enumerate(SIMS):
                 for i_scenario, scenario_ in enumerate(SCENARIOS):
                     key = f"{task_}{taskset_}_{sim_}_{scenario_}"
-
+                    
                     temp_dict: Dict[str, Any] = dict(
                         taskset=i_taskset + 1,
                         task=i_task + 1,
