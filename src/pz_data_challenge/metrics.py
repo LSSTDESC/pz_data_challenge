@@ -22,7 +22,7 @@ def get_truth_and_qp_ensemble(
 
     data_dict: dict[str, Any] = {}
     key = f"{taskset}_{sim}_{scenario}"
-
+ 
     test_file = os.path.abspath(os.path.join(datadir, f"pz_challenge_{taskset}_{sim}_{test_label}_{scenario}.hdf5"))
     validate_file = os.path.abspath(os.path.join(submission_dir, f"pz_challenge_{taskset}_{sim}_{eval_label}_{scenario}.hdf5"))
 
