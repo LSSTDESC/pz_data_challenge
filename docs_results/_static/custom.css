@@ -1,0 +1,34 @@
+/* Adjust maximum width */
+.document {
+    max-width: 100% !important;
+}
+
+/* For some themes, you might need: */
+.body {
+    max-width: 100% !important;
+}
+
+/* Or for the container: */
+.container {
+    max-width: 100% !important;
+}
+
+
+/* Full width */
+.wy-nav-content {
+    max-width: 100% !important;
+}
+
+.full-width-table {
+    width: 100% !important;
+}
+
+/* Make tables full width */
+.wy-table-responsive table {
+    width: 100% !important;
+}
+
+
+.wy-table-responsive .full-width-table {
+    width: 100% !important;
+}
