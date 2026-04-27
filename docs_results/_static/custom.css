@@ -8,22 +8,19 @@
     max-width: 100% !important;
 }
 
-/* Or for the container:
+/* Or for the container: */
 .container {
     max-width: 100% !important;
 }
-*/
 
 /* Full width */
 .wy-nav-content {
     max-width: 100% !important;
 }
-/*
 
-/* .full-width-table {
+.full-width-table {
     width: 100% !important;
 }
-*/
 
 .sortable-table {
     width: 50% !important;
