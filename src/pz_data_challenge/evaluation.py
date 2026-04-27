@@ -134,14 +134,10 @@ def get_metric_summary_dict(
     """
     out_dict: dict[str, tuple] = {}
     for sub_ in submissions:
-<<<<<<< HEAD
         try:
             task1_mask = data_dict[sub_]['task'] == 1
         except KeyError:
             continue
-=======
-        task1_mask = data_dict[sub_]['task'] == 1 
->>>>>>> updates
         run_ = 4*(data_dict[sub_]['taskset']-1) + 2*(data_dict[sub_]['scenario']-1) + (data_dict[sub_]['sim']-1)
         out_dict[sub_] = (data_dict[sub_][metric][task1_mask], run_[task1_mask])
     return out_dict
@@ -180,14 +176,10 @@ def get_metric_summary_dict_mulit(
     """
     out_dict: dict[str, tuple] = {}
     for sub_ in submissions:
-<<<<<<< HEAD
         try:
             run_ = 16*(data_dict[sub_]['taskset']-1) + 8*(data_dict[sub_]['scenario']-1) + 4*(data_dict[sub_]['sim']-1) + (data_dict[sub_]['task']-1)
         except KeyError:
             continue
-=======
-        run_ = 16*(data_dict[sub_]['taskset']-1) + 8*(data_dict[sub_]['scenario']-1) + 4*(data_dict[sub_]['sim']-1) +  (data_dict[sub_]['task']-1)
->>>>>>> updates
         out_dict[sub_] = (data_dict[sub_][metric], run_)
     return out_dict
 

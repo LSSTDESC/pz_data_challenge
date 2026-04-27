@@ -27,7 +27,7 @@ using increasingly realistic data.  Here we present the results.
    results/high_level_summary
    results/taskset_1_summary
    results/taskset_2_summary
-	  
+
 .. toctree::
    :maxdepth: 2
    :caption: Results of individual submissions

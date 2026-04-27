@@ -748,8 +748,6 @@ def make_timing_summaries(
         data_dict,
         submissions,
     )
-
-    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png")
     fig_algo_inform_time.savefig(f"{results_dir}/plot_summary_timing_inform.png")
 
 
