@@ -215,6 +215,8 @@ def make_algo_estimate_time_strip_plot(
     -----
     Times are normalized by dividing by 20k (objects per measurement).
     """
+    fig = plt.figure()
+        
     n_sub = len(submissions)
     y_min = -0.5
     y_max = n_sub - 0.5
@@ -227,9 +229,9 @@ def make_algo_estimate_time_strip_plot(
 
     _ = plt.yticks(np.linspace(0, n_sub-1, n_sub), submissions)
     _ = plt.xlabel(metric_label)
-
     _ = plt.xlim(metric_limits)
     _ = plt.ylim(y_min, y_max)
+    _ = plt.legend()
 
     for metric_range in metric_ranges:
         _ = plt.fill_between(metric_range, [y_min, y_min], [y_max, y_max], color='gray', alpha=0.1)
@@ -276,6 +278,8 @@ def make_algo_inform_time_strip_plot(
     Error bars are floored at 10 seconds to ensure visibility.
     X-axis uses logarithmic scale.
     """
+    fig = plt.figure()
+    
     n_sub = len(submissions)
     y_min = -0.5
     y_max = n_sub - 0.5
@@ -298,8 +302,9 @@ def make_algo_inform_time_strip_plot(
     _= plt.yticks(np.linspace(0, n_sub-1, n_sub), submissions)
     _ = plt.xlabel("Inform time [s]")
     _ = plt.ylim(y_min, y_max)
-
     _ = plt.xlim(metric_limits)
+    _ = plt.legend()
+    
     for metric_range in metric_ranges:
         _ = plt.fill_between(metric_range, [y_min, y_min], [y_max, y_max], color='gray', alpha=0.1)
     _ = plt.xscale('log')
@@ -345,6 +350,8 @@ def make_strip_plot(
     >>> fig = make_strip_plot(metric_data, "Bias", [-0.1, 0.1],
     ...                       [[-0.02, 0.02], [-0.05, 0.05]])
     """
+    fig = plt.figure()
+    
     n_y_labels = len(y_label_strings)
     y_min = -0.5
     y_max = n_y_labels-0.5
@@ -356,6 +363,7 @@ def make_strip_plot(
     _ = plt.xlabel(metric_label)
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
+    _ = plt.legend()
     
     for metric_range in metric_ranges:        
         _ = plt.fill_between(
@@ -407,6 +415,8 @@ def make_strip_plot_multi(
     Y-axis spacing is 4x larger than make_strip_plot to separate multiple
     tasks per configuration.
     """
+    fig = plt.figure()
+    
     n_y_labels = len(y_label_strings)
     y_min = -0.5
     y_max = 4*(n_y_labels) - 0.5
@@ -418,6 +428,7 @@ def make_strip_plot_multi(
     _ = plt.xlabel(metric_label)
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
+    _ = plt.legend()
     
     for metric_range in metric_ranges:        
         _ = plt.fill_between(
@@ -463,9 +474,11 @@ def make_qq_pit_plot(
     - Colors distinguish different submissions
     - Perfect calibration would follow the diagonal line
     """
+    fig = plt.figure()
+    
     lines = ['', '-', 'dashed']
     colors = ['blue', 'orange', 'green', 'red']                   
-    fig = plt.Figure((8, 8))
+    fig = plt.figure()
     for i_sub, sub_ in enumerate(submissions):
         for i_row, row_ in data_dict[sub_].iterrows():        
             if row_['task'] != 1:
@@ -482,6 +495,8 @@ def make_qq_pit_plot(
     _ = plt.xlabel("Q")
     _ = plt.ylabel(r"$p(z_{\rm ref} < z(Q))$")
     _ = plt.legend()
+
+    plt.tight_layout()    
     return plt.gcf()
 
 
@@ -529,6 +544,8 @@ def make_point_v_redshift_plot(
     - Colors distinguish different submissions
     - Y-axis label is hardcoded for photometric redshift bias
     """
+    fig = plt.figure()
+    
     lines = ['', '-', 'dashed']
     colors = ['blue', 'orange', 'green', 'red']
     for i_sub, sub_ in enumerate(submissions):
@@ -604,6 +621,8 @@ def make_point_v_mag_plot(
     - Colors distinguish different submissions
     - Y-axis label is hardcoded for photometric redshift bias
     """
+    fig = plt.figure()
+    
     lines = ['', '-', 'dashed']
     colors = ['blue', 'orange', 'green', 'red']
     for i_sub, sub_ in enumerate(submissions):

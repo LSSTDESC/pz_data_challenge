@@ -24,10 +24,8 @@ using increasingly realistic data.  Here we present the results.
    :maxdepth: 2
    :caption: Summaries of Results
 
-   results/high_level_summary
-   results/taskset_1_summary
-   results/taskset_2_summary
-
+   high_level_summary
+   
 	  
 .. toctree::
    :maxdepth: 2

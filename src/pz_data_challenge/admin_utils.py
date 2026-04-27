@@ -617,21 +617,22 @@ def make_point_summaries(
         [-0.2, 0.2],
         scoring.metric_dict['mean'],
     )
+    fig_mean.savefig(f"{results_dir}/plot_summary_point_mean.png")
+    
     fig_rms = evaluation.make_strip_plot(
         dd_rms,
         r"RMS $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
         [0, 0.5],
         scoring.metric_dict['std'],
     )
+    fig_rms.savefig(f"{results_dir}/plot_summary_point_rms.png")
+    
     fig_outliers = evaluation.make_strip_plot(
         dd_outliers,
         r"Outlier rate $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}} > 0.15$",
         [0, 0.5],
         scoring.metric_dict['abs_outlier_rate'],
     )
-
-    fig_mean.savefig(f"{results_dir}/plot_summary_point_mean.png")
-    fig_rms.savefig(f"{results_dir}/plot_summary_point_rms.png")
     fig_outliers.savefig(f"{results_dir}/plot_summary_point_outliers.png")
 
 
@@ -653,28 +654,30 @@ def make_PIT_summaries(
         [0, 2000],
         scoring.metric_dict['CvM'],
     )
+    fig_CvM.savefig(f"{results_dir}/plot_summary_pit_CvV.png")
+    
     fig_pit_outlier = evaluation.make_strip_plot(
         dd_outlier,
         r"PIT Q-Q Outliers",
         [0, 1],
         scoring.metric_dict['outlier'],
     )
+    fig_pit_outlier.savefig(f"{results_dir}/plot_summary_pit_outlier.png")
+    
     fig_ks = evaluation.make_strip_plot(
         dd_ks,
         r"PIT Q-Q KS",
         [0, 1],
         scoring.metric_dict['ks'],
     )
+    fig_ks.savefig(f"{results_dir}/plot_summary_pit_ks.png")
+    
     fig_ksamp = evaluation.make_strip_plot(
         dd_ksamp,
         r"PIT Q-Q ksamp",
         [0, 1e4],
         scoring.metric_dict['ksamp'],
     )
-
-    fig_CvM.savefig(f"{results_dir}/plot_summary_point_pit_CvV.png")
-    fig_pit_outlier.savefig(f"{results_dir}/plot_summary_pit_outlier.png")
-    fig_ks.savefig(f"{results_dir}/plot_summary_pit_ks.png")
     fig_ksamp.savefig(f"{results_dir}/plot_summary_pit_ksamp.png")
 
 
@@ -689,12 +692,12 @@ def make_timing_summaries(
         data_dict,
         submissions,
     )
+    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png")
+    
     fig_algo_inform_time = evaluation.make_algo_inform_time_strip_plot(
         data_dict,
         submissions,
     )
-
-    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png")
     fig_algo_inform_time.savefig(f"{results_dir}/plot_summary_timing_inform.png")
 
 
@@ -735,7 +738,6 @@ def make_submission_summary_rst(
     
             print(f"Generated: {output_path}")
 
-    
 
 def make_scores(
     results_dir: str,
