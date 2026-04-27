@@ -2,9 +2,22 @@ High Level Summary of Results
 =============================
 
 
-.. sortable-table::
-   :file: results/scores.csv
+Overall scores
+--------------
 
+We score the submissions based on how close they come to meeting requirements
+for each of the assesment metrics for each simulation and scenario.  We assign
+between 0 and 3 points for each tasket, metric, simulation and scenario combination,
+total all the of the assigned points and divide by the possible points.  The
+various points ranges are visible as progressively darker bands in the plots on this page.
+
+
+.. sortable-table::
+   :file: results/scores_summary.csv
+
+
+Indvidual Metrics
+-----------------
 
 .. list-table:: Image Gallery
    :header-rows: 1
