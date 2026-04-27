@@ -749,7 +749,7 @@ def make_scores(
     scores = scoring.extract_score(score_dict, 'percentages')
     with open(f"{results_dir}/scores_full.csv", 'w', encoding='utf-8') as fout:
         yaml.dump(score_dict, fout)
-    scores.to_csv(f"{results_dir}/scores_summary.csv")        
+    scores.to_csv(f"{results_dir}/scores_summary.csv", index=False)        
 
 
 def make_all_summary_plots_and_files(
