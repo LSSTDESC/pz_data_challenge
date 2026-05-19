@@ -11,9 +11,7 @@ SUBMISSION_NAME: str = "lsst_v5"
 SUBMISSION_URL: str = "https://github.com/e06243046/pz_data_challenge_submission/releases/download/lsst_v5_submission/lsst_v5_estimates_only.tgz"
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
-LOCAL_PUBLIC_AREA = Path("/home/ext_mayhewewan_gmail_com/tpu-2026/public")
-PUBLIC_AREA: str = str(LOCAL_PUBLIC_AREA) if LOCAL_PUBLIC_AREA.exists() else "tests/public"
-
+PUBLIC_AREA: str = "tests/public"
 
 @pytest.fixture(name="setup_public_area", scope="module")
 def setup_public_area() -> int:
