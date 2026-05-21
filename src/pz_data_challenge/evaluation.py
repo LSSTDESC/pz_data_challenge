@@ -134,7 +134,10 @@ def get_metric_summary_dict(
     """
     out_dict: dict[str, tuple] = {}
     for sub_ in submissions:
-        task1_mask = data_dict[sub_]['task'] == 1 
+        try:
+            task1_mask = data_dict[sub_]['task'] == 1
+        except KeyError:
+            continue
         run_ = 4*(data_dict[sub_]['taskset']-1) + 2*(data_dict[sub_]['scenario']-1) + (data_dict[sub_]['sim']-1)
         out_dict[sub_] = (data_dict[sub_][metric][task1_mask], run_[task1_mask])
     return out_dict
@@ -173,7 +176,10 @@ def get_metric_summary_dict_mulit(
     """
     out_dict: dict[str, tuple] = {}
     for sub_ in submissions:
-        run_ = 16*(data_dict[sub_]['taskset']-1) + 8*(data_dict[sub_]['scenario']-1) + 4*(data_dict[sub_]['sim']-1) +  (data_dict[sub_]['task']-1)
+        try:
+            run_ = 16*(data_dict[sub_]['taskset']-1) + 8*(data_dict[sub_]['scenario']-1) + 4*(data_dict[sub_]['sim']-1) + (data_dict[sub_]['task']-1)
+        except KeyError:
+            continue
         out_dict[sub_] = (data_dict[sub_][metric], run_)
     return out_dict
 
@@ -221,8 +227,11 @@ def make_algo_estimate_time_strip_plot(
     y_min = -0.5
     y_max = n_sub - 0.5
     for i_sub, sub_ in enumerate(submissions):
-        task2_mask = data[sub_]['task'] == 2
-        times = data[sub_]['time'][task2_mask]/20
+        try:
+            task2_mask = data[sub_]['task'] == 2
+            times = data[sub_]['time'][task2_mask]/20
+        except KeyError:
+            continue
         mean_task_2 = np.mean(times)
         std_task_2 = np.std(times)    
         _ = plt.errorbar(mean_task_2, i_sub, xerr=std_task_2, label=sub_, ls="", marker=".")
@@ -287,8 +296,11 @@ def make_algo_inform_time_strip_plot(
     estimate_only = {}
     inform_only = {}
     for i_sub, sub_ in enumerate(submissions):
-        task2_mask = data[sub_]['task'] == 2 
-        task3_mask = data[sub_]['task'] == 3
+        try:
+            task2_mask = data[sub_]['task'] == 2 
+            task3_mask = data[sub_]['task'] == 3
+        except KeyError:
+            continue
 
         mean_task_2 = np.mean(data[sub_]['time'][task2_mask])
         mean_task_3 = np.mean(data[sub_]['time'][task3_mask])
@@ -477,7 +489,7 @@ def make_qq_pit_plot(
     fig = plt.figure()
     
     lines = ['', '-', 'dashed']
-    colors = ['blue', 'orange', 'green', 'red']                   
+    colors = ['blue', 'orange', 'green', 'red', 'teal', 'grey']                   
     fig = plt.figure()
     for i_sub, sub_ in enumerate(submissions):
         for i_row, row_ in data_dict[sub_].iterrows():        

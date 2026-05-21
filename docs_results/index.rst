@@ -35,6 +35,8 @@ using increasingly realistic data.  Here we present the results.
    results/rail_bpz_test/index
    results/rail_knn_test/index
    results/bpz_31temps/index
+   results/lsst_v3/index
+   results/lsst_v5/index
 
 
 
