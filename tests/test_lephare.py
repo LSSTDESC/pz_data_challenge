@@ -110,6 +110,7 @@ def run_taskset_1_estimation_only(
         bands=flux_cols,
         err_bands=flux_err_cols,
         hdf5_groupname="",
+        lephare_config_from_model=False,
         **{f"lephare.{k}": v for k, v in config.items()},
     )
     pz_out = estimator.estimate(test_data)
@@ -210,6 +211,7 @@ def run_taskset_2_estimation_only(
         bands=flux_cols,
         err_bands=flux_err_cols,
         hdf5_groupname="",
+        lephare_config_from_model=False,
         **{f"lephare.{k}": v for k, v in config.items()},
     )
     pz_out = estimator.estimate(test_data)
