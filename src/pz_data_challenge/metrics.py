@@ -16,21 +16,30 @@ def get_truth_and_qp_ensemble(
     taskset: str,
     sim: str,
     scenario: str,
+    test_label: str="training",
+    eval_label: str="pz_evaluation",
 ) -> dict[str, Any]:
 
     data_dict: dict[str, Any] = {}
     key = f"{taskset}_{sim}_{scenario}"
-    
-    test_file = os.path.abspath(os.path.join(datadir, f"pz_challenge_{taskset}_{sim}_training_{scenario}.hdf5"))
-    validate_file = os.path.abspath(os.path.join(submission_dir, f"pz_challenge_{taskset}_{sim}_pz_evaluation_{scenario}.hdf5"))
+
+    test_file = os.path.abspath(os.path.join(datadir, f"pz_challenge_{taskset}_{sim}_{test_label}_{scenario}.hdf5"))
+    validate_file = os.path.abspath(os.path.join(submission_dir, f"pz_challenge_{taskset}_{sim}_{eval_label}_{scenario}.hdf5"))
 
     truth = tables_io.read(test_file)['redshift']
     qp_ensmble = qp.read(validate_file)
 
     data_dict[f"{key}_test"] = tables_io.read(test_file)
-    data_dict[f"{key}_evaluate"] = qp.read(validate_file)            
+    data_dict[f"{key}_evaluate"] = qp.read(validate_file)
 
     return data_dict
+
+
+def get_z_point(submit_data: qp.Ensemble) -> np.ndarray:
+    try:
+        return np.squeeze(submit_data.ancil['zmode'])
+    except KeyError:
+        return np.squeeze(submit_data.ancil['z_mode'])
 
 
 def point_metrics_plot(
@@ -41,11 +50,11 @@ def point_metrics_plot(
 ) -> dict[str, RailPlotHolder]:
 
     point_plotter = pz_plotters.PZPlotterPointEstimateVsTrueHist2D(**kwargs)
-    
-    return point_plotter.run(        
+
+    return point_plotter.run(
         prefix,
         truth=test_data['redshift'],
-        pointEstimate=np.squeeze(submit_data.ancil['zmode']),
+        pointEstimate=get_z_point(submit_data),
         magnitude=test_data['mag_i_lsst'],
     )
 
@@ -56,13 +65,13 @@ def point_v_redshfit_plot(
     submit_data: qp.Ensemble,
     **kwargs: Any
 ) -> dict[str, RailPlotHolder]:
-    
+
     point_v_redshfit_plotter = pz_plotters.PZPlotterBiweightStatsVsRedshift(**kwargs)
 
-    return point_v_redshfit_plotter.run(        
+    return point_v_redshfit_plotter.run(
         prefix,
         truth=test_data['redshift'],
-        pointEstimate=np.squeeze(submit_data.ancil['zmode']),
+        pointEstimate=get_z_point(submit_data),
         magnitude=test_data['mag_i_lsst'],
     )
 
@@ -74,12 +83,12 @@ def point_v_mag_plot(
     **kwargs: Any
 ) -> dict[str, RailPlotHolder]:
 
-    point_v_mag_plotter = pz_plotters.PZPlotterBiweightStatsVsRedshift(**kwargs)
-    
-    return point_v_mag_plotter.run(        
+    point_v_mag_plotter = pz_plotters.PZPlotterBiweightStatsVsMag(**kwargs)
+
+    return point_v_mag_plotter.run(
         prefix,
         truth=test_data['redshift'],
-        pointEstimate=np.squeeze(submit_data.ancil['zmode']),
+        pointEstimate=get_z_point(submit_data),
         magnitude=test_data['mag_i_lsst'],
     )
 
@@ -92,7 +101,7 @@ def plot_pit_prob_plot(
 ) -> dict[str, RailPlotHolder]:
 
     pit_prob_plotter = pz_dist_plotters.PZPlotterPITProb(**kwargs)
-    
+
     return pit_prob_plotter.run(
         prefix,
         truth=test_data['redshift'],
@@ -108,7 +117,7 @@ def plot_pit_qq_plot(
 ) -> dict[str, RailPlotHolder]:
 
     pit_qq_plotter = pz_dist_plotters.PZPlotterPITQQ(**kwargs)
-    
+
     return pit_qq_plotter.run(
         prefix,
         truth=test_data['redshift'],

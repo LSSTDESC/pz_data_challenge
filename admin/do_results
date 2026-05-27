@@ -1,0 +1,4 @@
+python admin/evaluate.py all
+pushd docs_results
+make clean html
+popd 
