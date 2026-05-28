@@ -22,19 +22,19 @@ The data preparation for taskset 3 including the following steps:
 
 .. container:: image-gallery
 
-   .. image:: figures/pz_challenge_taskset_1_training_1yr/RA_DEC_footprint.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_1yr/RA_DEC_footprint.jpg
       :alt: image
       :width: 45.0%
 
-   .. image:: figures/pz_challenge_taskset_1_test_1yr/RA_DEC_footprint.jpg
+   .. image:: figures/pz_challenge_taskset_3_test_1yr/RA_DEC_footprint.jpg
       :alt: image
       :width: 45.0%
 
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/RA_DEC_footprint.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_10yr/RA_DEC_footprint.jpg
       :alt: image
       :width: 45.0%
    
-   .. image:: figures/pz_challenge_taskset_1_test_10yr/RA_DEC_footprint.jpg
+   .. image:: figures/pz_challenge_taskset_3_test_10yr/RA_DEC_footprint.jpg
       :alt: image
       :width: 45.0%
 
@@ -45,16 +45,16 @@ The data preparation for taskset 3 including the following steps:
 
 .. container:: image-gallery
 
-   .. image:: figures/pz_challenge_taskset_1_training_1yr/mag_number_counts_Rubin.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_1yr/mag_number_counts_Rubin.jpg
       :width: 45.0%
 
-   .. image:: figures/pz_challenge_taskset_1_test_1yr/mag_number_counts_Rubin.jpg
+   .. image:: figures/pz_challenge_taskset_3_test_1yr/mag_number_counts_Rubin.jpg
       :width: 45.0%
 	      
-   .. image:: figures/pz_challenge_taskset_1_training_1yr/mag_number_counts_Roman.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_1yr/mag_number_counts_Roman.jpg
       :width: 45.0%
 
-   .. image:: figures/pz_challenge_taskset_1_test_1yr/mag_number_counts_Roman.jpg
+   .. image:: figures/pz_challenge_taskset_3_test_1yr/mag_number_counts_Roman.jpg
       :width: 45.0%
 	       
    Number counts as a function of magnitude for Rubin (top) and Roman (bottom) bands
@@ -63,19 +63,19 @@ The data preparation for taskset 3 including the following steps:
 
 .. container:: image-gallery
    
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/gr_vs_ug_sidebyside.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_10yr/gr_vs_ug_sidebyside.jpg
       :alt: image
       :width: 80.0%
 
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/ri_vs_gr_sidebyside.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_10yr/ri_vs_gr_sidebyside.jpg
       :alt: image
       :width: 80.0%
    
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/iz_vs_ri_sidebyside.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_10yr/iz_vs_ri_sidebyside.jpg
       :alt: image
       :width: 80.0%
 
-   .. image:: figures/pz_challenge_taskset_1_training_10yr/zy_vs_iz_sidebyside.jpg
+   .. image:: figures/pz_challenge_taskset_3_training_10yr/zy_vs_iz_sidebyside.jpg
       :alt: image
       :width: 80.0%
 
