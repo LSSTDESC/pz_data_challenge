@@ -81,6 +81,18 @@ The data preparation for taskset 3 including the following steps:
 
    Color-color plots for 10 year training sets pairs of adjacent bands.
 
+.. container:: image-gallery
+   
+   .. image:: figures/pz_challenge_taskset_3_training_1yr/sigma_nmad_vs_mag_i.jpg
+      :alt: image
+      :width: 80.0%
 
+   .. image:: figures/pz_challenge_taskset_3_training_1yr/foutlier_vs_mag_i.jpg
+      :alt: image
+      :width: 80.0%
+
+   Normalized median absolute deviation (left) and outlier fraction (right) of 
+   emulated mock COSMOS2020 photometric redshifts as a function of i-band 
+   magnitude for 1 and 10 year training data sets. 
 
 ..  LocalWords:  taskset
