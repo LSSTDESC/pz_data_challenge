@@ -95,4 +95,27 @@ The data preparation for taskset 3 including the following steps:
    emulated mock COSMOS2020 photometric redshifts as a function of i-band 
    magnitude for 1 and 10 year training data sets. 
 
+.. container:: image-gallery
+
+   .. image:: figures/fig_ts3_flag_counts.png
+      :alt: Spectroscopic survey flag counts
+      :width: 80.0%
+
+   Number of training objects selected by each spectroscopic survey flag
+   (DEEP2, VVDSf02, zCOSMOS, DESI BGS/ELG/LRG, COSMOS) for all four
+   training files (Cardinal and Flagship, 1 and 10 year).
+
+.. container:: image-gallery
+
+   .. image:: figures/fig_ts3_nz_by_flag.png
+      :alt: N(z) by spectroscopic survey flag
+      :width: 80.0%
+
+   Normalised redshift distributions N(z) of training galaxies split by
+   spectroscopic survey flag. Each flag selects a distinct redshift range
+   reflecting the target selection of the underlying survey. The dashed
+   pink curve shows N(z) derived from the many-band photometric redshift
+   (``redshift_manyband``) for COSMOS-selected objects, whose true
+   spectroscopic redshifts are not available.
+
 ..  LocalWords:  taskset

@@ -87,4 +87,27 @@ The data preparation for taskset 4 including the following steps:
 
 
 
+.. container:: image-gallery
+
+   .. image:: figures/fig_ts4_flag_counts.png
+      :alt: Spectroscopic survey flag counts
+      :width: 80.0%
+
+   Number of training objects selected by each spectroscopic survey flag
+   (DEEP2, VVDSf02, zCOSMOS, COSMOS, DESI BGS/ELG/LRG) for Cardinal and
+   Flagship 1-year training files. Taskset 4 training is 1-year only;
+   no 10-year training data is provided.
+
+.. container:: image-gallery
+
+   .. image:: figures/fig_ts4_nz_by_flag.png
+      :alt: N(z) by spectroscopic survey flag
+      :width: 80.0%
+
+   Normalised redshift distributions N(z) of training galaxies split by
+   spectroscopic survey flag. The dashed purple curve shows N(z) derived
+   from the many-band photometric redshift (``redshift_manyband``) for
+   COSMOS-selected objects, whose true spectroscopic redshifts are not
+   available.
+
 ..  LocalWords:  taskset
