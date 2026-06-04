@@ -853,12 +853,12 @@ The subtasks in this task set are:
    provide the estimates in a downloadable ``tar`` file.
 
 #. Provide pre-trained models appropriate to each of the training files
-   and implement a Python function (``run_taskset_2_estimation_only``)
+   and implement a Python function (``run_taskset_4_estimation_only``)
    to use those pre-trained models to estimate :math:`p(z)` for each
    object in the associated test files.
 
 #. Implement a Python function
-   (``run_taskset_2_training_and_estimation``) to train a model for each
+   (``run_taskset_4_training_and_estimation``) to train a model for each
    training file and use that model to estimate :math:`p(z)` for each
    object in the associated test files.
 
