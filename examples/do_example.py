@@ -1,3 +1,5 @@
+import tables_io
+import numpy as np
 from rail.core.data import TableHandle
 from rail.estimation.algos import sklearn_neurnet
 from rail.utils import catalog_utils
@@ -17,8 +19,17 @@ def train_and_estimate(
     scenario: str,
 ) -> None:
 
+    # clean up the training data
+    train_data_path = f"public/pz_challenge_{taskset}_{sim}_training_{scenario}.hdf5"
+    uncleaned_training_data = tables_io.read(train_data_path)
+    bad_mask = np.isnan(uncleaned_training_data['redshift'])
+    if bad_mask.any():
+        cleaned_training_data = {key: val[~bad_mask] for key, val in uncleaned_training_data.items()}
+        train_data_path = train_data_path.replace('.hdf5', '_cleaned.hdf5')
+        tables_io.write(cleaned_training_data, train_data_path)
+
     train_data = TableHandle(
-        "train", path=f"public/pz_challenge_{taskset}_{sim}_training_{scenario}.hdf5"
+        "train", path=train_data_path,
     )
     test_data = TableHandle(
         "test", path=f"public/pz_challenge_{taskset}_{sim}_test_{scenario}.hdf5"
@@ -33,7 +44,7 @@ def train_and_estimate(
         os.makedirs("evaluation")
     except:
         pass
-    
+
     model_path = f"submission/pz_challenge_{taskset}_{sim}_pz_model_{scenario}.pkl"
     output_path = f"submission/pz_challenge_{taskset}_{sim}_pz_estimate_{scenario}.hdf5"
     evaluate_path = f"evaluation/pz_challenge_{taskset}_{sim}_pz_evaluation_{scenario}.hdf5"
@@ -66,7 +77,7 @@ def train_and_estimate(
     pz_evaluate.data.ancil["object_id"] = train_data()["object_id"].astype(int)
     pz_evaluate.path = evaluate_path
     pz_evaluate.write()
-    
+
 
 
 if __name__ == "__main__":
