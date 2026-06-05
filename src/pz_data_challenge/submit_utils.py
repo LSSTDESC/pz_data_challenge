@@ -18,15 +18,30 @@ _DOWNLOAD_RETRY_DELAY = 5
 
 
 def _download_to_tempfile(url: str) -> str:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".tar") as tmp_file:
+    temp_dir = os.environ.get("RUNNER_TEMP", tempfile.gettempdir())
+    
+    with tempfile.NamedTemporaryFile(
+        delete=False, 
+        suffix=".tar",
+        dir=temp_dir
+    ) as tmp_file:
         tmp_path = tmp_file.name
 
     try:
-        with urllib.request.urlopen(url, timeout=_DOWNLOAD_TIMEOUT) as response:
+        # Add headers to mimic a browser
+        req = urllib.request.Request(
+            url,
+            headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        )
+        
+        with urllib.request.urlopen(req, timeout=_DOWNLOAD_TIMEOUT) as response:
             with open(tmp_path, "wb") as downloaded_file:
                 shutil.copyfileobj(response, downloaded_file)
     except Exception:
-        os.unlink(tmp_path)
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
         raise
 
     return tmp_path
