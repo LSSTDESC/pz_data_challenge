@@ -6,7 +6,7 @@ DATADIR = 'public'
 EVALUATION_DIR = 'evaluation'
 PLOTS_DIR = 'metric_plots'
 
-TASKSETS = ["taskset_1", "taskset_2"]
+TASKSETS = ["taskset_1", "taskset_2", "taskset_3", "taskset_4"]
 SIMS = ["cardinal", "flagship"]
 SCENARIOS = ["1yr", "10yr"]
 
