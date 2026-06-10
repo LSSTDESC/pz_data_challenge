@@ -823,9 +823,7 @@ Task set 4: Estimate redshifts on non-representative samples, including narrowba
 The fourth and final task in the PZ challenge is to estimate redshifts
 on a sample of objects that include “unrecognized blends”. I.e.,
 multiple object that are detected as a single object by the image
-processing algorithms.
-
-using non-representative training samples. I.e., the training samples
+processing algorithm, and using non-representative training samples. I.e., the training samples
 are not drawn from the same distributions as the test samples. For this
 task set we applied the spectroscopic selection emulation for the
 training set, but retained all the objects down to :math:`i < 25.4` in
@@ -837,7 +835,7 @@ photometry.
 The four
 ``pz_challenge_taskset_4_{simulation}_training_{scenario}.hdf5`` files
 are the training sets for the “Flagship” and “Cardinal” simulations,
-emulating 1 year and 10 years of LSST data. Similar to the taskset 3
+emulating 1 year and 10 years of LSST data.  These are similar to the taskset 3
 files, except with emulated object blending applied.
 
 The corresponding
@@ -957,8 +955,30 @@ RAIL can emulate the selection functions of several different
 spectroscopic redshift surveys, including VVDSf02, zCOSMOS, DEEP2_LSST,
 and the DESI BGS, ELG, and LRG samples.
 
-We can also use RAIL to emulate narrowband photometric surveys and
-include small amounts of mislabeled reference redshifts.
+We can also use RAIL to emulate narrow-band photometric surveys and
+include small amounts of mislabeled reference redshifts. The performance
+of the narrow-band photometric redshifts is shown here:
+
+.. container:: figure*
+
+   |image2| |image3|
+
+
+Emulating unrecognized blending
+-------------------------------
+
+In the files for taskset 4 we emulate the effect of unrecognized
+blending, i.e., two or more objects being detected as a single object.
+Our blending algorithm is relatively simple: we apply a
+“friends-of-friends” matching algorithm with a 1.0 arcsecond linking
+length replace all groups with a single object with the summed fluxes in
+each of the bands.
+
+.. container:: figure*
+
+   |image4| |image5| |image6| |image7|
+   
+
 
 .. _prep_process:
 
@@ -1006,6 +1026,18 @@ reproducibility.
 .. |image| image:: figures/color_color_redshift_taskset_1_cardinal_10yr.png
    :width: 45.0%
 .. |image1| image:: figures/color_color_redshift_taskset_1_flagship_10yr.png
+   :width: 45.0%
+.. |image2| image:: figures/pz_challenge_taskset_3_training_10yr/foutlier_vs_mag_i.jpg
+   :width: 45.0%
+.. |image3| image:: figures/pz_challenge_taskset_3_training_10yr/sigma_nmad_vs_mag_i.jpg
+   :width: 45.0%
+.. |image4| image:: figures/n_objects_in_blend.png
+   :width: 45.0%
+.. |image5| image:: figures/blend_fractions.png
+   :width: 45.0%
+.. |image6| image:: figures/redshift_ratio.png
+   :width: 45.0%
+.. |image7| image:: figures/flux_contamination.png
    :width: 45.0%
 
 
