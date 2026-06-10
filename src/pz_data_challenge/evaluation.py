@@ -489,7 +489,7 @@ def make_qq_pit_plot(
     fig = plt.figure()
     
     lines = ['', '-', 'dashed']
-    colors = ['blue', 'orange', 'green', 'red', 'teal', 'grey']                   
+    # colors = ['blue', 'orange', 'green', 'red', 'teal', 'grey']                   
     fig = plt.figure()
     for i_sub, sub_ in enumerate(submissions):
         for i_row, row_ in data_dict[sub_].iterrows():        
@@ -500,7 +500,8 @@ def make_qq_pit_plot(
             if row_['sim'] != 1:
                 continue    
             cdf = np.cumsum(row_['y_vals'].clip(0, 5))
-            plt.plot(row_['x_vals'], cdf/cdf[-1], ls=lines[row_['taskset']], c=colors[i_sub], label=f"{sub_} {row_['taskset']}")
+            #plt.plot(row_['x_vals'], cdf/cdf[-1], ls=lines[row_['taskset']], c=colors[i_sub], label=f"{sub_} {row_['taskset']}")
+            plt.plot(row_['x_vals'], cdf/cdf[-1], ls=lines[row_['taskset']], label=f"{sub_} {row_['taskset']}")
     _ = plt.plot([0,1],[0,1])
     _ = plt.xlim(0, 1)
     _ = plt.ylim(0, 1)
