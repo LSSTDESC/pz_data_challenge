@@ -274,7 +274,8 @@ def make_eval_plots_and_summarize(
                 os.path.join(results_dir, task),
                 force=force,
             )
-        except Exception:
+        except Exception as exc:
+            print(exc)
             pass
 
     merge_results_summaries(results_dir, submission_name)
