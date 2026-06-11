@@ -50,7 +50,7 @@ def _capture_paths(monkeypatch: pytest.MonkeyPatch, module, runner) -> list[str]
 
     runner(
         "public",
-        "submission",
+        ".",
         estimation_only,
         training_and_estimation,
     )
