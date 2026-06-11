@@ -13,7 +13,7 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 
 from pz_data_challenge import submit_utils
 SUBMISSION_NAME: str = "bpz_31temps_4tasks"
-SUBMISSION_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/submit_bpz_31temps_4tasks.tgz"
+SUBMISSION_URL: str = "https://portal.nersc.gov/cfs/lsst/schmidt9/submit_bpz_31temps_4tasks.tgz"
 
 mag_limits_10yr = {
     "mag_u_lsst": 27.79,
