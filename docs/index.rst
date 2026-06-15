@@ -508,7 +508,9 @@ expected file they check that:
 #. the object_ids in the submission file match the associated test file.
 
 If any of these checks fail, the GitHub action triggered by the
-submission will fail and report the cause of the failure.
+submission will fail and report the cause of the failure.   *Note that
+the github actions occasionally fail to download the data files.  If this happens
+simply rerunning the action typically succeeds.*
 
 The easiest way to test that you have correctly implemented the required
 functions is simply to run these commands.
