@@ -138,6 +138,13 @@ def run_taskset_x_estimation_only(
     """
     test_data = TableHandle("test", path=test_file)
 
+    if "flagship" in output_file:
+        kern = 0.12
+    elif "cardinal" in output_file:
+        kern = 0.04
+    else:
+        kern = 0.0
+    
     informer = BPZliteInformer.make_stage(
         name="inform",
         output_HDFN=True,
@@ -159,6 +166,7 @@ def run_taskset_x_estimation_only(
         zp_offsets=[0.,0.,0.,0.,0.,0.,0.,0.,0.],
         zp_errors=[0.01, 0.01, 0.01,0.01, 0.01, 0.01,0.01, 0.01, 0.01],
         mag_limits=mag_limits_10yr,
+        gauss_kernel=kern,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -193,6 +201,14 @@ def run_taskset_x_training_and_estimation(
     train_data = TableHandle("train", path=train_file)
     test_data = TableHandle("test", path=test_file)
 
+    if "flagship" in output_file:
+        kern = 0.12
+    elif "cardinal" in output_file:
+        kern = 0.04
+    else:
+        kern = 0.0
+
+    
     informer = BPZliteInformer.make_stage(
         name="inform",
         hdf5_groupname="",
@@ -213,6 +229,7 @@ def run_taskset_x_training_and_estimation(
         zp_offsets=[0.,0.,0.,0.,0.,0.,0.,0.,0.],
         zp_errors=[0.01, 0.01, 0.01,0.01, 0.01, 0.01,0.01, 0.01, 0.01],
         mag_limits=mag_limits_10yr,
+        gauss_kernel=kern,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
