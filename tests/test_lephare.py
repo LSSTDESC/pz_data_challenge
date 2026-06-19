@@ -33,17 +33,23 @@ flux_err_cols = [f"mag_{b}_lsst_err" for b in "ugrizy"]
 flux_err_cols += [f"mag_{b}_roman_err" for b in "YJH"]
 
 config = lsst_default_config.copy()
-config.update(
-    {
-        "MAG_REF": "2",
-        "ERR_SCALE": "0.02",
-        "FILTER_CALIB": "0",
-        "FILTER_LIST": lsst_default_config["FILTER_LIST"]
-        + ",roman/Roman_WFI.F106.dat,roman/Roman_WFI.F129.dat,roman/Roman_WFI.F158.dat",
-        "ZPHOTLIB": "LSST_STAR_MAG,LSST_GAL_MAG",
-        "Z_STEP": "0.02,0.,3.",
-    }
-)
+updates = {
+    "MAG_REF": "2",
+    "ERR_SCALE": "0.02",
+    "FILTER_CALIB": "0",
+    "FILTER_LIST": lsst_default_config["FILTER_LIST"]
+    + ",roman/Roman_WFI.F106.dat,roman/Roman_WFI.F129.dat,roman/Roman_WFI.F158.dat",
+    "GLB_CONTEXT": "0",
+    "MABS_CONTEXT": "0",
+    # Remove AGN for speed
+    "ZPHOTLIB": "LSST_STAR_MAG,LSST_GAL_MAG",
+    "Z_STEP": "0.02,0.,3.",
+    "EM_DISPERSION": "0.5,1.,1.5",
+    "ERR_FACTOR": "1.",
+}
+config.update(updates)
+params = {f"lephare.{k}": v for k, v in updates.items()}
+params["gal.MOD_EXTINC"] = ("16,24,24,31,24,31,24,31",)
 
 
 @pytest.fixture(name="setup_submit_area", scope="module")
@@ -113,7 +119,7 @@ def run_taskset_1_estimation_only(
         err_bands=flux_err_cols,
         hdf5_groupname="",
         lephare_config_from_model=False,
-        **{f"lephare.{k}": v for k, v in config.items()},
+        **params,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -154,7 +160,7 @@ def run_taskset_1_training_and_estimation(
         nondetect_val=np.nan,
         model="lephare.pkl",
         hdf5_groupname="",
-        **{f"lephare.{k}": v for k, v in config.items()},
+        **params,
         bands=flux_cols,
         err_bands=flux_err_cols,
         ref_band="mag_g_lsst",
@@ -218,7 +224,7 @@ def run_taskset_2_estimation_only(
         err_bands=flux_err_cols,
         hdf5_groupname="",
         lephare_config_from_model=False,
-        **{f"lephare.{k}": v for k, v in config.items()},
+        **params,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -256,7 +262,7 @@ def run_taskset_2_training_and_estimation(
         nondetect_val=np.nan,
         model="lephare.pkl",
         hdf5_groupname="",
-        **{f"lephare.{k}": v for k, v in config.items()},
+        **params,
         bands=flux_cols,
         err_bands=flux_err_cols,
         ref_band="mag_g_lsst",
