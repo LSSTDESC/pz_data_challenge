@@ -1,3 +1,10 @@
+"""Submission utilities for downloading, validating, and checking photo-z submissions.
+
+This module provides helper functions for downloading tar archives,
+validating photo-z submission files against test data, and printing
+manifest/timing summaries.
+"""
+
 import os
 import shutil
 import tarfile
@@ -11,19 +18,17 @@ from pathlib import Path
 import qp
 import tables_io
 
-
 _DOWNLOAD_RETRIES = 3
 _DOWNLOAD_TIMEOUT = 30
 _DOWNLOAD_RETRY_DELAY = 5
 
 
 def _download_to_tempfile(url: str) -> str:
+    """Download a URL to a temporary file and return its path."""
     temp_dir = os.environ.get("RUNNER_TEMP", tempfile.gettempdir())
-    
+
     with tempfile.NamedTemporaryFile(
-        delete=False, 
-        suffix=".tar",
-        dir=temp_dir
+        delete=False, suffix=".tar", dir=temp_dir
     ) as tmp_file:
         tmp_path = tmp_file.name
 
@@ -32,10 +37,10 @@ def _download_to_tempfile(url: str) -> str:
         req = urllib.request.Request(
             url,
             headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            },
         )
-        
+
         with urllib.request.urlopen(req, timeout=_DOWNLOAD_TIMEOUT) as response:
             with open(tmp_path, "wb") as downloaded_file:
                 shutil.copyfileobj(response, downloaded_file)
@@ -211,6 +216,14 @@ def check_pz_submission_file(
 
 
 def pretty_print_manifest_dict(manifest_dict: dict[str, Any]) -> None:
+    """Print a formatted table of validation check results.
+
+    Parameters
+    ----------
+    manifest_dict : dict[str, Any]
+        Dictionary mapping submission keys to lists of passed check IDs.
+        Keys containing "time" are skipped.
+    """
     print("Key                            Status")
     print("-------------------------------------------")
 
@@ -229,7 +242,14 @@ def pretty_print_manifest_dict(manifest_dict: dict[str, Any]) -> None:
 
 
 def pretty_print_time_dict(manifest_dict: dict[str, Any]) -> None:
+    """Print a formatted table of timing results.
 
+    Parameters
+    ----------
+    manifest_dict : dict[str, Any]
+        Dictionary mapping keys to timing values. Only keys containing
+        "time" are printed.
+    """
     print("Key                            Time")
     print("-------------------------------------------")
     for key, time_ in manifest_dict.items():
@@ -240,9 +260,20 @@ def pretty_print_time_dict(manifest_dict: dict[str, Any]) -> None:
 
 
 def check_manifest_dict(manifest_dict: dict[str, Any]) -> None:
+    """Validate that all submission checks passed.
+
+    Parameters
+    ----------
+    manifest_dict : dict[str, Any]
+        Dictionary mapping submission keys to lists of passed check IDs.
+
+    Raises
+    ------
+    ValueError
+        If any non-timing key does not include check 7 (object ID match).
+    """
     for key, checks in manifest_dict.items():
         if key.find("time") >= 0:
             continue
         if 7 not in checks:
             raise ValueError(f"Checks failed for {key} {list(checks)}")
-

@@ -32,7 +32,7 @@ SIMS_DICT = dict(cardinal=1, flagship=2)
 SCENARIOS_DICT = {"1yr": 1, "10yr": 2}
 
 
-def copy_file(input_path, output_path):
+def copy_file(input_path: str, output_path: str) -> None:
     """
     Copy a text file to an output file
 
@@ -61,7 +61,7 @@ def copy_file(input_path, output_path):
     except FileNotFoundError:
         print(f"Warning: Input file '{input_path}' not found", file=sys.stderr)
     except PermissionError:
-        print(f"Warning: Permission denied when accessing files", file=sys.stderr)
+        print("Warning: Permission denied when accessing files", file=sys.stderr)
     except Exception as e:
         print(f"Warning: {str(e)}", file=sys.stderr)
 
@@ -154,7 +154,7 @@ def merge_results_summaries(
         with open(file_) as fin:
             try:
                 all_dict[file_.replace(f"{results_dir}/", "")] = yaml.safe_load(fin)
-            except:
+            except Exception:
                 pass
 
     summary_file = os.path.join(RESULTS_TOP_DIR, f"summary_{submission}.yaml")
@@ -324,7 +324,7 @@ def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
                     try:
                         point_data = results_data[f"{key}_point.yaml"]
                         temp_dict.update(**point_data)
-                    except:
+                    except Exception:
                         temp_dict.update(
                             abs_outlier_rate=np.nan,
                             mean=np.nan,
@@ -485,7 +485,7 @@ def get_timing_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
             temp_dict.update(**dd)
             temp_list.append(temp_dict.copy())
 
-    out_dict = {}
+    out_dict: dict[str, Any] = {}
     for next_dict in temp_list:
         for k, v in next_dict.items():
             if k in out_dict:
@@ -496,8 +496,8 @@ def get_timing_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(out_dict)
 
 
-def get_pit_prob(results_data):
-    """Extract PIT probability fro data.
+def get_pit_prob(results_data: Dict[str, Any]) -> pd.DataFrame:
+    """Extract PIT probability from data.
 
     Parameters
     ----------
@@ -531,7 +531,7 @@ def get_pit_prob(results_data):
                     temp_dict.update(**point_data)
                     temp_list.append(temp_dict)
 
-    out_dict = {}
+    out_dict: dict[str, Any] = {}
     for next_dict in temp_list:
         for k, v in next_dict.items():
             if k in out_dict:
@@ -673,7 +673,15 @@ def make_point_summaries(
     results_dir: str,
     submissions: list[str],
 ) -> None:
+    """Generate summary strip plots for point-estimate metrics.
 
+    Parameters
+    ----------
+    results_dir : str
+        Directory where summary plots will be saved.
+    submissions : list[str]
+        List of submission identifiers to include.
+    """
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions, "point")
 
     dd_outliers = evaluation.get_metric_summary_dict(
@@ -711,7 +719,15 @@ def make_PIT_summaries(
     results_dir: str,
     submissions: list[str],
 ) -> None:
+    """Generate summary strip plots for PIT Q-Q metrics.
 
+    Parameters
+    ----------
+    results_dir : str
+        Directory where summary plots will be saved.
+    submissions : list[str]
+        List of submission identifiers to include.
+    """
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions)
 
     dd_outlier = evaluation.get_metric_summary_dict_multi(
@@ -758,7 +774,15 @@ def make_timing_summaries(
     results_dir: str,
     submissions: list[str],
 ) -> None:
+    """Generate summary strip plots for algorithm timing metrics.
 
+    Parameters
+    ----------
+    results_dir : str
+        Directory where summary plots will be saved.
+    submissions : list[str]
+        List of submission identifiers to include.
+    """
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions, "timing")
 
     fig_algo_estimate_time = evaluation.make_algo_estimate_time_strip_plot(
@@ -778,7 +802,15 @@ def make_PIT_plot(
     results_dir: str,
     submissions: list[str],
 ) -> None:
+    """Generate PIT Q-Q comparison plot across submissions.
 
+    Parameters
+    ----------
+    results_dir : str
+        Directory where the Q-Q plot will be saved.
+    submissions : list[str]
+        List of submission identifiers to include.
+    """
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions, "pit_prob")
 
     fig_qq_plot = evaluation.make_qq_pit_plot(data_dict, submissions)
@@ -791,7 +823,17 @@ def make_submission_summary_rst(
     submissions: list[str],
     template_file: str,
 ) -> None:
+    """Render RST summary pages for each submission from a Jinja2 template.
 
+    Parameters
+    ----------
+    results_dir : str
+        Base directory for output RST files.
+    submissions : list[str]
+        List of submission identifiers.
+    template_file : str
+        Path to the Jinja2 RST template file.
+    """
     with open(template_file, "r") as f:
         template = Template(f.read())
 
@@ -816,8 +858,16 @@ def make_scores(
     results_dir: str,
     submissions: list[str],
 ) -> None:
+    """Compute and save scoring summaries for all submissions.
 
-    data_dict = evaluation.build_summary_data_dict(results_dir, submissions, 'point')
+    Parameters
+    ----------
+    results_dir : str
+        Directory where score CSV and YAML files will be written.
+    submissions : list[str]
+        List of submission identifiers to score.
+    """
+    data_dict = evaluation.build_summary_data_dict(results_dir, submissions, "point")
     score_dict = scoring.score_all_metrics(data_dict, scoring.metric_dict)
     scores = scoring.extract_score(score_dict, "percentages")
     with open(f"{results_dir}/scores_full.csv", "w", encoding="utf-8") as fout:
@@ -829,7 +879,15 @@ def make_all_summary_plots_and_files(
     results_dir: str,
     submissions: list[str],
 ) -> None:
+    """Generate all summary plots, scores, and RST files.
 
+    Parameters
+    ----------
+    results_dir : str
+        Directory where all summary outputs will be written.
+    submissions : list[str]
+        List of submission identifiers to process.
+    """
     if not os.environ.get("SKIP_SUMMARIZE"):
         make_point_summaries(results_dir, submissions)
         make_PIT_summaries(results_dir, submissions)
