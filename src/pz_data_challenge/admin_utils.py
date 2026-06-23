@@ -11,6 +11,7 @@ import subprocess
 import sys
 from typing import Any, Dict, List
 import yaml
+import numpy as np
 
 import glob
 import pandas as pd
@@ -58,11 +59,11 @@ def copy_file(input_path, output_path):
         print(f"Successfully created {output_path} from {input_path}\n")
 
     except FileNotFoundError:
-        print(f"Error: Input file '{input_path}' not found", file=sys.stderr)
+        print(f"Warning: Input file '{input_path}' not found", file=sys.stderr)
     except PermissionError:
-        print(f"Error: Permission denied when accessing files", file=sys.stderr)
+        print(f"Warning: Permission denied when accessing files", file=sys.stderr)
     except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
+        print(f"Warning: {str(e)}", file=sys.stderr)
 
 
 def extract_dataframes(
@@ -151,7 +152,10 @@ def merge_results_summaries(
     all_dict = {}
     for file_ in all_files:
         with open(file_) as fin:
-            all_dict[file_.replace(f"{results_dir}/", "")] = yaml.safe_load(fin)
+            try:
+                all_dict[file_.replace(f"{results_dir}/", "")] = yaml.safe_load(fin)
+            except:
+                pass
 
     summary_file = os.path.join(RESULTS_TOP_DIR, f"summary_{submission}.yaml")
     with open(summary_file, "w", encoding="utf-8") as fout:
@@ -188,15 +192,18 @@ def make_submission_eval_plots(
             for scenario_ in SCENARIOS:
                 prefix = f"{taskset_}_{sim_}_{scenario_}"
 
-                sub_data_dict = metrics.get_truth_and_qp_ensemble(
-                    reseved_data_dir,
-                    submission_data_dir,
-                    taskset_,
-                    sim_,
-                    scenario_,
-                    test_label="test",
-                    eval_label="pz_estimate",
-                )
+                try:
+                    sub_data_dict = metrics.get_truth_and_qp_ensemble(
+                        reseved_data_dir,
+                        submission_data_dir,
+                        taskset_,
+                        sim_,
+                        scenario_,
+                        test_label="test",
+                        eval_label="pz_estimate",
+                    )
+                except Exception:
+                    continue
                 test_data = sub_data_dict[f"{prefix}_test"]
                 submit_data = sub_data_dict[f"{prefix}_evaluate"]
 
@@ -276,7 +283,7 @@ def make_eval_plots_and_summarize(
             )
         except Exception as exc:
             print(exc)
-            pass
+            raise
 
     merge_results_summaries(results_dir, submission_name)
 
@@ -316,11 +323,25 @@ def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
                     )
                     try:
                         point_data = results_data[f"{key}_point.yaml"]
+                        temp_dict.update(**point_data)
+                    except:
+                        temp_dict.update(
+                            abs_outlier_rate=np.nan,
+                            mean=np.nan,
+                            mean_err=np.nan,
+                            outlier_rate=np.nan,
+                            std=np.nan,
+                        )
+                    try:
                         pit_data = results_data[f"{key}_pit_qq.yaml"]
+                        temp_dict.update(**pit_data)
                     except KeyError:
-                        continue
-                    temp_dict.update(**point_data)
-                    temp_dict.update(**pit_data)
+                        temp_dict.update(
+                            CvM=np.nan,
+                            ks=np.nan,
+                            ksamp=np.nan,
+                            outlier=np.nan,
+                        )
                     temp_list.append(temp_dict)
 
     out_dict: Dict[str, List[Any]] = {}
@@ -541,9 +562,10 @@ def run_submission(
     if os.path.exists(os.path.join(results_dir, "pytest.log")) and not force:
         return
 
-    subprocess.run(
-        ["pip", "install", "-r", f"requirements_{submission_name}.txt"], check=True
-    )
+    if not os.environ.get("SKIP_INSTALL"):
+        subprocess.run(
+            ["pip", "install", "-r", f"requirements_{submission_name}.txt"], check=True
+        )
 
     os.environ["NO_TEARDOWN"] = "1"
 
@@ -652,7 +674,7 @@ def make_point_summaries(
     submissions: list[str],
 ) -> None:
 
-    data_dict = evaluation.build_summary_data_dict(results_dir, submissions)
+    data_dict = evaluation.build_summary_data_dict(results_dir, submissions, "point")
 
     dd_outliers = evaluation.get_metric_summary_dict(
         data_dict, submissions, "abs_outlier_rate"
@@ -692,12 +714,12 @@ def make_PIT_summaries(
 
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions)
 
-    dd_outlier = evaluation.get_metric_summary_dict_mulit(
+    dd_outlier = evaluation.get_metric_summary_dict_multi(
         data_dict, submissions, "outlier"
     )
-    dd_CvM = evaluation.get_metric_summary_dict_mulit(data_dict, submissions, "CvM")
-    dd_ks = evaluation.get_metric_summary_dict_mulit(data_dict, submissions, "ks")
-    dd_ksamp = evaluation.get_metric_summary_dict_mulit(data_dict, submissions, "ksamp")
+    dd_CvM = evaluation.get_metric_summary_dict_multi(data_dict, submissions, "CvM")
+    dd_ks = evaluation.get_metric_summary_dict_multi(data_dict, submissions, "ks")
+    dd_ksamp = evaluation.get_metric_summary_dict_multi(data_dict, submissions, "ksamp")
 
     fig_CvM = evaluation.make_strip_plot(
         dd_CvM,
@@ -795,7 +817,7 @@ def make_scores(
     submissions: list[str],
 ) -> None:
 
-    data_dict = evaluation.build_summary_data_dict(results_dir, submissions)
+    data_dict = evaluation.build_summary_data_dict(results_dir, submissions, 'point')
     score_dict = scoring.score_all_metrics(data_dict, scoring.metric_dict)
     scores = scoring.extract_score(score_dict, "percentages")
     with open(f"{results_dir}/scores_full.csv", "w", encoding="utf-8") as fout:

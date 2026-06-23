@@ -97,7 +97,11 @@ def build_summary_data_dict(
     data_dict = {}
     for sub_ in submissions:
         submission_file = os.path.join(results_dir, f"summary_{sub_}_{summary_type}.parq")
-        data_dict[sub_] = tables_io.read(submission_file)
+        try:
+            data_dict[sub_] = tables_io.read(submission_file)
+        except Exception as exc:
+            print(f"Skipping {sub_}_{summary_type} because {exc}")            
+            pass
     return data_dict
 
 
@@ -143,7 +147,7 @@ def get_metric_summary_dict(
     return out_dict
 
 
-def get_metric_summary_dict_mulit(
+def get_metric_summary_dict_multi(
     data_dict: dict[str, Any],
     submissions: list[str],
     metric: str,
@@ -171,7 +175,7 @@ def get_metric_summary_dict_mulit(
 
     Examples
     --------
-    >>> metric_dict = get_metric_summary_dict_mulit(data, subs, 'accuracy')
+    >>> metric_dict = get_metric_summary_dict_multi(data, subs, 'accuracy')
     >>> values, runs = metric_dict['improved_algo']
     """
     out_dict: dict[str, tuple] = {}
@@ -489,9 +493,10 @@ def make_qq_pit_plot(
     fig = plt.figure()
     
     lines = ['', '-', 'dashed']
-    # colors = ['blue', 'orange', 'green', 'red', 'teal', 'grey']                   
     fig = plt.figure()
-    for i_sub, sub_ in enumerate(submissions):
+    for sub_ in submissions:
+        if sub_ not in data_dict:
+            continue
         for i_row, row_ in data_dict[sub_].iterrows():        
             if row_['task'] != 1:
                 continue
@@ -500,7 +505,6 @@ def make_qq_pit_plot(
             if row_['sim'] != 1:
                 continue    
             cdf = np.cumsum(row_['y_vals'].clip(0, 5))
-            #plt.plot(row_['x_vals'], cdf/cdf[-1], ls=lines[row_['taskset']], c=colors[i_sub], label=f"{sub_} {row_['taskset']}")
             plt.plot(row_['x_vals'], cdf/cdf[-1], ls=lines[row_['taskset']], label=f"{sub_} {row_['taskset']}")
     _ = plt.plot([0,1],[0,1])
     _ = plt.xlim(0, 1)

@@ -102,11 +102,14 @@ def plot_pit_prob_plot(
 
     pit_prob_plotter = pz_dist_plotters.PZPlotterPITProb(**kwargs)
 
-    return pit_prob_plotter.run(
-        prefix,
-        truth=test_data['redshift'],
-        pz=submit_data,
-    )
+    try:
+        return pit_prob_plotter.run(
+            prefix,
+            truth=test_data['redshift'],
+            pz=submit_data,
+        )
+    except:
+        return {}
 
 
 def plot_pit_qq_plot(
@@ -118,8 +121,11 @@ def plot_pit_qq_plot(
 
     pit_qq_plotter = pz_dist_plotters.PZPlotterPITQQ(**kwargs)
 
-    return pit_qq_plotter.run(
-        prefix,
-        truth=test_data['redshift'],
-        pz=submit_data,
-    )
+    try:
+        return pit_qq_plotter.run(
+            prefix,
+            truth=test_data['redshift'],
+            pz=submit_data,
+        )
+    except:
+        return {}

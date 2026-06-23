@@ -40,7 +40,11 @@ using increasingly realistic data.  Here we present the results.
    results/lsst_v5/index
    results/dnf_lsst_fallback/index
    results/dnf_roman_fallback/index
-
+   results/knn_baseline/index
+   results/lephare/index
+   results/owenqueen/index
+   results/pz_resnet_flow/index
+   results/rail_knn_4tasks/index
 
 
 	     
