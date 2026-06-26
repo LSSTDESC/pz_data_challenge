@@ -24,7 +24,7 @@ using increasingly realistic data.  Here we present the results.
    :maxdepth: 2
    :caption: Summaries of Results
 
-   results/high_level_summary
+   high_level_summary
    results/taskset_1_summary
    results/taskset_2_summary
 
@@ -38,7 +38,13 @@ using increasingly realistic data.  Here we present the results.
    results/bpz_31temps/index
    results/lsst_v3/index
    results/lsst_v5/index
-
+   results/dnf_lsst_fallback/index
+   results/dnf_roman_fallback/index
+   results/knn_baseline/index
+   results/lephare/index
+   results/owenqueen/index
+   results/pz_resnet_flow/index
+   results/rail_knn_4tasks/index
 
 
 	     

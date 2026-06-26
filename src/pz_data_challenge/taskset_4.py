@@ -1,3 +1,9 @@
+"""Taskset 4 runner for the photo-z data challenge.
+
+Executes estimation-only and training+estimation pipelines for taskset 4
+across all simulation/scenario combinations and validates outputs.
+"""
+
 import os
 import time
 from typing import Any, Callable
@@ -12,10 +18,28 @@ SCENARIOS = ["1yr", "10yr"]
 def run_taskset_4(
     public_area: str,
     submission: str,
-    run_taskset_4_estimation_only: Callable,
-    run_taskset_4_training_and_estimation: Callable,
+    run_taskset_4_estimation_only: Callable[[str, str, str], None] | None,
+    run_taskset_4_training_and_estimation: Callable[[str, str, str], None] | None,
 ) -> None:
+    """Run taskset 4 evaluation for a submission.
 
+    Iterates over all simulation/scenario combinations, validates pre-made
+    submission files, then optionally runs estimation-only and
+    training+estimation pipelines, validating their outputs.
+
+    Parameters
+    ----------
+    public_area : str
+        Path to the directory containing public challenge data files.
+    submission : str
+        Submission identifier used to locate submission directory.
+    run_taskset_4_estimation_only : Callable[[str, str, str], None] | None
+        Function taking (model_file, test_file, output_file) that runs
+        estimation from a pre-trained model. None to skip.
+    run_taskset_4_training_and_estimation : Callable[[str, str, str], None] | None
+        Function taking (training_file, test_file, output_file) that trains
+        and estimates. None to skip.
+    """
     submit_dir: str = f"submissions/{submission}"
 
     manifest_dict: dict[str, Any] = {}
@@ -53,6 +77,9 @@ def run_taskset_4(
                 submit_file, test_file
             )
 
+            if os.environ.get("SKIP_TASKS_23"):
+                continue
+
             # Run the estimate only function
             if run_taskset_4_estimation_only is not None:
                 time_2_before = time.time()
@@ -79,11 +106,10 @@ def run_taskset_4(
                     output_file_3, test_file
                 )
 
-
     submit_utils.pretty_print_manifest_dict(manifest_dict)
 
     stats_file = os.path.join(submit_dir, "stats_taskset4.yaml")
-    with open(stats_file, 'w', encoding='utf-8') as fout:
+    with open(stats_file, "w", encoding="utf-8") as fout:
         yaml.dump(manifest_dict, fout)
 
     submit_utils.check_manifest_dict(manifest_dict)

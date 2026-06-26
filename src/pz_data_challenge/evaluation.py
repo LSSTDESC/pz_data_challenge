@@ -16,16 +16,15 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import tables_io
 
-
 Y_LABEL_STRINGS = [
-    'taskset_1_1yr_cardinal',
-    'taskset_1_1yr_flagship',
-    'taskset_1_10yr_cardinal',
-    'taskset_1_10yr_flagship',
-    'taskset_2_1yr_cardinal',
-    'taskset_2_1yr_flagship',
-    'taskset_2_10yr_cardinal',
-    'taskset_2_10yr_flagship',
+    "taskset_1_1yr_cardinal",
+    "taskset_1_1yr_flagship",
+    "taskset_1_10yr_cardinal",
+    "taskset_1_10yr_flagship",
+    "taskset_2_1yr_cardinal",
+    "taskset_2_1yr_flagship",
+    "taskset_2_10yr_cardinal",
+    "taskset_2_10yr_flagship",
 ]
 
 
@@ -54,7 +53,10 @@ def get_submissions(accept_dir: str = "../accepted") -> list[str]:
     ['baseline', 'improved_algo', 'fast_estimator']
     """
     test_string = f"{accept_dir}/test_"
-    submissions = [f.replace(test_string, '').replace('.py', '') for f in glob.glob(f"{test_string}*.py")]
+    submissions = [
+        f.replace(test_string, "").replace(".py", "")
+        for f in glob.glob(f"{test_string}*.py")
+    ]
     return submissions
 
 
@@ -74,7 +76,7 @@ def build_summary_data_dict(
     results_dir
         Directory path containing summary result files.
     submissions
-        List of submission identifiers to load. If None, automatically 
+        List of submission identifiers to load. If None, automatically
         discovers submissions using get_submissions().
     summary_type
         Type of summary data to load (e.g., "point", "pit-qq", "timing").
@@ -93,11 +95,17 @@ def build_summary_data_dict(
     """
     if submissions is None:
         submissions = get_submissions()
-        
+
     data_dict = {}
     for sub_ in submissions:
-        submission_file = os.path.join(results_dir, f"summary_{sub_}_{summary_type}.parq")
-        data_dict[sub_] = tables_io.read(submission_file)
+        submission_file = os.path.join(
+            results_dir, f"summary_{sub_}_{summary_type}.parq"
+        )
+        try:
+            data_dict[sub_] = tables_io.read(submission_file)
+        except Exception as exc:
+            print(f"Skipping {sub_}_{summary_type} because {exc}")
+            pass
     return data_dict
 
 
@@ -135,15 +143,19 @@ def get_metric_summary_dict(
     out_dict: dict[str, tuple] = {}
     for sub_ in submissions:
         try:
-            task1_mask = data_dict[sub_]['task'] == 1
+            task1_mask = data_dict[sub_]["task"] == 1
         except KeyError:
             continue
-        run_ = 4*(data_dict[sub_]['taskset']-1) + 2*(data_dict[sub_]['scenario']-1) + (data_dict[sub_]['sim']-1)
+        run_ = (
+            4 * (data_dict[sub_]["taskset"] - 1)
+            + 2 * (data_dict[sub_]["scenario"] - 1)
+            + (data_dict[sub_]["sim"] - 1)
+        )
         out_dict[sub_] = (data_dict[sub_][metric][task1_mask], run_[task1_mask])
     return out_dict
 
 
-def get_metric_summary_dict_mulit(
+def get_metric_summary_dict_multi(
     data_dict: dict[str, Any],
     submissions: list[str],
     metric: str,
@@ -171,13 +183,18 @@ def get_metric_summary_dict_mulit(
 
     Examples
     --------
-    >>> metric_dict = get_metric_summary_dict_mulit(data, subs, 'accuracy')
+    >>> metric_dict = get_metric_summary_dict_multi(data, subs, 'accuracy')
     >>> values, runs = metric_dict['improved_algo']
     """
     out_dict: dict[str, tuple] = {}
     for sub_ in submissions:
         try:
-            run_ = 16*(data_dict[sub_]['taskset']-1) + 8*(data_dict[sub_]['scenario']-1) + 4*(data_dict[sub_]['sim']-1) + (data_dict[sub_]['task']-1)
+            run_ = (
+                16 * (data_dict[sub_]["taskset"] - 1)
+                + 8 * (data_dict[sub_]["scenario"] - 1)
+                + 4 * (data_dict[sub_]["sim"] - 1)
+                + (data_dict[sub_]["task"] - 1)
+            )
         except KeyError:
             continue
         out_dict[sub_] = (data_dict[sub_][metric], run_)
@@ -222,33 +239,37 @@ def make_algo_estimate_time_strip_plot(
     Times are normalized by dividing by 20k (objects per measurement).
     """
     fig = plt.figure()
-        
+
     n_sub = len(submissions)
     y_min = -0.5
     y_max = n_sub - 0.5
     for i_sub, sub_ in enumerate(submissions):
         try:
-            task2_mask = data[sub_]['task'] == 2
-            times = data[sub_]['time'][task2_mask]/20
+            task2_mask = data[sub_]["task"] == 2
+            times = data[sub_]["time"][task2_mask] / 20
         except KeyError:
             continue
         mean_task_2 = np.mean(times)
-        std_task_2 = np.std(times)    
-        _ = plt.errorbar(mean_task_2, i_sub, xerr=std_task_2, label=sub_, ls="", marker=".")
+        std_task_2 = np.std(times)
+        _ = plt.errorbar(
+            mean_task_2, i_sub, xerr=std_task_2, label=sub_, ls="", marker="."
+        )
 
-    _ = plt.yticks(np.linspace(0, n_sub-1, n_sub), submissions)
+    _ = plt.yticks(np.linspace(0, n_sub - 1, n_sub), submissions)
     _ = plt.xlabel(metric_label)
     _ = plt.xlim(metric_limits)
     _ = plt.ylim(y_min, y_max)
     _ = plt.legend()
 
     for metric_range in metric_ranges:
-        _ = plt.fill_between(metric_range, [y_min, y_min], [y_max, y_max], color='gray', alpha=0.1)
-    _ = plt.xscale('log')
+        _ = plt.fill_between(
+            metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
+        )
+    _ = plt.xscale("log")
 
     plt.tight_layout()
-    return plt.gcf()
-    
+    return fig
+
 
 def make_algo_inform_time_strip_plot(
     data: dict[str, Any],
@@ -288,43 +309,45 @@ def make_algo_inform_time_strip_plot(
     X-axis uses logarithmic scale.
     """
     fig = plt.figure()
-    
+
     n_sub = len(submissions)
     y_min = -0.5
     y_max = n_sub - 0.5
-    
-    estimate_only = {}
-    inform_only = {}
+
     for i_sub, sub_ in enumerate(submissions):
         try:
-            task2_mask = data[sub_]['task'] == 2 
-            task3_mask = data[sub_]['task'] == 3
+            task2_mask = data[sub_]["task"] == 2
+            task3_mask = data[sub_]["task"] == 3
         except KeyError:
             continue
 
-        mean_task_2 = np.mean(data[sub_]['time'][task2_mask])
-        mean_task_3 = np.mean(data[sub_]['time'][task3_mask])
+        mean_task_2 = np.mean(data[sub_]["time"][task2_mask])
+        mean_task_3 = np.mean(data[sub_]["time"][task3_mask])
 
-        std_task_3 = np.std(data[sub_]['time'][task3_mask])
+        std_task_3 = np.std(data[sub_]["time"][task3_mask])
 
-        inform_time = max(mean_task_3-mean_task_2, 10)
-    
-        _ = plt.errorbar(inform_time, i_sub, xerr=max(std_task_3, 10), label=sub_, ls="", marker=".")
+        inform_time = max(mean_task_3 - mean_task_2, 10)
 
-    _= plt.yticks(np.linspace(0, n_sub-1, n_sub), submissions)
+        _ = plt.errorbar(
+            inform_time, i_sub, xerr=max(std_task_3, 10), label=sub_, ls="", marker="."
+        )
+
+    _ = plt.yticks(np.linspace(0, n_sub - 1, n_sub), submissions)
     _ = plt.xlabel("Inform time [s]")
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
     _ = plt.legend()
-    
+
     for metric_range in metric_ranges:
-        _ = plt.fill_between(metric_range, [y_min, y_min], [y_max, y_max], color='gray', alpha=0.1)
-    _ = plt.xscale('log')
+        _ = plt.fill_between(
+            metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
+        )
+    _ = plt.xscale("log")
 
     plt.tight_layout()
-    return plt.gcf()
-    
-    
+    return fig
+
+
 def make_strip_plot(
     data: dict[str, Any],
     metric_label: str,
@@ -363,31 +386,27 @@ def make_strip_plot(
     ...                       [[-0.02, 0.02], [-0.05, 0.05]])
     """
     fig = plt.figure()
-    
+
     n_y_labels = len(y_label_strings)
     y_min = -0.5
-    y_max = n_y_labels-0.5
-    
+    y_max = n_y_labels - 0.5
+
     for key, val in data.items():
         plt.scatter(val[0], val[1], label=key)
-        
-    _ = plt.yticks(np.linspace(0, n_y_labels-1, n_y_labels), y_label_strings)
+
+    _ = plt.yticks(np.linspace(0, n_y_labels - 1, n_y_labels), y_label_strings)
     _ = plt.xlabel(metric_label)
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
     _ = plt.legend()
-    
-    for metric_range in metric_ranges:        
+
+    for metric_range in metric_ranges:
         _ = plt.fill_between(
-            metric_range,
-            [y_min, y_min],
-            [y_max, y_max],
-            color='gray',
-            alpha=0.1
+            metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
         )
 
     plt.tight_layout()
-    return plt.gcf()
+    return fig
 
 
 def make_strip_plot_multi(
@@ -395,7 +414,7 @@ def make_strip_plot_multi(
     metric_label: str,
     metric_limits: list[float],
     metric_ranges: list[list[float]],
-    y_label_strings: list[str] = Y_LABEL_STRINGS,    
+    y_label_strings: list[str] = Y_LABEL_STRINGS,
 ) -> Figure:
     """
     Create an extended strip plot for multiple tasks per configuration.
@@ -428,31 +447,27 @@ def make_strip_plot_multi(
     tasks per configuration.
     """
     fig = plt.figure()
-    
+
     n_y_labels = len(y_label_strings)
     y_min = -0.5
-    y_max = 4*(n_y_labels) - 0.5
-    
+    y_max = 4 * (n_y_labels) - 0.5
+
     for key, val in data.items():
         plt.scatter(val[0], val[1], label=key)
-        
-    _ = plt.yticks(np.linspace(1, 4*(n_y_labels-1), n_y_labels), y_label_strings)
+
+    _ = plt.yticks(np.linspace(1, 4 * (n_y_labels - 1), n_y_labels), y_label_strings)
     _ = plt.xlabel(metric_label)
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
     _ = plt.legend()
-    
-    for metric_range in metric_ranges:        
+
+    for metric_range in metric_ranges:
         _ = plt.fill_between(
-            metric_range,
-            [y_min, y_min],
-            [y_max, y_max],
-            color='gray',
-            alpha=0.1
+            metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
         )
 
     plt.tight_layout()
-    return plt.gcf()
+    return fig
 
 
 def make_qq_pit_plot(
@@ -468,7 +483,7 @@ def make_qq_pit_plot(
     Parameters
     ----------
     data_dict
-        Dictionary of submission data tables containing 'x_vals' and 'y_vals' 
+        Dictionary of submission data tables containing 'x_vals' and 'y_vals'
         columns with histogram data.
     submissions
         List of submission identifiers to plot.
@@ -487,37 +502,43 @@ def make_qq_pit_plot(
     - Perfect calibration would follow the diagonal line
     """
     fig = plt.figure()
-    
-    lines = ['', '-', 'dashed']
-    colors = ['blue', 'orange', 'green', 'red', 'teal', 'grey']                   
+
+    lines = ["", "-", "dashed"]
     fig = plt.figure()
-    for i_sub, sub_ in enumerate(submissions):
-        for i_row, row_ in data_dict[sub_].iterrows():        
-            if row_['task'] != 1:
+    for sub_ in submissions:
+        if sub_ not in data_dict:
+            continue
+        for i_row, row_ in data_dict[sub_].iterrows():
+            if row_["task"] != 1:
                 continue
-            if row_['scenario'] != 1:
+            if row_["scenario"] != 1:
                 continue
-            if row_['sim'] != 1:
-                continue    
-            cdf = np.cumsum(row_['y_vals'].clip(0, 5))
-            plt.plot(row_['x_vals'], cdf/cdf[-1], ls=lines[row_['taskset']], c=colors[i_sub], label=f"{sub_} {row_['taskset']}")
-    _ = plt.plot([0,1],[0,1])
+            if row_["sim"] != 1:
+                continue
+            cdf = np.cumsum(row_["y_vals"].clip(0, 5))
+            plt.plot(
+                row_["x_vals"],
+                cdf / cdf[-1],
+                ls=lines[row_["taskset"]],
+                label=f"{sub_} {row_['taskset']}",
+            )
+    _ = plt.plot([0, 1], [0, 1])
     _ = plt.xlim(0, 1)
     _ = plt.ylim(0, 1)
     _ = plt.xlabel("Q")
     _ = plt.ylabel(r"$p(z_{\rm ref} < z(Q))$")
     _ = plt.legend()
 
-    plt.tight_layout()    
-    return plt.gcf()
+    plt.tight_layout()
+    return fig
 
 
 def make_point_v_redshift_plot(
     data_dict: dict[str, Any],
     submissions: list[str],
-    label: str, 
+    label: str,
     metric: str,
-    metric_limits: list[float],    
+    metric_limits: list[float],
     metric_ranges: list[list[float]],
 ) -> Figure:
     """
@@ -529,7 +550,7 @@ def make_point_v_redshift_plot(
     Parameters
     ----------
     data_dict
-        Dictionary of submission data tables containing redshift ('z_mean') 
+        Dictionary of submission data tables containing redshift ('z_mean')
         and metric columns.
     submissions
         List of submission identifiers to plot.
@@ -540,7 +561,7 @@ def make_point_v_redshift_plot(
     metric_limits
         Y-axis limits as [min, max].
     metric_ranges
-        List of [min, max] ranges to highlight with horizontal gray shading 
+        List of [min, max] ranges to highlight with horizontal gray shading
         across the full redshift range.
 
     Returns
@@ -557,44 +578,50 @@ def make_point_v_redshift_plot(
     - Y-axis label is hardcoded for photometric redshift bias
     """
     fig = plt.figure()
-    
-    lines = ['', '-', 'dashed']
-    colors = ['blue', 'orange', 'green', 'red']
+
+    lines = ["", "-", "dashed"]
+    colors = ["blue", "orange", "green", "red"]
     for i_sub, sub_ in enumerate(submissions):
-        task1_mask = data_dict[sub_]['task'] == 1
-        for i_row, row_ in data_dict[sub_][task1_mask].iterrows():        
-            if row_['task'] != 1:
+        task1_mask = data_dict[sub_]["task"] == 1
+        for i_row, row_ in data_dict[sub_][task1_mask].iterrows():
+            if row_["task"] != 1:
                 continue
-            if row_['scenario'] == 1:
+            if row_["scenario"] == 1:
                 continue
-            if row_['sim'] == 1:
-                continue            
-            plt.plot(row_['z_mean'], row_[metric], ls=lines[row_['taskset']], c=colors[i_sub], label=f"{sub_} {row_['taskset']}")
+            if row_["sim"] == 1:
+                continue
+            plt.plot(
+                row_["z_mean"],
+                row_[metric],
+                ls=lines[row_["taskset"]],
+                c=colors[i_sub],
+                label=f"{sub_} {row_['taskset']}",
+            )
     _ = plt.legend()
     _ = plt.xlim(0, 2.5)
     _ = plt.ylim(metric_limits)
-    _ = plt.xlabel(r'$z_{\rm ref}$')
+    _ = plt.xlabel(r"$z_{\rm ref}$")
     _ = plt.ylabel(label)
-    
-    for metric_range in metric_ranges:        
+
+    for metric_range in metric_ranges:
         _ = plt.fill_between(
-            [0., 2.5],
+            [0.0, 2.5],
             [metric_range[0], metric_range[0]],
             [metric_range[1], metric_range[1]],
-            color='gray',
-            alpha=0.1
+            color="gray",
+            alpha=0.1,
         )
-    
+
     plt.tight_layout()
-    return plt.gcf()
+    return fig
 
 
 def make_point_v_mag_plot(
     data_dict: dict[str, Any],
     submissions: list[str],
-    label: str, 
+    label: str,
     metric: str,
-    metric_limits: list[float],    
+    metric_limits: list[float],
     metric_ranges: list[list[float]],
 ) -> Figure:
     """
@@ -606,7 +633,7 @@ def make_point_v_mag_plot(
     Parameters
     ----------
     data_dict
-        Dictionary of submission data tables containing redshift ('z_mean') 
+        Dictionary of submission data tables containing redshift ('z_mean')
         and metric columns.
     submissions
         List of submission identifiers to plot.
@@ -617,7 +644,7 @@ def make_point_v_mag_plot(
     metric_limits
         Y-axis limits as [min, max].
     metric_ranges
-        List of [min, max] ranges to highlight with horizontal gray shading 
+        List of [min, max] ranges to highlight with horizontal gray shading
         across the full redshift range.
 
     Returns
@@ -634,33 +661,39 @@ def make_point_v_mag_plot(
     - Y-axis label is hardcoded for photometric redshift bias
     """
     fig = plt.figure()
-    
-    lines = ['', '-', 'dashed']
-    colors = ['blue', 'orange', 'green', 'red']
+
+    lines = ["", "-", "dashed"]
+    colors = ["blue", "orange", "green", "red"]
     for i_sub, sub_ in enumerate(submissions):
-        task1_mask = data_dict[sub_]['task'] == 1
-        for i_row, row_ in data_dict[sub_][task1_mask].iterrows():        
-            if row_['task'] != 1:
+        task1_mask = data_dict[sub_]["task"] == 1
+        for i_row, row_ in data_dict[sub_][task1_mask].iterrows():
+            if row_["task"] != 1:
                 continue
-            if row_['scenario'] == 1:
+            if row_["scenario"] == 1:
                 continue
-            if row_['sim'] == 1:
-                continue            
-            plt.plot(row_['i_mag'], row_[metric], ls=lines[row_['taskset']], c=colors[i_sub], label=f"{sub_} {row_['taskset']}")
+            if row_["sim"] == 1:
+                continue
+            plt.plot(
+                row_["i_mag"],
+                row_[metric],
+                ls=lines[row_["taskset"]],
+                c=colors[i_sub],
+                label=f"{sub_} {row_['taskset']}",
+            )
     _ = plt.legend()
     _ = plt.xlim(20, 24.5)
     _ = plt.ylim(metric_limits)
-    _ = plt.xlabel(r'$z_{\rm ref}$')
+    _ = plt.xlabel(r"$z_{\rm ref}$")
     _ = plt.ylabel(label)
-    
-    for metric_range in metric_ranges:        
+
+    for metric_range in metric_ranges:
         _ = plt.fill_between(
-            [20., 24.5],
+            [20.0, 24.5],
             [metric_range[0], metric_range[0]],
             [metric_range[1], metric_range[1]],
-            color='gray',
-            alpha=0.1
+            color="gray",
+            alpha=0.1,
         )
-    
+
     plt.tight_layout()
-    return plt.gcf()
+    return fig

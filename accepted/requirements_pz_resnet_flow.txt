@@ -1,0 +1,8 @@
+# requirements_pz_resnet_flow.txt
+torch>=2.0.0
+numpy>=1.24.0
+pandas>=2.0.0
+h5py>=3.8.0
+qp-prob>=0.4.0
+tables-io
+scipy>=1.10.0
