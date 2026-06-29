@@ -95,8 +95,16 @@ def calculate_metrics(pdfs, true_z, z_edges):
     for i, z_t in enumerate(true_z):
         pdf = pdfs[i]
         idx = np.clip(np.searchsorted(z_centers, z_t), 0, len(z_centers) - 1)
-        cum_pdf = np.cumsum(pdf) * dz
-        pdf_at_true.append(max(pdf[idx], eps))
+        sum_val = np.sum(pdf)
+        
+        if np.abs(sum_val * dz - 1.0) < np.abs(sum_val - 1.0):
+            cum_pdf = np.cumsum(pdf) * dz
+            val = pdf[idx]
+        else:
+            cum_pdf = np.cumsum(pdf)
+            val = pdf[idx] / dz
+            
+        pdf_at_true.append(max(val, eps))
         pit_values.append(np.clip(cum_pdf[idx], 0.0, 1.0))
         
     avg_log_lik = np.mean(np.log(pdf_at_true))
