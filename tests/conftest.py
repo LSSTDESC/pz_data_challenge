@@ -4,7 +4,7 @@ import pytest
 from pz_data_challenge import submit_utils
 
 # don't change these
-PUBLIC_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public_test.tgz"
+PUBLIC_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public.tgz"
 
 
 @pytest.fixture(name="setup_public_area", scope="package")
