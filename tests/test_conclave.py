@@ -22,7 +22,6 @@ from rail.utils import catalog_utils
 
 from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
-from pz_data_challenge.taskset_2 import run_taskset_2
 
 from conclave.submission import (
     run_taskset_1_training_and_estimation as _conclave_train_and_estimate,
@@ -106,19 +105,8 @@ def run_taskset_1_training_and_estimation(
     _conclave_train_and_estimate(train_file, str(test_file), str(output_file))
 
 
-def run_taskset_2_estimation_only(
-    model_file: str | Path, test_file: str | Path, output_file: str | Path,
-) -> None:
-    run_taskset_1_estimation_only(model_file, test_file, output_file)
-
-
-def run_taskset_2_training_and_estimation(
-    train_file: str | Path, test_file: str | Path, output_file: str | Path,
-) -> None:
-    run_taskset_1_training_and_estimation(train_file, test_file, output_file)
-
-
 def test_example_taskset_1(setup_public_area: int, setup_submit_area: int) -> None:
+    # TS1 submission: only Task Set 1 deliverables are shipped (Task Set 2 closes later).
     assert setup_public_area == 0
     assert setup_submit_area == 0
     run_taskset_1(
@@ -126,15 +114,4 @@ def test_example_taskset_1(setup_public_area: int, setup_submit_area: int) -> No
         SUBMISSION_NAME,
         run_taskset_1_estimation_only,
         run_taskset_1_training_and_estimation,
-    )
-
-
-def test_example_taskset_2(setup_public_area: int, setup_submit_area: int) -> None:
-    assert setup_public_area == 0
-    assert setup_submit_area == 0
-    run_taskset_2(
-        PUBLIC_AREA,
-        SUBMISSION_NAME,
-        run_taskset_2_estimation_only,
-        run_taskset_2_training_and_estimation,
     )
