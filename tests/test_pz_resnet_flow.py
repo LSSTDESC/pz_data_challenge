@@ -20,7 +20,7 @@ from pz_data_challenge import submit_utils
 # and a URL to download the sumission data files
 # and needed model files
 SUBMISSION_NAME: str = "pz_resnet_flow"
-SUBMISSION_URL: str = "https://github.com/kpngbsee/pz_data_challenge/releases/download/v1.0/pzdatachallenge_resnet_flow_submission_20260622_143934.tgz"
+SUBMISSION_URL: str = "https://github.com/kpngbsee/pz_data_challenge/releases/download/v1.0/pzdatachallenge_resnet_flow_dedicated_submission_20260702_161411.tgz"
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -416,6 +416,53 @@ def run_taskset_2_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
+    import qp
+    import torch
+    import numpy as np
+    import tables_io
+    from pathlib import Path
+    from sklearn.preprocessing import StandardScaler
+    
+    
+    print(f"Run Taskset 2 - Estimation Only")
+    print(f"  Model: {model_file}")
+    print(f"  Test: {test_file}")
+    print(f"  Output: {output_file}")
+    
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"  Device: {device}")
+    
+    checkpoint = torch.load(model_file, map_location=device, weights_only=False)
+    
+    # Initialize model
+    model = ConditionalResNetWithTimeEmbedding(
+        z_dim=1, t_dim=1, x_dim=6,
+        hidden_dim=512, num_blocks=5, dropout=0.1, time_emb_dim=32
+    )
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model = model.to(device)
+    model.eval()
+    
+    # Reconstruct scalers from baked-in parameters
+    scaler_X = StandardScaler()
+    scaler_X.mean_ = checkpoint['scaler_X_mean']
+    scaler_X.scale_ = checkpoint['scaler_X_scale']
+    
+    scaler_y = StandardScaler()
+    scaler_y.mean_ = checkpoint['scaler_y_mean']
+    scaler_y.scale_ = checkpoint['scaler_y_scale']
+    
+    # Generate predictions
+    z_grid = np.linspace(0, 3.0, 301)
+    object_ids, z_modes, samples = generate_predictions_for_test(
+        model, test_file, scaler_X, scaler_y, device,
+        n_samples=500, n_ode_steps=20
+    )
+    
+    # Save predictions in qp format
+    save_predictions_qp(object_ids, z_modes, samples, z_grid, output_file)
+    print(f"Estimation complete!")
+    print(f"  Objects: {len(object_ids)}")
     return
 
 
