@@ -3,7 +3,7 @@ torch>=2.0.0
 numpy>=1.24.0
 pandas>=2.0.0
 h5py>=3.8.0
-qp>=0.4.0
+qp==0.4.0
 tables-io>=2.0.0
 scipy>=1.10.0
 scikit-learn>=1.0.0
