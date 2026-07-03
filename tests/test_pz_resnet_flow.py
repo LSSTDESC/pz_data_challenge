@@ -229,7 +229,7 @@ def generate_predictions_for_test(model, test_file, scaler_X, scaler_y,
 
 
 def save_predictions_qp(object_ids, z_modes, samples, z_grid, output_file):
-    import qp
+    import qp_prob as qp
     
     n_objects = len(object_ids)
     n_bins = len(z_grid) - 1
