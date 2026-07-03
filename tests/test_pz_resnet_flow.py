@@ -9,7 +9,7 @@ import h5py
 import tables_io
 
 import pickle
-import qp_prob as qp
+import qp
 
 # These are used by test scripts
 from pz_data_challenge.taskset_1 import run_taskset_1
@@ -229,7 +229,7 @@ def generate_predictions_for_test(model, test_file, scaler_X, scaler_y,
 
 
 def save_predictions_qp(object_ids, z_modes, samples, z_grid, output_file):
-    import qp_prob as qp
+    import qp
     
     n_objects = len(object_ids)
     n_bins = len(z_grid) - 1
@@ -312,7 +312,7 @@ def run_taskset_1_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    import qp_prob as qp
+    import qp
     import torch
     import numpy as np
     import tables_io
@@ -416,7 +416,7 @@ def run_taskset_2_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    import qp_prob as qp
+    import sqp
     import torch
     import numpy as np
     import tables_io
