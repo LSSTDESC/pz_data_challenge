@@ -9,7 +9,7 @@ import h5py
 import tables_io
 
 import pickle
-import qp
+import qp_prob as qp
 
 # These are used by test scripts
 from pz_data_challenge.taskset_1 import run_taskset_1
@@ -312,7 +312,7 @@ def run_taskset_1_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    import qp
+    import qp_prob as qp
     import torch
     import numpy as np
     import tables_io
@@ -416,7 +416,7 @@ def run_taskset_2_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    import qp
+    import qp_prob as qp
     import torch
     import numpy as np
     import tables_io
