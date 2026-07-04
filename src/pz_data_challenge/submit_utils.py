@@ -1,3 +1,4 @@
+#mariano.dominguez@unc.edu.ar july 2026
 """Submission utilities for downloading, validating, and checking photo-z submissions.
 
 This module provides helper functions for downloading tar archives,

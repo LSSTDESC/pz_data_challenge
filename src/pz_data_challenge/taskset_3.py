@@ -1,3 +1,4 @@
+#mariano.dominguez@unc.edu.ar july 2026
 """Taskset 3 runner for the photo-z data challenge.
 
 Executes estimation-only and training+estimation pipelines for taskset 3
