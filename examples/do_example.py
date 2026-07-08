@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 from rail.core.data import TableHandle
 from rail.estimation.algos import sklearn_neurnet
 from rail.utils import catalog_utils

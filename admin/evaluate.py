@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 import glob
 import os
 import sys

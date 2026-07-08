@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from sphinx.util.docutils import SphinxDirective

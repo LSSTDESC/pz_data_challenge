@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 import os
 
 from pz_data_challenge import metrics

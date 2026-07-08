@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 import argparse
 import json
 import pickle

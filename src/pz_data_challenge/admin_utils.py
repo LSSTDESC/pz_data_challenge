@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 """Administrative utilities for submission processing and evaluation.
 
 This module provides functions for processing, evaluating, and analyzing

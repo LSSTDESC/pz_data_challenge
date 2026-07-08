@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 import math
 import os
 from pathlib import Path

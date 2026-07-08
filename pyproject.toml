@@ -2,7 +2,7 @@
 name = "pz-data-challenge"
 description = "Photometric redshift data challenge"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 license = { file = "LICENSE" }
 authors = [
     { name = "The LSST DESC PZ WG", email = "echarles@slac.stanford.edu" },

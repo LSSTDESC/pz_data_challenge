@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 import os
 import pickle
 import sys

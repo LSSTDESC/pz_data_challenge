@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#mariano.dominguez@unc.edu.ar july 2026
 """Build precomputed rail_knn_4tasks submission tarball."""
 import math
 import os

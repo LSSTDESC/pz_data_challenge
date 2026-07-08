@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 """
 Scoring utilities for evaluating submission performance against metric thresholds.
 

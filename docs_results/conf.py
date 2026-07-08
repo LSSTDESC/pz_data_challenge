@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.

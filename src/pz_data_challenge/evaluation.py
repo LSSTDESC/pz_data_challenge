@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 """
 Visualization and analysis utilities for astronomical survey submission results.
 

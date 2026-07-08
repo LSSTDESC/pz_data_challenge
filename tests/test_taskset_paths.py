@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 import sys
 from pathlib import Path
 
@@ -49,20 +48,12 @@ def _capture_paths(monkeypatch: pytest.MonkeyPatch, module, runner) -> list[str]
         lambda manifest_dict: None,
     )
 
-    import os
-    import shutil
-    os.makedirs("submissions/submission", exist_ok=True)
-
-    try:
-        runner(
-            "public",
-            "submission",
-            estimation_only,
-            training_and_estimation,
-        )
-    finally:
-        if os.path.exists("submissions/submission"):
-            shutil.rmtree("submissions/submission")
+    runner(
+        "public",
+        "submission",
+        estimation_only,
+        training_and_estimation,
+    )
 
     return filenames
 

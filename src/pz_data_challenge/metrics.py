@@ -1,4 +1,3 @@
-#mariano.dominguez@unc.edu.ar july 2026
 """Metric computation and plotting for photometric redshift estimates.
 
 This module provides functions for loading truth/submission data and
