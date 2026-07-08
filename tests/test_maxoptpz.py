@@ -32,8 +32,7 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 from pz_data_challenge import submit_utils
 
 SUBMISSION_NAME: str = "maxoptpz"
-SUBMISSION_URL: str = ""
-
+SUBMISSION_URL: str = "https://github.com/mardom/pz_data_challenge/releases/download/v1.0.0/maxoptpz.tgz"
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = "tests/public"
 
