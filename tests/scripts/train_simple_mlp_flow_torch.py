@@ -106,6 +106,35 @@ def split_indices(n: int, val_frac: float, test_frac: float, seed: int):
     return train, val, test
 
 
+def load_pretrained_weights(model: nn.Module, checkpoint_path: Path) -> dict:
+    bundle = torch.load(checkpoint_path, map_location="cpu")
+    if not isinstance(bundle, dict) or "model_state" not in bundle:
+        raise SystemExit(f"Invalid checkpoint format in {checkpoint_path}")
+    state = bundle["model_state"]
+    current = model.state_dict()
+    bad_shapes = []
+    for key, tensor in state.items():
+        if key in current and current[key].shape != tensor.shape:
+            bad_shapes.append((key, tuple(tensor.shape), tuple(current[key].shape)))
+    if bad_shapes:
+        lines = [
+            f"{key}: checkpoint {old_shape} vs current {new_shape}"
+            for key, old_shape, new_shape in bad_shapes
+        ]
+        raise SystemExit(
+            "Pretrained checkpoint is not architecture-compatible.\n"
+            + "\n".join(lines)
+        )
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    if missing or unexpected:
+        print(
+            "Loaded pretrained checkpoint with partial match:"
+            f" missing={missing}, unexpected={unexpected}",
+            flush=True,
+        )
+    return bundle.get("metadata", {})
+
+
 def flow_loss(model, features, z_true):
     z0 = torch.randn_like(z_true)
     t = torch.rand_like(z_true)
@@ -153,12 +182,16 @@ def main() -> None:
     parser.add_argument("--posterior-samples", type=int, default=128)
     parser.add_argument("--sample-steps", type=int, default=64)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--split-seed", type=int, default=None)
     parser.add_argument("--max-rows", type=int, default=None)
+    parser.add_argument("--init-model", default=None, help="Optional path to pretrained simple_mlp_flow_model.pt")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    if args.split_seed is None:
+        args.split_seed = args.seed
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -187,7 +220,7 @@ def main() -> None:
     z_min = max(0.0, float(np.min(z)) - 0.05)
     z_max = float(np.max(z)) + 0.05
 
-    train_idx, val_idx, test_idx = split_indices(len(z), args.val_frac, args.test_frac, args.seed)
+    train_idx, val_idx, test_idx = split_indices(len(z), args.val_frac, args.test_frac, args.split_seed)
     x_tensor = torch.tensor(x, dtype=torch.float32)
     z_tensor = torch.tensor(z, dtype=torch.float32)
 
@@ -201,6 +234,10 @@ def main() -> None:
     val_z = z_tensor[val_idx].to(device)
 
     model = FlowMLP(x.shape[1] + 2, args.hidden, args.depth, args.dropout).to(device)
+    init_metadata = None
+    if args.init_model:
+        init_metadata = load_pretrained_weights(model, Path(args.init_model))
+        print(f"Initialized model from pretrained checkpoint: {args.init_model}", flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     log_rows = ["epoch,train_loss,val_loss"]
@@ -244,8 +281,11 @@ def main() -> None:
         "dropout": args.dropout,
         "epochs": args.epochs,
         "seed": args.seed,
+        "split_seed": args.split_seed,
         "device": str(device),
         "best_val_loss": best_val,
+        "init_model": args.init_model,
+        "init_metadata": init_metadata,
     }
     torch.save({"model_state": model.state_dict(), "metadata": metadata}, outdir / "simple_mlp_flow_model.pt")
     (outdir / "training_log.csv").write_text("\n".join(log_rows) + "\n", encoding="utf-8")
