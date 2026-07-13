@@ -140,10 +140,13 @@ def run_taskset_x_estimation_only(
 
     if "flagship" in output_file:
         kern = 0.12
+        madauflag = "yes"
     elif "cardinal" in output_file:
         kern = 0.04
+        madauflag = "no"
     else:
         kern = 0.0
+        madauflag = "no"
     
     informer = BPZliteInformer.make_stage(
         name="inform",
@@ -167,6 +170,7 @@ def run_taskset_x_estimation_only(
         zp_errors=[0.01, 0.01, 0.01,0.01, 0.01, 0.01,0.01, 0.01, 0.01],
         mag_limits=mag_limits_10yr,
         gauss_kernel=kern,
+        madau_flag=madauflag,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -203,10 +207,13 @@ def run_taskset_x_training_and_estimation(
 
     if "flagship" in output_file:
         kern = 0.12
+        madauflag = "yes"
     elif "cardinal" in output_file:
         kern = 0.04
+        madauflag = "no"
     else:
         kern = 0.0
+        madauflag = "no"
 
     
     informer = BPZliteInformer.make_stage(
@@ -230,6 +237,7 @@ def run_taskset_x_training_and_estimation(
         zp_errors=[0.01, 0.01, 0.01,0.01, 0.01, 0.01,0.01, 0.01, 0.01],
         mag_limits=mag_limits_10yr,
         gauss_kernel=kern,
+        madau_flag=madauflag,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
