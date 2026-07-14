@@ -176,6 +176,13 @@ def run_taskset_1_estimation_only(
     """Challenge subtask 2 entry point for taskset 1."""
     export_model_predictions_to_qp(model_file, test_file, output_file)
 
+def run_taskset_2_estimation_only(
+    model_file: str | Path,
+    test_file: str | Path,
+    output_file: str | Path,
+) -> None:
+    """Challenge subtask 2 entry point for taskset 2."""
+    export_model_predictions_to_qp(model_file, test_file, output_file)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export Simple MLP Flow predictions to official qp format.")
