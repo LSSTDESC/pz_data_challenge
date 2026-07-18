@@ -1,0 +1,7 @@
+conda install numpy
+pip install pandas
+pip install h5py
+pip install scikit-learn
+pip install cupy-cuda12x
+pip install qp-prob
+pip pyarrow
