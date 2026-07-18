@@ -3,6 +3,8 @@ from pathlib import Path
 import pytest
 
 # Put needed import here
+from inference_submission import run_estimation
+from train_submission import train_submission
 
 # These are used by test scripts
 from pz_data_challenge.taskset_1 import run_taskset_1
@@ -13,7 +15,7 @@ from pz_data_challenge import submit_utils
 # and a URL to download the sumission data files
 # and needed model files
 SUBMISSION_NAME: str = "cosom"
-SUBMISSION_URL: str = ""
+SUBMISSION_URL: str = "https://github.com/AlvaroCATA/files_pzchallenge/releases/download/files/models_and_predictions.tar.xz"
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -59,27 +61,19 @@ def run_taskset_1_estimation_only(
     output_file: str | Path,
 ) -> None:
     """
-    User supplied function to run estimation for task set 1
-
-    This function should use a model stored in model_file, which
-    is downloaded as part of the submission tar file.
-
-    This function should write output data to output_file in qp
-    format.
-
-    Parameters
-    ----------
-    model_file:
-        Path to the model.  This should be part of the submission
-        tar file.
-    test_file:
-        Path to the test file contains the photometric test data on
-        which the PZ estimation will be run
-    output_file:
-        Path to write the output data to.  The output data should
-        be written in qp format.
+    Run inference using a pretrained Co-SOM model.
     """
-    return
+
+
+    run_estimation(
+
+        model_file=model_file,
+
+        test_file=test_file,
+
+        output_file=output_file
+
+    )
 
 
 def run_taskset_1_training_and_estimation(
@@ -88,26 +82,40 @@ def run_taskset_1_training_and_estimation(
     output_file: str | Path,
 ) -> None:
     """
-    User supplied function to run training and estimation for task set 1
-
-    This function should train a model and use it.
-
-    This function should write output data to output_file in qp
-    format.
-
-    Parameters
-    ----------
-    train_file:
-        Path to the test file contains the photometric test data on
-        which the PZ estimation will be trained
-    test_file:
-        Path to the test file contains the photometric test data on
-        which the PZ estimation will be run
-    output_file:
-        Path to write the output data to.  The output data should
-        be written in qp format.
+    Train Co-SOM model and run inference.
     """
-    return
+
+    model_file = (
+        f"{SUBMIT_DIR}/cosom_model.pkl"
+    )
+
+
+    # ======================================================
+    # Train model
+    # ======================================================
+
+    train_submission(
+
+        train_file=train_file,
+
+        output_model=model_file
+
+    )
+
+
+    # ======================================================
+    # Run inference
+    # ======================================================
+
+    run_estimation(
+
+        model_file=model_file,
+
+        test_file=test_file,
+
+        output_file=output_file
+
+    )
 
 
 def run_taskset_2_estimation_only(
@@ -116,51 +124,74 @@ def run_taskset_2_estimation_only(
     output_file: str | Path,
 ) -> None:
     """
-    User supplied function to run estimation for task set 1
-
-    This function should use a model stored in model_file, which
-    is downloaded as part of the submission tar file.
-
-    This function should write output data to output_file in qp
-    format.
-
-    Parameters
-    ----------
-    model_file:
-        Path to the model.  This should be part of the submission
-        tar file.
-    test_file:
-        Path to the test file contains the photometric test data on
-        which the PZ estimation will be run
-    output_file:
-        Path to write the output data to.  The output data should
-        be written in qp format.
+    Run inference using a pretrained Co-SOM model for Task 2.
     """
-    return
 
+    run_estimation(
 
+        model_file=model_file,
+
+        test_file=test_file,
+
+        output_file=output_file
+
+    )
+    
 def run_taskset_2_training_and_estimation(
     train_file: str | Path,
     test_file: str | Path,
     output_file: str | Path,
 ) -> None:
     """
-    User supplied function to run training and estimation for task set 1
-
-    This function should train a model and use it.
-
-    This function should write output data to output_file in qp
-    format.
+    Train Co-SOM model for Task Set 2 and run inference.
 
     Parameters
     ----------
-    test_file:
-        Path to the test file contains the photometric test data on
-        which the PZ estimation will be run
-    output_file:
-        Path to write the output data to.  The output data should
-        be written in qp format.
+    train_file : str or Path
+        Task 2 training HDF5 file.
+
+    test_file : str or Path
+        Task 2 test HDF5 file.
+
+    output_file : str or Path
+        Output qp file.
     """
+
+
+    model_file = (
+        f"{SUBMIT_DIR}/task2_cosom_model.pkl"
+    )
+
+
+    # ======================================================
+    # Train Task 2 Co-SOM model
+    # ======================================================
+
+    train_submission(
+
+        train_file=train_file,
+
+        output_model=model_file
+
+    )
+
+
+    # ======================================================
+    # Run Task 2 inference
+    # ======================================================
+
+    run_estimation(
+
+        model_file=model_file,
+
+        test_file=test_file,
+
+        output_file=output_file
+
+    )
+
+
+
 
 
 def test_example_taskset_1(
