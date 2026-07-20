@@ -1,7 +1,9 @@
-"""CI test for the `conclave` TS1 submission (LSST-DESC PZ Data Challenge).
+"""CI test for the `conclave` TS1+TS2 submission (LSST-DESC PZ Data Challenge).
 
 conclave = a committee ensemble of PZFlow + GPz + FlexZBoost combined with convex-QP
-optimal weights and a global-PIT recalibration. The method lives in the pip-installable
+optimal weights and a per-task-set PIT recalibration (TS1 global; TS2 support-deficit-
+binned, with the frozen deficit reference carried inside the pretrained model bundles).
+The method lives in the pip-installable
 `conclave` package (github.com/rhw/conclave, pinned in requirements_conclave.txt); this
 test file is the thin submission entry point that the upstream harness discovers and runs.
 
@@ -22,10 +24,13 @@ from rail.utils import catalog_utils
 
 from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
+from pz_data_challenge.taskset_2 import run_taskset_2
 
 from conclave.submission import (
     run_taskset_1_training_and_estimation as _conclave_train_and_estimate,
     run_taskset_1_estimation_only as _conclave_estimate_only,
+    run_taskset_2_training_and_estimation as _conclave_ts2_train_and_estimate,
+    run_taskset_2_estimation_only as _conclave_ts2_estimate_only,
 )
 
 # CI concession: the full method trains 3 estimators (PZFlow/GPz/FlexZBoost) on 100k x 4
@@ -37,7 +42,7 @@ CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "0"))
 
 SUBMISSION_NAME: str = "conclave"
 # GitHub release .tgz of the pre-made estimates + pretrained models (set before opening the PR).
-SUBMISSION_URL: str = "https://github.com/rhw/conclave/releases/download/ts1-v1/conclave_submission.tgz"
+SUBMISSION_URL: str = "https://github.com/rhw/conclave/releases/download/ts2-v1/conclave_submission.tgz"
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = os.environ.get("PZDC_PUBLIC_AREA", "tests/public")
@@ -105,8 +110,20 @@ def run_taskset_1_training_and_estimation(
     _conclave_train_and_estimate(train_file, str(test_file), str(output_file))
 
 
+def run_taskset_2_estimation_only(
+    model_file: str | Path, test_file: str | Path, output_file: str | Path,
+) -> None:
+    _conclave_ts2_estimate_only(str(model_file), str(test_file), str(output_file))
+
+
+def run_taskset_2_training_and_estimation(
+    train_file: str | Path, test_file: str | Path, output_file: str | Path,
+) -> None:
+    train_file = _maybe_subsample_train(str(train_file))
+    _conclave_ts2_train_and_estimate(train_file, str(test_file), str(output_file))
+
+
 def test_example_taskset_1(setup_public_area: int, setup_submit_area: int) -> None:
-    # TS1 submission: only Task Set 1 deliverables are shipped (Task Set 2 closes later).
     assert setup_public_area == 0
     assert setup_submit_area == 0
     run_taskset_1(
@@ -114,4 +131,20 @@ def test_example_taskset_1(setup_public_area: int, setup_submit_area: int) -> No
         SUBMISSION_NAME,
         run_taskset_1_estimation_only,
         run_taskset_1_training_and_estimation,
+    )
+
+
+def test_example_taskset_2(setup_public_area: int, setup_submit_area: int) -> None:
+    # TS2: same ensemble, TRAINED ON ALL provided (spec-selected) training objects,
+    # with support-deficit-binned PIT recalibration (conclave.submission.TS2_CONFIG);
+    # the pretrained bundles carry the frozen deficit_ref the label-free kNN deficit
+    # is computed against. The release tarball at SUBMISSION_URL contains BOTH task
+    # sets' pre-made estimates + models (16 files, tag ts2-v1).
+    assert setup_public_area == 0
+    assert setup_submit_area == 0
+    run_taskset_2(
+        PUBLIC_AREA,
+        SUBMISSION_NAME,
+        run_taskset_2_estimation_only,
+        run_taskset_2_training_and_estimation,
     )
