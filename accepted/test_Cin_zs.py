@@ -4,9 +4,16 @@ import pytest
 import h5py
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-import torch.optim as optim
+
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    # Enable CuDNN auto-tuner for hardware-specific optimizations
+    torch.backends.cudnn.benchmark = True
+except ImportError:
+   pass
+
 import qp  
 from scipy.stats import norm
 
@@ -14,8 +21,6 @@ from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
 from pz_data_challenge import submit_utils
 
-# Enable CuDNN auto-tuner for hardware-specific optimizations
-torch.backends.cudnn.benchmark = True
 
 SUBMISSION_NAME: str = "Cin_zs"
 SUBMISSION_URL: str = "https://www.dropbox.com/scl/fi/fw39q1z4pxk5d6ffz22ur/Cin_zs_final_submission.tar.gz?rlkey=sqkkh21jrhm2m4epfzdesh4da&st=9hg4nobp&dl=1" 
