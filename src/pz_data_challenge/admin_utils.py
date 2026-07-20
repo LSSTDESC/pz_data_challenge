@@ -605,6 +605,8 @@ def evaluate_submission(
     results_dir: str,
     results_top_dir: str,
     reserved_data_path: str,
+    *,
+    force: bool=False,
 ) -> None:
     """Evaluate submission results.
 
@@ -620,18 +622,26 @@ def evaluate_submission(
         Path to the directory where results will be summarized.
     reserved_data_path : str
         Path to the reserved/validation data.
+    force: bool
+        Force runnning
     """
 
     # copy files from accepted area back to where they were
-    copy_file(
-        f"{accepted_dir}/requirements_{submission_name}.txt",
-        f"requirements_{submission_name}.txt",
-    )
+    try:
+        copy_file(
+            f"{accepted_dir}/requirements_{submission_name}.txt",
+            f"requirements_{submission_name}.txt",
+        )
+    except:
+        pass
 
-    copy_file(
-        f"{accepted_dir}/test_{submission_name}.py",
-        f"tests/test_{submission_name}.py",
-    )
+    try:
+        copy_file(
+            f"{accepted_dir}/test_{submission_name}.py",
+            f"tests/test_{submission_name}.py",
+        )
+    except:
+        pass
 
     failed = False
     # Run the submssion
@@ -641,6 +651,7 @@ def evaluate_submission(
                 submission_name,
                 submission_dir,
                 results_dir,
+                force=force,
             )
         except Exception:
             failed = True
