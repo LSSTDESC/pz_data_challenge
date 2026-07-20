@@ -44,4 +44,5 @@ if __name__ == "__main__":
             print(f"Failed to evaluate {submission_name} because {exc}")
             raise
 
-    admin_utils.make_all_summary_plots_and_files(RESULTS_TOP_DIR, all_submissions)
+    if not os.environ.get('SKIP_SUMMARY'):
+        admin_utils.make_all_summary_plots_and_files(RESULTS_TOP_DIR, all_submissions)

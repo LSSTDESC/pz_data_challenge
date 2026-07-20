@@ -3,8 +3,11 @@ from pathlib import Path
 import pytest
 
 # Put needed import here
-from inference_submission import run_estimation
-from train_submission import train_submission
+try:
+    from inference_submission import run_estimation
+    from train_submission import train_submission
+except ImportError:
+    pass
 
 # These are used by test scripts
 from pz_data_challenge.taskset_1 import run_taskset_1

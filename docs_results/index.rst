@@ -37,12 +37,12 @@ using increasingly realistic data.  Here we present the results.
    results/bpz_31temps/index
    results/Cin_zs/index
    results/conclave/index
+   results/cosom/index
    results/dnf_lsst_fallback/index
    results/dnf_roman_fallback/index
    results/easy_forest/index
+   results/fzb_dimmingtofaint/index
    results/lephare/index
-   results/lsst_v3/index
-   results/lsst_v5/index
    results/maxoptpz/index
    results/nn_augmentation/index
    results/owenqueen/index
@@ -51,6 +51,5 @@ using increasingly realistic data.  Here we present the results.
    results/rail_knn_4tasks/index
    results/rail_knn_test/index
    results/tpz_colors_curvature/index
-
 
 	     

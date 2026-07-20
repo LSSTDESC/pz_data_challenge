@@ -647,19 +647,26 @@ def evaluate_submission(
 
     # Evaluate the results
     if not os.environ.get("SKIP_EVALUATE") and not failed:
-        make_eval_plots_and_summarize(
-            submission_name,
-            submission_dir,
-            results_dir,
-            reserved_data_path,
-        )
+        try:
+            make_eval_plots_and_summarize(
+                submission_name,
+                submission_dir,
+                results_dir,
+                reserved_data_path,
+            )
+        except Exception:
+            failed = True
 
     # Extract the results
     if not os.environ.get("SKIP_EXTRACT") and not failed:
-        extract_dataframes(
-            results_top_dir,
-            submission_name,
-        )
+        try:
+            extract_dataframes(
+                results_top_dir,
+                submission_name,
+            )
+        except Exception:
+            failed = True
+            
 
     # clean up
     try:
