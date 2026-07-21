@@ -42,7 +42,7 @@ CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "0"))
 
 SUBMISSION_NAME: str = "conclave"
 # GitHub release .tgz of the pre-made estimates + pretrained models (set before opening the PR).
-SUBMISSION_URL: str = "https://github.com/rhw/conclave/releases/download/ts2-v1/conclave_submission.tgz"
+SUBMISSION_URL: str = "https://github.com/rhw/conclave/releases/download/ts2-v2/conclave_submission.tgz"
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = os.environ.get("PZDC_PUBLIC_AREA", "tests/public")
@@ -139,7 +139,7 @@ def test_example_taskset_2(setup_public_area: int, setup_submit_area: int) -> No
     # with support-deficit-binned PIT recalibration (conclave.submission.TS2_CONFIG);
     # the pretrained bundles carry the frozen deficit_ref the label-free kNN deficit
     # is computed against. The release tarball at SUBMISSION_URL contains BOTH task
-    # sets' pre-made estimates + models (16 files, tag ts2-v1).
+    # sets' pre-made estimates + models (16 files, tag ts2-v2).
     assert setup_public_area == 0
     assert setup_submit_area == 0
     run_taskset_2(
