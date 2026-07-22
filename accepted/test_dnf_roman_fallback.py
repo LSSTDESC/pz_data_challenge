@@ -205,9 +205,11 @@ def test_example_taskset_2(
     )
 
 # ---- DNF fallback submission wrappers inserted by pzdc_dnf_fallback_submission_kit ----
-from scripts.dnf_fallback_submission import estimate_with_model as _dnf_fallback_estimate_with_model
-from scripts.dnf_fallback_submission import train_and_estimate as _dnf_fallback_train_and_estimate
-
+try:
+    from scripts.dnf_fallback_submission import estimate_with_model as _dnf_fallback_estimate_with_model
+    from scripts.dnf_fallback_submission import train_and_estimate as _dnf_fallback_train_and_estimate
+except:
+    pass
 
 def run_taskset_1_estimation_only(model_file, test_file, output_file) -> None:
     _dnf_fallback_estimate_with_model(model_file, test_file, output_file)

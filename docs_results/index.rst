@@ -32,19 +32,24 @@ using increasingly realistic data.  Here we present the results.
    :maxdepth: 2
    :caption: Results of individual submissions
 
-   results/easy_forest/index
-   results/rail_bpz_test/index
-   results/rail_knn_test/index
+   results/bpz_136temps_4tasks/index
+   results/bpz_31temps_4tasks/index
    results/bpz_31temps/index
-   results/lsst_v3/index
-   results/lsst_v5/index
+   results/Cin_zs/index
+   results/conclave/index
+   results/cosom/index
    results/dnf_lsst_fallback/index
    results/dnf_roman_fallback/index
-   results/knn_baseline/index
+   results/easy_forest/index
+   results/fzb_dimmingtofaint/index
    results/lephare/index
+   results/maxoptpz/index
+   results/nn_augmentation/index
    results/owenqueen/index
    results/pz_resnet_flow/index
+   results/rail_bpz_test/index
    results/rail_knn_4tasks/index
-
+   results/rail_knn_test/index
+   results/tpz_colors_curvature/index
 
 	     
