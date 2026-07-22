@@ -633,29 +633,40 @@ def evaluate_submission(
         f"tests/test_{submission_name}.py",
     )
 
+    failed = False
     # Run the submssion
     if not os.environ.get("SKIP_RUN"):
-        run_submission(
-            submission_name,
-            submission_dir,
-            results_dir,
-        )
+        try:
+            run_submission(
+                submission_name,
+                submission_dir,
+                results_dir,
+            )
+        except Exception:
+            failed = True
 
     # Evaluate the results
-    if not os.environ.get("SKIP_EVALUATE"):
-        make_eval_plots_and_summarize(
-            submission_name,
-            submission_dir,
-            results_dir,
-            reserved_data_path,
-        )
+    if not os.environ.get("SKIP_EVALUATE") and not failed:
+        try:
+            make_eval_plots_and_summarize(
+                submission_name,
+                submission_dir,
+                results_dir,
+                reserved_data_path,
+            )
+        except Exception:
+            failed = True
 
     # Extract the results
-    if not os.environ.get("SKIP_EXTRACT"):
-        extract_dataframes(
-            results_top_dir,
-            submission_name,
-        )
+    if not os.environ.get("SKIP_EXTRACT") and not failed:
+        try:
+            extract_dataframes(
+                results_top_dir,
+                submission_name,
+            )
+        except Exception:
+            failed = True
+            
 
     # clean up
     try:
