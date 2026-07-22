@@ -730,12 +730,10 @@ def make_PIT_summaries(
     """
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions)
 
-    dd_outlier = evaluation.get_metric_summary_dict_multi(
-        data_dict, submissions, "outlier"
-    )
-    dd_CvM = evaluation.get_metric_summary_dict_multi(data_dict, submissions, "CvM")
-    dd_ks = evaluation.get_metric_summary_dict_multi(data_dict, submissions, "ks")
-    dd_ksamp = evaluation.get_metric_summary_dict_multi(data_dict, submissions, "ksamp")
+    dd_outlier = evaluation.get_metric_summary_dict(data_dict, submissions, "outlier")
+    dd_CvM = evaluation.get_metric_summary_dict(data_dict, submissions, "CvM")
+    dd_ks = evaluation.get_metric_summary_dict(data_dict, submissions, "ks")
+    dd_ksamp = evaluation.get_metric_summary_dict(data_dict, submissions, "ksamp")
 
     fig_CvM = evaluation.make_strip_plot(
         dd_CvM,

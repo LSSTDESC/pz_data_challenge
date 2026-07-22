@@ -412,6 +412,12 @@ def make_strip_plot(
     'maxoptpz':             'mixed',
     }
     method_id = {k: i for i, k in enumerate(sorted(method_type))}
+    has_augmentation = {
+        'cosom': True,
+        'fzb_dimmingtofaint': True,
+        'nn_augmentation': True,
+    }
+    # everything else defaults False
 
     markers = {'template-fitting': 'o', 'ml': 'D', 'mixed': 's'}
     n_y_labels = len(y_label_strings)
@@ -430,7 +436,9 @@ def make_strip_plot(
     handles = {}
     for key in ordered[::-1]:
         val = data[key]
-        handles[key]=ax.scatter(val[0], val[1], color=colors[method_id[key]], marker=markers[method_type[key]], alpha=0.7,label=key, zorder=3)
+        augmented = has_augmentation.get(key, False)
+        handles[key]=ax.scatter(val[0], val[1], color=colors[method_id[key]], marker=markers[method_type[key]], alpha=0.7,label=key, zorder=3,edgecolors='black' if augmented else 'none',
+           linewidths=1.2 if augmented else 0.5)
     print(data['owenqueen'])
 
     ax.set_yticks(np.arange(n_y_labels))
