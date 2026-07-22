@@ -657,7 +657,7 @@ def evaluate_submission(
             failed = True
 
     # Evaluate the results
-    if not os.environ.get("SKIP_EVALUATE") and not failed:
+    if not os.environ.get("SKIP_EVALUATE") and not failed and not force:
         try:
             make_eval_plots_and_summarize(
                 submission_name,
@@ -669,7 +669,7 @@ def evaluate_submission(
             failed = True
 
     # Extract the results
-    if not os.environ.get("SKIP_EXTRACT") and not failed:
+    if not os.environ.get("SKIP_EXTRACT") and not failed and not force:
         try:
             extract_dataframes(
                 results_top_dir,
