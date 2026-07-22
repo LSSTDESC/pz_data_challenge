@@ -26,6 +26,7 @@ if __name__ == "__main__":
     else:
         submissions = sys.argv[1:]
 
+    failed_submissions = []
     for submission_name in submissions:
 
         submission_dir = os.path.join(SUBMISSION_TOP_DIR, submission_name)
@@ -42,6 +43,7 @@ if __name__ == "__main__":
             )
         except Exception as exc:
             print(f"Failed to evaluate {submission_name} because {exc}")
-            raise
+            failed_submissions.append(submission_name)
 
-    admin_utils.make_all_summary_plots_and_files(RESULTS_TOP_DIR, all_submissions)
+    summary_submissions = [s for s in all_submissions if s not in failed_submissions]
+    admin_utils.make_all_summary_plots_and_files(RESULTS_TOP_DIR, summary_submissions)

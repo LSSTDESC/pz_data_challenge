@@ -693,18 +693,18 @@ def make_point_summaries(
     fig_mean = evaluation.make_strip_plot(
         dd_mean,
         r"Mean $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
-        [-0.2, 0.2],
+        [-0.05, 0.05],
         scoring.metric_dict["mean"],
     )
-    fig_mean.savefig(f"{results_dir}/plot_summary_point_mean.png")
+    fig_mean.savefig(f"{results_dir}/plot_summary_point_mean.png", dpi=200)
 
     fig_rms = evaluation.make_strip_plot(
         dd_rms,
         r"RMS $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
-        [0, 0.5],
+        [0, 0.3],
         scoring.metric_dict["std"],
     )
-    fig_rms.savefig(f"{results_dir}/plot_summary_point_rms.png")
+    fig_rms.savefig(f"{results_dir}/plot_summary_point_rms.png", dpi=200)
 
     fig_outliers = evaluation.make_strip_plot(
         dd_outliers,
@@ -712,7 +712,7 @@ def make_point_summaries(
         [0, 0.5],
         scoring.metric_dict["abs_outlier_rate"],
     )
-    fig_outliers.savefig(f"{results_dir}/plot_summary_point_outliers.png")
+    fig_outliers.savefig(f"{results_dir}/plot_summary_point_outliers.png", dpi=200)
 
 
 def make_PIT_summaries(
@@ -759,7 +759,7 @@ def make_PIT_summaries(
         [0, 1],
         scoring.metric_dict["ks"],
     )
-    fig_ks.savefig(f"{results_dir}/plot_summary_pit_ks.png")
+    fig_ks.savefig(f"{results_dir}/plot_summary_pit_ks.png", dpi=200)
 
     fig_ksamp = evaluation.make_strip_plot(
         dd_ksamp,
@@ -789,13 +789,13 @@ def make_timing_summaries(
         data_dict,
         submissions,
     )
-    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png")
+    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png", dpi=200)
 
     fig_algo_inform_time = evaluation.make_algo_inform_time_strip_plot(
         data_dict,
         submissions,
     )
-    fig_algo_inform_time.savefig(f"{results_dir}/plot_summary_timing_inform.png")
+    fig_algo_inform_time.savefig(f"{results_dir}/plot_summary_timing_inform.png", dpi=200)
 
 
 def make_PIT_plot(

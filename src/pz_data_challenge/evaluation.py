@@ -308,7 +308,8 @@ def make_algo_inform_time_strip_plot(
     Error bars are floored at 10 seconds to ensure visibility.
     X-axis uses logarithmic scale.
     """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 5))
+    ax = plt.gca()
 
     n_sub = len(submissions)
     y_min = -0.5
@@ -336,14 +337,12 @@ def make_algo_inform_time_strip_plot(
     _ = plt.xlabel("Inform time [s]")
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
-    _ = plt.legend()
 
     for metric_range in metric_ranges:
         _ = plt.fill_between(
             metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
         )
     _ = plt.xscale("log")
-
     plt.tight_layout()
     return fig
 
@@ -385,27 +384,65 @@ def make_strip_plot(
     >>> fig = make_strip_plot(metric_data, "Bias", [-0.1, 0.1],
     ...                       [[-0.02, 0.02], [-0.05, 0.05]])
     """
-    fig = plt.figure()
+    fig, ax = plt.subplots(figsize=(11, 5))   # wider, and grab ax explicitly
+    method_type = {
+    # --- template-fitting ---
+    'bpz_136temps':         'template-fitting',
+    'bpz_31temps':          'template-fitting',
+    'bpz_31temps_4tasks':   'template-fitting',
+    'bpz_136temps_4tasks':   'template-fitting',
+    'rail_bpz_test':        'template-fitting',
+    'lephare':              'template-fitting',
 
+    # --- machine learning ---
+    'Cin_zs':               'ml',   # pytorch
+    'conclave':             'ml',   # ensemble of ML methods
+    'cosom':                'ml',   # sklearn + SOM augmentation
+    'easy_forest':          'ml',   # random forest
+    'fzb_dimmingtofaint':   'ml',   # flexzboost + augmentation
+    'nn_augmentation':      'ml',   # flexzboost + augmentation
+    'owenqueen':            'ml',   # sklearn
+    'pz_resnet_flow':       'ml',   # resnet
+    'rail_knn_test':        'ml',   # KNN
+    'rail_knn_4tasks':      'ml',   # KNN
+    'tpz_colors_curvature': 'ml',   # TPZ
+    'dnf_roman_fallback':   'ml',
+    'dnf_lsst_fallback':    'ml',
+    # --- mixed ---
+    'maxoptpz':             'mixed',
+    }
+    method_id = {k: i for i, k in enumerate(sorted(method_type))}
+
+    markers = {'template-fitting': 'o', 'ml': 'D', 'mixed': 's'}
     n_y_labels = len(y_label_strings)
-    y_min = -0.5
-    y_max = n_y_labels - 0.5
+    y_min, y_max = -0.5, n_y_labels - 0.5
 
-    for key, val in data.items():
-        plt.scatter(val[0], val[1], label=key)
+    scores_per_plot = {k: np.sum(v[0]**2) for k, v in data.items()}
+    ordered = sorted(scores_per_plot, key=scores_per_plot.get)
+    ordered.remove('owenqueen')
+    colors = plt.cm.tab20(np.linspace(0, 1,20))[:len(method_id)]
+    # colors = plt.cm.viridis(np.linspace(0, 1, len(ordered)))
 
-    _ = plt.yticks(np.linspace(0, n_y_labels - 1, n_y_labels), y_label_strings)
-    _ = plt.xlabel(metric_label)
-    _ = plt.ylim(y_min, y_max)
-    _ = plt.xlim(metric_limits)
-    _ = plt.legend()
-
+    # shaded bands first, so they sit under the points
     for metric_range in metric_ranges:
-        _ = plt.fill_between(
-            metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
-        )
+        ax.fill_between(metric_range, y_min, y_max, color="gray", alpha=0.1, zorder=0)
 
-    plt.tight_layout()
+    handles = {}
+    for key in ordered[::-1]:
+        val = data[key]
+        handles[key]=ax.scatter(val[0], val[1], color=colors[method_id[key]], marker=markers[method_type[key]], alpha=0.7,label=key, zorder=3)
+    print(data['owenqueen'])
+
+    ax.set_yticks(np.arange(n_y_labels))
+    ax.set_yticklabels(y_label_strings)
+    ax.set_xlabel(metric_label)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xlim(metric_limits)
+
+    ax.legend([handles[k] for k in ordered], ordered,
+              loc='center left', bbox_to_anchor=(1.02, 0.5),
+              frameon=False, fontsize=8, handletextpad=0.3)
+    fig.tight_layout()
     return fig
 
 
