@@ -13,6 +13,8 @@ SUBMISSION_TOP_DIR = "submissions"
 RESULTS_TOP_DIR = "results"
 ACCEPTED_SUBMISSIONS_DIR = "accepted"
 
+FORCE = True
+
 
 if __name__ == "__main__":
 
@@ -40,6 +42,7 @@ if __name__ == "__main__":
                 results_dir,
                 RESULTS_TOP_DIR,
                 PZ_RESERVED_DATA_PATH,
+                force=FORCE,
             )
         except Exception as exc:
             print(f"Failed to evaluate {submission_name} because {exc}")

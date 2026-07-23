@@ -22,7 +22,8 @@ from pz_data_challenge import submit_utils
 
 
 SUBMISSION_NAME: str = "lsst_v3"
-SUBMISSION_URL: str = "https://github.com/e06243046/pz_data_challenge_submission/releases/download/submission-lsst_v3_v1/lsst_v3_submission.tgz"
+#SUBMISSION_URL: str = "https://github.com/e06243046/pz_data_challenge_submission/releases/download/submission-lsst_v3_v1/lsst_v3_submission.tgz"
+SUBMISSION_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/lsst_v3_tarball_remake.tgz"
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = os.environ.get("PZDC_PUBLIC_AREA", "tests/public")
