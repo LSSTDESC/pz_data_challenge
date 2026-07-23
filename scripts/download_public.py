@@ -2,7 +2,7 @@ import os
 from pz_data_challenge import submit_utils
 
 # don't change these
-PUBLIC_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public.tgz"
+PUBLIC_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public_test.tgz"
 
 
 def setup_public_area() -> None:
