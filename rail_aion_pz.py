@@ -410,6 +410,17 @@ def train_and_estimate(
         curr_ref_band = ref_band if len(bands) == 6 else lp_ref_band
         
         lephare_config_file = "/home/mardom/Rubin-LSST-Research/Photometric-Redshift/code/rail_lephare/tests/data/lsst.para"
+        if not os.path.exists(lephare_config_file):
+            possible_paths = [
+                os.path.join(os.path.dirname(__file__), "tests", "lsst.para"),
+                os.path.join(os.path.dirname(__file__), "lsst.para"),
+                "tests/lsst.para",
+                "lsst.para",
+            ]
+            for p in possible_paths:
+                if os.path.exists(p):
+                    lephare_config_file = p
+                    break
         lephare_config = lp.keymap_to_string_dict(lp.read_config(lephare_config_file))
         
         lp_inf = make_clean_stage(
