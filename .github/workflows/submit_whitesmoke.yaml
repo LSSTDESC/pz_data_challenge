@@ -5,9 +5,9 @@ name: Unit test and code coverage (whitesmoke)
 
 on:
   push:
-    branches: [main]
+    branches: [main, whitesmoke]
   pull_request:
-    branches: [main]
+    branches: [main, whitesmoke]
 
 jobs:
   build:

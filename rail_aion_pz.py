@@ -546,13 +546,23 @@ def train_and_estimate(
 
     # Save models
     if save_model_to is not None:
+        model_pzflow_bytes = None
+        if os.path.exists("pzflow_model.pkl"):
+            with open("pzflow_model.pkl", "rb") as f:
+                model_pzflow_bytes = f.read()
+            try:
+                os.remove("pzflow_model.pkl")
+            except OSError:
+                pass
+
         model_dict = {
             "model_nn1": model_nn1,
             "model_nn2": model_nn2,
             "model_knn": model_knn,
             "model_bpz": bpz_model,
             "model_fzboost": model_fzboost,
-            "model_pzflow": pzflow_model,
+            "model_pzflow": None,
+            "model_pzflow_bytes": model_pzflow_bytes,
             "model_gpz": gpz_model,
             "model_lephare": lephare_model,
             "aion_head": aion_head,
@@ -662,9 +672,19 @@ def estimate_only(
     pdf_aion = 0.5 * (pdf_aion[:, :-1] + pdf_aion[:, 1:])
 
     # 7.6 PZFlow
+    pzflow_model = model_dict.get("model_pzflow")
+    pzflow_bytes = model_dict.get("model_pzflow_bytes")
+    tmp_pzflow_path = None
+    if pzflow_bytes is not None:
+        import tempfile
+        fd, tmp_pzflow_path = tempfile.mkstemp(suffix=".pkl")
+        with os.fdopen(fd, "wb") as tmp_file:
+            tmp_file.write(pzflow_bytes)
+        pzflow_model = tmp_pzflow_path
+
     pzflow_est = make_clean_stage(
         PZFlowEstimator,
-        name="estimate_pzflow_eo", model=model_dict["model_pzflow"], hdf5_groupname="",
+        name="estimate_pzflow_eo", model=pzflow_model, hdf5_groupname="",
         zmin=0.03, zmax=ZMAX, nzbins=NZ-1, seed=0,
         ref_band=ref_band, column_names=bands, mag_limits=mag_limits,
         include_mag_errors=False, redshift_col="redshift"
@@ -674,6 +694,11 @@ def estimate_only(
         test_dict_for_flow['redshift'] = np.zeros(len(test_dict_for_flow[list(test_dict_for_flow.keys())[0]]))
     test_handle_for_flow = TableHandle('test_data_flow', data=test_dict_for_flow)
     pdf_pzflow = pzflow_est.estimate(test_handle_for_flow).data.pdf(Z_CENTERS)
+    if tmp_pzflow_path is not None and os.path.exists(tmp_pzflow_path):
+        try:
+            os.remove(tmp_pzflow_path)
+        except OSError:
+            pass
 
     # 7.7 GPz
     gpz_est = make_clean_stage(
@@ -723,9 +748,17 @@ def estimate_only(
     if pdf_lephare is not None:
         test_pdfs.append(pdf_lephare)
 
+    train_errors = model_dict["train_errors"]
+    if len(test_pdfs) > train_errors.shape[0]:
+        n_missing = len(test_pdfs) - train_errors.shape[0]
+        padding = np.repeat(train_errors[-1:], n_missing, axis=0)
+        train_errors = np.vstack([train_errors, padding])
+    elif len(test_pdfs) < train_errors.shape[0]:
+        train_errors = train_errors[:len(test_pdfs)]
+
     weighted_pdfs, val_expert_weights = apply_expert_weights_knn(
         test_dict, test_pdfs,
-        model_dict["train_features_norm"], model_dict["train_errors"],
+        model_dict["train_features_norm"], train_errors,
         model_dict["features_mean"], model_dict["features_std"],
         bands, ref_band, K=K_val
     )

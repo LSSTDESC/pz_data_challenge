@@ -51,8 +51,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
             submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
 
     def teardown_submit_area() -> None:
-        if not os.environ.get("NO_TEARDOWN") and SUBMISSION_URL:
-            os.system(f"\\rm -rf {SUBMIT_DIR}")
+        pass
 
     for sub in ("outputs_2", "outputs_3"):
         os.makedirs(os.path.join(SUBMIT_DIR, sub), exist_ok=True)
