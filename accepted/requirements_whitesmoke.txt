@@ -12,3 +12,6 @@ pz-rail-lephare
 pz-rail-sklearn
 pz-rail-som
 pz-rail-flexzboost
+pz-rail-bpz
+desc-bpz
+
