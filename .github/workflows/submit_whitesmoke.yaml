@@ -34,5 +34,7 @@ jobs:
           pip install .[dev]
           if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install --no-build-isolation -r requirements_${{ matrix.submission }}.txt; fi
       - name: Run unit tests with pytest
+        env:
+          PZDC_CI_MAX_TRAIN: "1000"
         run: |
           python -m pytest tests/test_${{ matrix.submission }}.py
