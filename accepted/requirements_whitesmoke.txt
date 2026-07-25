@@ -9,3 +9,6 @@ pz-rail-pzflow
 pz-rail-gpz-v1
 lephare
 pz-rail-lephare
+pz-rail-sklearn
+pz-rail-som
+pz-rail-flexzboost
