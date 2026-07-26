@@ -416,7 +416,7 @@ def run_taskset_2_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    import sqp
+    import qp
     import torch
     import numpy as np
     import tables_io
