@@ -33,7 +33,20 @@ def _download_to_tempfile(url: str) -> str:
         tmp_path = tmp_file.name
 
     try:
-        # Add headers to mimic a browser
+        # Try downloading using curl first, which is much faster and handles timeouts/resumes natively
+        import subprocess
+        print(f"Downloading {url} using curl...")
+        res = subprocess.run(
+            ["curl", "-L", "--connect-timeout", "30", "--retry", "3", "-o", tmp_path, url],
+            capture_output=True,
+            text=True
+        )
+        if res.returncode == 0:
+            return tmp_path
+
+        print(f"curl download failed (exit code {res.returncode}): {res.stderr}. Falling back to urllib.")
+
+        # Fallback to urllib
         req = urllib.request.Request(
             url,
             headers={
