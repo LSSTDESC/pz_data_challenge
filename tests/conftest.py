@@ -4,7 +4,8 @@ import pytest
 from pz_data_challenge import submit_utils
 
 # don't change these
-PUBLIC_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public.tgz"
+PUBLIC_URL: str = "https://github.com/mardom/pz_data_challenge/releases/download/v2.0.0/public.tgz"
+
 
 
 @pytest.fixture(name="setup_public_area", scope="package")
