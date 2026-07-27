@@ -1,0 +1,40 @@
+---
+# CI workflow for the graysmoke photo-z submission.
+
+name: Unit test and code coverage (graysmoke)
+
+on:
+  push:
+    branches: [main, graysmoke]
+  pull_request:
+    branches: [main, graysmoke]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.13']
+        submission: ['graysmoke']
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt install libbz2-dev
+          python -m pip install --upgrade pip
+          pip install wheel numpy
+          pip install .
+          pip install .[dev]
+          if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install -r requirements_${{ matrix.submission }}.txt; fi
+      - name: Run unit tests with pytest
+        env:
+          PZDC_CI_MAX_TRAIN: "1000"
+        run: |
+          python -m pytest tests/test_${{ matrix.submission }}.py
