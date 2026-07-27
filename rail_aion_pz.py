@@ -36,11 +36,14 @@ if not hasattr(np, 'trapezoid'):
 try:
     import jax
     import jax.core
-    _orig_shaped_array_new = jax.core.ShapedArray.__new__
-    def _compat_shaped_array_new(cls, *args, **kwargs):
-        kwargs.pop("named_shape", None)
-        return _orig_shaped_array_new(cls, *args, **kwargs)
-    jax.core.ShapedArray.__new__ = _compat_shaped_array_new
+    import inspect
+    _orig_shaped_array_init = jax.core.ShapedArray.__init__
+    _sig = inspect.signature(_orig_shaped_array_init)
+    if "named_shape" not in _sig.parameters:
+        def _compat_shaped_array_init(self, *args, **kwargs):
+            kwargs.pop("named_shape", None)
+            return _orig_shaped_array_init(self, *args, **kwargs)
+        jax.core.ShapedArray.__init__ = _compat_shaped_array_init
 except Exception:
     pass
 
