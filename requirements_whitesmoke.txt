@@ -14,4 +14,7 @@ pz-rail-som
 pz-rail-flexzboost
 pz-rail-bpz
 desc-bpz
+jaxtyping>=0.2.29
+chex>=0.1.86
+
 

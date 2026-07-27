@@ -380,10 +380,10 @@ def train_and_estimate(
     clf = MLPClassifier(
         hidden_layer_sizes=(128, 64) if is_ci else (512, 256),
         alpha=1e-4,
-        batch_size=256,
+        batch_size='auto' if is_ci else 256,
         learning_rate_init=1e-3,
         max_iter=max_iter_nn,
-        early_stopping=True,
+        early_stopping=True if len(xs_fit) >= 100 else False,
         n_iter_no_change=8,
     )
     clf.fit(xs_fit, labels_fit)
