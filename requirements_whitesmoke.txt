@@ -4,10 +4,6 @@ safetensors>=0.4.3
 scikit-learn
 joblib
 minisom
-jax<0.4.30
-jaxlib<0.4.30
-jaxtyping>=0.2.29
-chex>=0.1.86
 pzflow
 pz-rail-pzflow
 pz-rail-gpz-v1
@@ -18,3 +14,5 @@ pz-rail-som
 pz-rail-flexzboost
 pz-rail-bpz
 desc-bpz
+jaxtyping>=0.2.29
+chex>=0.1.86

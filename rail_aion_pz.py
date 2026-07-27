@@ -32,6 +32,18 @@ if not hasattr(tables_io.types, 'fileType') and hasattr(tables_io.types, 'file_t
 if not hasattr(np, 'trapezoid'):
     np.trapezoid = np.trapz
 
+# JAX ShapedArray compatibility patch for JAX >= 0.4.30 / Python 3.13
+try:
+    import jax
+    import jax.core
+    _orig_shaped_array_new = jax.core.ShapedArray.__new__
+    def _compat_shaped_array_new(cls, *args, **kwargs):
+        kwargs.pop("named_shape", None)
+        return _orig_shaped_array_new(cls, *args, **kwargs)
+    jax.core.ShapedArray.__new__ = _compat_shaped_array_new
+except Exception:
+    pass
+
 # 2. Import RAIL and other dependencies
 import qp
 from rail.core.data import TableHandle
