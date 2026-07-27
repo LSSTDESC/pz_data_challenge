@@ -203,7 +203,7 @@ def make_submission_eval_plots(
                         eval_label="pz_estimate",
                     )
                 except Exception:
-                    continue
+                    raise
                 test_data = sub_data_dict[f"{prefix}_test"]
                 submit_data = sub_data_dict[f"{prefix}_evaluate"]
 
@@ -656,8 +656,9 @@ def evaluate_submission(
         except Exception:
             failed = True
 
+        
     # Evaluate the results
-    if not os.environ.get("SKIP_EVALUATE") and not failed and not force:
+    if not os.environ.get("SKIP_EVALUATE") and not failed or force:
         try:
             make_eval_plots_and_summarize(
                 submission_name,
@@ -669,7 +670,7 @@ def evaluate_submission(
             failed = True
 
     # Extract the results
-    if not os.environ.get("SKIP_EXTRACT") and not failed and not force:
+    if not os.environ.get("SKIP_EXTRACT") and not failed or force:
         try:
             extract_dataframes(
                 results_top_dir,

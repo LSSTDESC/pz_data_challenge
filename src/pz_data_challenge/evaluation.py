@@ -425,7 +425,10 @@ def make_strip_plot(
 
     scores_per_plot = {k: np.sum(v[0]**2) for k, v in data.items()}
     ordered = sorted(scores_per_plot, key=scores_per_plot.get)
-    ordered.remove('owenqueen')
+    try:
+        ordered.remove('owenqueen')
+    except ValueError:
+        pass
     colors = plt.cm.tab20(np.linspace(0, 1,20))[:len(method_id)]
     # colors = plt.cm.viridis(np.linspace(0, 1, len(ordered)))
 
@@ -437,9 +440,24 @@ def make_strip_plot(
     for key in ordered[::-1]:
         val = data[key]
         augmented = has_augmentation.get(key, False)
-        handles[key]=ax.scatter(val[0], val[1], color=colors[method_id[key]], marker=markers[method_type[key]], alpha=0.7,label=key, zorder=3,edgecolors='black' if augmented else 'none',
-           linewidths=1.2 if augmented else 0.5)
-    print(data['owenqueen'])
+        try:
+            handles[key]=ax.scatter(
+                val[0], val[1],
+                color=colors[method_id[key]],
+                marker=markers[method_type[key]],
+                alpha=0.7,
+                label=key,
+                zorder=3,
+                edgecolors='black' if augmented else 'none',
+                linewidths=1.2 if augmented else 0.5
+            )
+        except:
+            pass
+
+    try:
+        print(data['owenqueen'])
+    except KeyError:
+        pass
 
     ax.set_yticks(np.arange(n_y_labels))
     ax.set_yticklabels(y_label_strings)
@@ -447,7 +465,10 @@ def make_strip_plot(
     ax.set_ylim(y_min, y_max)
     ax.set_xlim(metric_limits)
 
-    ax.legend([handles[k] for k in ordered], ordered,
+    all_handles = []
+    for k in ordered:
+        all_handles.append(k)
+    ax.legend(all_handles, ordered,
               loc='center left', bbox_to_anchor=(1.02, 0.5),
               frameon=False, fontsize=8, handletextpad=0.3)
     fig.tight_layout()
