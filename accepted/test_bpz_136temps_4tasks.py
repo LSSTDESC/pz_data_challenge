@@ -14,7 +14,7 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 
 from pz_data_challenge import submit_utils
 SUBMISSION_NAME: str = "bpz_136temps_4tasks"
-SUBMISSION_URL: str = "https://portal.nersc.gov/cfs/lsst/schmidt9/submit_bpz_31temps_4tasks.tgz"
+SUBMISSION_URL: str = "https://portal.nersc.gov/cfs/lsst/schmidt9/submit_bpz_136temps_4tasks.tgz"
 
 mag_limits_10yr = {
     "mag_u_lsst": 27.79,
@@ -183,10 +183,13 @@ def run_taskset_x_estimation_only(
 
     if "flagship" in output_file:
         kern = 0.12
+        madauflag = "yes"
     elif "cardinal" in output_file:
         kern = 0.04
+        madauflag = "no"
     else:
         kern = 0.0
+        madauflag = "no"
 
     if "10yr" in output_file:
         maglim = mag_limits_10yr
@@ -220,6 +223,7 @@ def run_taskset_x_estimation_only(
         zp_errors=[0.01, 0.01, 0.01,0.01, 0.01, 0.01,0.01, 0.01, 0.01],
         mag_limits=maglim,
         gauss_kernel=kern,
+        madau_flag=madauflag,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)
@@ -256,10 +260,13 @@ def run_taskset_x_training_and_estimation(
 
     if "flagship" in output_file:
         kern = 0.12
+        madauflag = "yes"
     elif "cardinal" in output_file:
         kern = 0.04
+        madauflag = "no"
     else:
         kern = 0.0
+        madauflag = "no"
 
     if "10yr" in output_file:
         maglim = mag_limits_10yr
@@ -292,6 +299,7 @@ def run_taskset_x_training_and_estimation(
         zp_errors=[0.01, 0.01, 0.01,0.01, 0.01, 0.01,0.01, 0.01, 0.01],
         mag_limits=maglim,
         gauss_kernel=kern,
+        madau_flag=madauflag,
     )
     pz_out = estimator.estimate(test_data)
     pz_out.data.ancil["object_id"] = test_data()["object_id"].astype(int)

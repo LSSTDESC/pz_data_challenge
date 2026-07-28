@@ -3,16 +3,18 @@ import pickle
 import sys
 from pathlib import Path
 
-import h5py
-import numpy as np
-import pytest
-import qp
-if not hasattr(np, "trapz"):
-    np.trapz = np.trapezoid
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import StandardScaler
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+try:
+    import h5py
+    import numpy as np
+    import pytest
+    import qp
+    if not hasattr(np, "trapz"):
+        np.trapz = np.trapezoid
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.preprocessing import StandardScaler
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+except Exception:
+    pass
 
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2

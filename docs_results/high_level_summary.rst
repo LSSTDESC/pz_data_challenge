@@ -19,6 +19,18 @@ various points ranges are visible as progressively darker bands in the plots on 
 Indvidual Metrics
 -----------------
 
+Marker shapes in the plots below indicate the type of method used by each
+submission:
+
+.. raw:: html
+
+   <ul>
+     <li>&#9679; Circle &mdash; template fitting</li>
+     <li>&#9670; Diamond &mdash; machine learning</li>
+     <li>&#9632; Square &mdash; mixed model</li>
+     <li><span style="display:inline-block;width:0.9em;height:0.9em;border:2px solid black;border-radius:50%;vertical-align:middle;"></span> Black border &mdash; augmentation</li>
+   </ul>
+
 .. list-table:: Image Gallery
    :header-rows: 1
 
@@ -26,19 +38,19 @@ Indvidual Metrics
      - Plot
    * - **Mean of Estimated - True Redshift**
      - .. image:: results/plot_summary_point_mean.png
-          :width: 400px
+          :width: 600px
           :align: center
    * - **RMS of Estimated - True Redshift**
      - .. image:: results/plot_summary_point_rms.png
-          :width: 400px
+          :width: 600px
           :align: center
    * - **Outlier Fraction of Estimated - True Redshift**
      - .. image:: results/plot_summary_point_outliers.png
-          :width: 400px
+          :width: 600px
           :align: center
    * - **KS of PIT**
      - .. image:: results/plot_summary_pit_ks.png
-          :width: 400px
+          :width: 600px
           :align: center
 
 
@@ -49,11 +61,11 @@ Indvidual Metrics
      - Plot
    * - **Per-object estimation timing**
      - .. image:: results/plot_summary_timing_estimate.png
-          :width: 400px
+          :width: 600px
           :align: center
    * - **Total training timing**
      - .. image:: results/plot_summary_timing_inform.png
-          :width: 400px
+          :width: 600px
           :align: center
 
 

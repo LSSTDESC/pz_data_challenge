@@ -1,0 +1,10 @@
+pytest
+numpy
+qp-prob
+tables-io
+pz-rail-flexzboost
+pz-rail-base
+pandas
+photerr
+scipy
+astropy
