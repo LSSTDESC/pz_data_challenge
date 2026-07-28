@@ -4,3 +4,9 @@ safetensors>=0.4.3
 scikit-learn
 joblib
 minisom
+pz-rail-base>=2.0.0
+pz-rail-sklearn>=2.0.0
+pz-rail-bpz>=2.0.0
+pz-rail-flexzboost>=2.0.0
+pz-rail-pzflow>=2.0.0
+pz-rail-gpz-v1>=2.0.0
