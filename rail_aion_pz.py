@@ -67,17 +67,46 @@ except ImportError:
         from rail.estimation.algos import k_nearneigh
 
 
-from rail.estimation.algos.bpz_lite import BPZliteInformer, BPZliteEstimator
-from rail.estimation.algos.flexzboost import FlexZBoostInformer, FlexZBoostEstimator
-from rail.estimation.algos.pzflow_nf import PZFlowInformer, PZFlowEstimator
-from rail.estimation.algos.gpz import GPzInformer, GPzEstimator
-from rail.estimation.algos.lephare import LephareInformer, LephareEstimator
-import lephare as lp
-import logging
-FlexZBoostInformer.log = logging.getLogger("FlexZBoostInformer")
-FlexZBoostEstimator.log = logging.getLogger("FlexZBoostEstimator")
-GPzInformer.log = logging.getLogger("GPzInformer")
-GPzEstimator.log = logging.getLogger("GPzEstimator")
+try:
+    from rail.estimation.algos.bpz_lite import BPZliteInformer, BPZliteEstimator
+except ImportError:
+    BPZliteInformer = None
+    BPZliteEstimator = None
+
+try:
+    from rail.estimation.algos.flexzboost import FlexZBoostInformer, FlexZBoostEstimator
+    import logging
+    FlexZBoostInformer.log = logging.getLogger("FlexZBoostInformer")
+    FlexZBoostEstimator.log = logging.getLogger("FlexZBoostEstimator")
+except ImportError:
+    FlexZBoostInformer = None
+    FlexZBoostEstimator = None
+
+try:
+    from rail.estimation.algos.pzflow_nf import PZFlowInformer, PZFlowEstimator
+except ImportError:
+    PZFlowInformer = None
+    PZFlowEstimator = None
+
+try:
+    from rail.estimation.algos.gpz import GPzInformer, GPzEstimator
+    import logging
+    GPzInformer.log = logging.getLogger("GPzInformer")
+    GPzEstimator.log = logging.getLogger("GPzEstimator")
+except ImportError:
+    GPzInformer = None
+    GPzEstimator = None
+
+try:
+    from rail.estimation.algos.lephare import LephareInformer, LephareEstimator
+    import lephare as lp
+    HAS_LEPHARE = True
+except ImportError:
+    LephareInformer = None
+    LephareEstimator = None
+    lp = None
+    HAS_LEPHARE = False
+
 from minisom import MiniSom
 from scipy.ndimage import gaussian_filter1d
 from sklearn.neighbors import NearestNeighbors
@@ -431,7 +460,7 @@ def train_and_estimate(
     pdf_lephare = None
     pdf_lephare_train = None
     lephare_model = None
-    if not is_roman:
+    if not is_roman and HAS_LEPHARE and LephareInformer is not None:
         lp_bands = ['mag_u_lsst', 'mag_g_lsst', 'mag_r_lsst', 'mag_i_lsst', 'mag_z_lsst', 'mag_y_lsst']
         lp_err_bands = ['mag_u_lsst_err', 'mag_g_lsst_err', 'mag_r_lsst_err', 'mag_i_lsst_err', 'mag_z_lsst_err', 'mag_y_lsst_err']
         lp_ref_band = 'mag_i_lsst'
@@ -753,7 +782,7 @@ def estimate_only(
 
     # 7.8 LePhare conditionally (only if not is_roman)
     pdf_lephare = None
-    if not is_roman and model_dict.get("model_lephare") is not None:
+    if not is_roman and HAS_LEPHARE and LephareEstimator is not None and model_dict.get("model_lephare") is not None:
         lp_bands = ['mag_u_lsst', 'mag_g_lsst', 'mag_r_lsst', 'mag_i_lsst', 'mag_z_lsst', 'mag_y_lsst']
         lp_err_bands = ['mag_u_lsst_err', 'mag_g_lsst_err', 'mag_r_lsst_err', 'mag_i_lsst_err', 'mag_z_lsst_err', 'mag_y_lsst_err']
         lp_ref_band = 'mag_i_lsst'
