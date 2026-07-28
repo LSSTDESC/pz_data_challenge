@@ -165,22 +165,6 @@ def _hsc_mag_modalities(data: dict[str, np.ndarray], device: str) -> list[Any]:
 def load_aion(model_name: str = "polymathic-ai/aion-base", device: str | None = None):
     """Load the pretrained AION model and its codec manager."""
     import os
-    repo_root = os.path.dirname(os.path.abspath(__file__))
-    local_hf_cache = None
-    submissions_dir = os.path.join(repo_root, "submissions")
-    if os.path.exists(submissions_dir):
-        for sub in os.listdir(submissions_dir):
-            path = os.path.join(submissions_dir, sub, "hf_cache")
-            if os.path.exists(path):
-                local_hf_cache = path
-                break
-
-    if local_hf_cache is not None:
-        os.environ["HF_HOME"] = local_hf_cache
-        os.environ["HF_HUB_OFFLINE"] = "1"
-    elif "HF_HOME" not in os.environ and os.path.exists("/home/mardom/hf_cache"):
-        os.environ["HF_HOME"] = "/home/mardom/hf_cache"
-
     import torch
     from aion import AION
     from aion.codecs import CodecManager
@@ -188,7 +172,28 @@ def load_aion(model_name: str = "polymathic-ai/aion-base", device: str | None = 
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.set_grad_enabled(False)
-    model = AION.from_pretrained(model_name).to(device).eval()
+    
+    # Attempt loading from HuggingFace online repository with local release fallback
+    try:
+        model = AION.from_pretrained(model_name).to(device).eval()
+    except Exception as err:
+        local_paths = [
+            "submissions/graysmoke/aion-base",
+            "submissions/rail_aion/aion-base",
+            "submissions/aion/aion-base",
+            "aion-base",
+            os.path.expanduser("~/.cache/huggingface/hub/models--polymathic-ai--aion-base/snapshots/main"),
+        ]
+        found_path = None
+        for path in local_paths:
+            if os.path.exists(path):
+                found_path = path
+                break
+        if found_path is not None:
+            model = AION.from_pretrained(found_path, local_files_only=True).to(device).eval()
+        else:
+            raise err
+
     codec_manager = CodecManager(device=device)
     return model, codec_manager, device
 

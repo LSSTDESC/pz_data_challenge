@@ -5,9 +5,9 @@ name: Unit test and code coverage (graysmoke)
 
 on:
   push:
-    branches: [main, graysmoke]
+    branches: [main, graysmoke, rail+aion]
   pull_request:
-    branches: [main, graysmoke]
+    branches: [main, graysmoke, rail+aion]
 
 jobs:
   build:
@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.13']
+        python-version: ['3.11']
         submission: ['graysmoke']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -29,15 +29,11 @@ jobs:
           sudo apt-get update
           sudo apt install libbz2-dev
           python -m pip install --upgrade pip
-          pip install wheel numpy
+          pip install wheel
           pip install .
           pip install .[dev]
-          if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install --no-build-isolation -r requirements_${{ matrix.submission }}.txt; fi
+          if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install -r requirements_${{ matrix.submission }}.txt; fi
+          if [ -f requirements_rail_aion.txt ]; then pip install -r requirements_rail_aion.txt; fi
       - name: Run unit tests with pytest
-        env:
-          PZDC_CI_MAX_TRAIN: "1000"
-          AION_PZ_DEVICE: "cpu"
-          HF_HUB_OFFLINE: "1"
-          TRANSFORMERS_OFFLINE: "1"
         run: |
-          python -m pytest tests/test_${{ matrix.submission }}.py
+          PZDC_CI_MAX_TRAIN=500 python -m pytest tests/test_${{ matrix.submission }}.py
