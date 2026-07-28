@@ -50,7 +50,22 @@ except Exception:
 # 2. Import RAIL and other dependencies
 import qp
 from rail.core.data import TableHandle
-from rail.estimation.algos import sklearn_neurnet, k_nearneigh
+try:
+    from rail.estimation.algos import sklearn_neurnet
+except ImportError:
+    try:
+        from rail.estimation.algos import sklneurnet as sklearn_neurnet
+    except ImportError:
+        import rail.estimation.algos.sklneurnet as sklearn_neurnet
+
+try:
+    from rail.estimation.algos import k_nearneigh
+except ImportError:
+    try:
+        from rail.estimation.algos import knearneigh as k_nearneigh
+    except ImportError:
+        import rail.estimation.algos.knearneigh as k_nearneigh
+
 from rail.estimation.algos.bpz_lite import BPZliteInformer, BPZliteEstimator
 from rail.estimation.algos.flexzboost import FlexZBoostInformer, FlexZBoostEstimator
 from rail.estimation.algos.pzflow_nf import PZFlowInformer, PZFlowEstimator
