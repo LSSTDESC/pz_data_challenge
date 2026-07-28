@@ -72,9 +72,20 @@ def _seed_mock_submission_files() -> None:
 
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area(request: pytest.FixtureRequest) -> int:
-    """Download the submission data if a URL is set, and prepare directory structure."""
+    """Download or extract local submission data, and prepare directory structure."""
     if not os.path.exists(SUBMIT_DIR):
-        if SUBMISSION_URL:
+        local_tar = None
+        for candidate in ("graysmoke_submission.tgz", "whitesmoke.tgz", "rail_aion_submission.tgz"):
+            if os.path.exists(candidate):
+                local_tar = candidate
+                break
+        
+        if local_tar is not None:
+            print(f"[setup_submit_area] Extracting local archive {local_tar} to {SUBMIT_DIR}...")
+            import tarfile
+            with tarfile.open(local_tar, "r:gz") as tar:
+                tar.extractall(SUBMIT_DIR)
+        elif SUBMISSION_URL:
             try:
                 submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
             except Exception as e:
