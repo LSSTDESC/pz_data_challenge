@@ -38,7 +38,9 @@ AION_WEIGHTS_URL: str = (
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = "tests/public"
 
-# Set AION_PZ_DEVICE=cpu to force CPU; otherwise CUDA is auto-detected.
+# Set AION_PZ_DEVICE=cpu to force CPU if not specified.
+if "AION_PZ_DEVICE" not in os.environ:
+    os.environ["AION_PZ_DEVICE"] = "cpu"
 _DEVICE = os.environ.get("AION_PZ_DEVICE")
 
 
@@ -53,6 +55,12 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
 
     if AION_WEIGHTS_URL and not os.path.exists(os.path.join(SUBMIT_DIR, "hf_cache")):
         submit_utils.download_and_extract_tar(AION_WEIGHTS_URL, SUBMIT_DIR)
+
+    hf_cache_path = os.path.abspath(os.path.join(SUBMIT_DIR, "hf_cache"))
+    if os.path.exists(hf_cache_path):
+        os.environ["HF_HOME"] = hf_cache_path
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
     def teardown_submit_area() -> None:
         pass

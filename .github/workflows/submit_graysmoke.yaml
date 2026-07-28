@@ -36,5 +36,8 @@ jobs:
       - name: Run unit tests with pytest
         env:
           PZDC_CI_MAX_TRAIN: "1000"
+          AION_PZ_DEVICE: "cpu"
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
         run: |
           python -m pytest tests/test_${{ matrix.submission }}.py
