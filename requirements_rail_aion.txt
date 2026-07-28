@@ -1,0 +1,6 @@
+polymathic-aion
+torch>=2.4.0
+safetensors>=0.4.3
+scikit-learn
+joblib
+minisom
