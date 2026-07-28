@@ -51,20 +51,21 @@ except Exception:
 import qp
 from rail.core.data import TableHandle
 try:
-    from rail.estimation.algos import sklearn_neurnet
+    import rail.estimation.algos.sklearn_neurnet as sklearn_neurnet
 except ImportError:
     try:
-        from rail.estimation.algos import sklneurnet as sklearn_neurnet
-    except ImportError:
         import rail.estimation.algos.sklneurnet as sklearn_neurnet
+    except ImportError:
+        from rail.estimation.algos import sklearn_neurnet
 
 try:
-    from rail.estimation.algos import k_nearneigh
+    import rail.estimation.algos.k_nearneigh as k_nearneigh
 except ImportError:
     try:
-        from rail.estimation.algos import knearneigh as k_nearneigh
-    except ImportError:
         import rail.estimation.algos.knearneigh as k_nearneigh
+    except ImportError:
+        from rail.estimation.algos import k_nearneigh
+
 
 from rail.estimation.algos.bpz_lite import BPZliteInformer, BPZliteEstimator
 from rail.estimation.algos.flexzboost import FlexZBoostInformer, FlexZBoostEstimator
