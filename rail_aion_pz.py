@@ -38,12 +38,16 @@ try:
     import jax.core
     import inspect
     _orig_shaped_array_init = jax.core.ShapedArray.__init__
-    _sig = inspect.signature(_orig_shaped_array_init)
-    if "named_shape" not in _sig.parameters:
-        def _compat_shaped_array_init(self, *args, **kwargs):
-            kwargs.pop("named_shape", None)
-            return _orig_shaped_array_init(self, *args, **kwargs)
-        jax.core.ShapedArray.__init__ = _compat_shaped_array_init
+    if _orig_shaped_array_init is not object.__init__:
+        _sig = inspect.signature(_orig_shaped_array_init)
+        if "named_shape" not in _sig.parameters:
+            def _compat_shaped_array_init(self, *args, **kwargs):
+                kwargs.pop("named_shape", None)
+                try:
+                    return _orig_shaped_array_init(self, *args, **kwargs)
+                except TypeError:
+                    return _orig_shaped_array_init(self)
+            jax.core.ShapedArray.__init__ = _compat_shaped_array_init
 except Exception:
     pass
 
