@@ -59,7 +59,7 @@ Z_GRID = np.linspace(0.0, ZMAX, NZ)
 # Sentinel used for non-detections / NaNs before feeding the model.
 NONDETECT_FILL = 30.0
 
-DEFAULT_BATCH_SIZE = 512
+DEFAULT_BATCH_SIZE = 128
 DEFAULT_NUM_ENCODER_TOKENS = 8  # 5 HSC-mag scalar tokens fit comfortably
 
 
