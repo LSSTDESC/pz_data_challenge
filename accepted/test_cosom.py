@@ -4,8 +4,8 @@ import pytest
 
 # Put needed import here
 try:
-    from inference_submission import run_estimation
-    from train_submission import train_submission
+    from .inference_submission import run_estimation
+    from .train_submission import train_submission
 except ImportError:
     pass
 
