@@ -1,4 +1,10 @@
 import os
+
+# Force JAX XLA to use standard OS platform allocator (malloc) and disable 23GB BFC preallocation
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = ".10"
+
 import pytest
 import numpy as np
 
