@@ -484,7 +484,7 @@ def make_strip_plot(
 
     all_handles = []
     for k in ordered:
-        all_handles.append(k)
+        all_handles.append(handles[k])
     ax.legend(
         all_handles,
         ordered,
