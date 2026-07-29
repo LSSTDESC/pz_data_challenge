@@ -40,6 +40,9 @@ def run_taskset_4(
         Function taking (training_file, test_file, output_file) that trains
         and estimates. None to skip.
     """
+    if os.environ.get("SKIP_TASKSETS_34"):
+        return
+
     submit_dir: str = f"submissions/{submission}"
 
     manifest_dict: dict[str, Any] = {}
