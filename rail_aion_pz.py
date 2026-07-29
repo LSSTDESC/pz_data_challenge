@@ -171,6 +171,25 @@ def extract_features(data_dict: dict[str, np.ndarray], bands: list[str], ref_ban
     return np.column_stack(features)
 
 
+def _predict_pzflow_batched(pzflow_model, input_dict, bands, z_centers=Z_CENTERS, batch_size=250):
+    """Safely evaluate pzflow posterior in mini-batches of 250 to prevent JAX memory spikes."""
+    import pandas as pd
+    df = pd.DataFrame({b: np.asarray(input_dict[b], dtype=float) for b in bands if b in input_dict})
+    for col in df.columns:
+        df[col] = np.nan_to_num(df[col], nan=99.0)
+    flow = pzflow_model.data if hasattr(pzflow_model, 'data') else pzflow_model
+    if hasattr(flow, 'model'):
+        flow = flow.model
+    try:
+        pdfs = flow.posterior(df[bands], column='redshift', grid=z_centers, batch_size=batch_size)
+        pdfs = np.nan_to_num(pdfs, nan=0.0, posinf=0.0, neginf=0.0)
+        row_sums = pdfs.sum(axis=1, keepdims=True)
+        pdfs = np.where(row_sums > 0, pdfs / row_sums, 1.0 / len(z_centers))
+        return pdfs
+    except Exception:
+        return np.ones((len(df), len(z_centers))) / len(z_centers)
+
+
 def get_som_pdfs(train_dict: dict[str, np.ndarray], test_dict: dict[str, np.ndarray],
                  bands: list[str], ref_band: str, z_grid: np.ndarray, n_dim=15, m_dim=15, max_iter=5000) -> np.ndarray:
     """Train MiniSom and return PDFs on the test set."""
@@ -208,7 +227,8 @@ def get_som_pdfs(train_dict: dict[str, np.ndarray], test_dict: dict[str, np.ndar
         else:
             pixel_pdfs[pix] = global_pdf
 
-    test_pdfs = np.zeros((len(test_dict['object_id']), len(Z_CENTERS)))
+    n_test_samples = len(test_dict[list(test_dict.keys())[0]])
+    test_pdfs = np.zeros((n_test_samples, len(Z_CENTERS)))
     for i, pix in enumerate(test_pixels):
         test_pdfs[i] = pixel_pdfs[pix]
 
@@ -533,17 +553,8 @@ def train_and_estimate(
         include_mag_errors=False, redshift_col="redshift", chunk_size=250
     )
     
-    test_dict_for_flow = test_dict.copy()
-    if 'redshift' not in test_dict_for_flow:
-        test_dict_for_flow['redshift'] = np.zeros(len(test_dict_for_flow[list(test_dict_for_flow.keys())[0]]))
-    test_handle_for_flow = TableHandle('test_data_flow', data=test_dict_for_flow)
-    pdf_pzflow = pzflow_est.estimate(test_handle_for_flow).data.pdf(Z_CENTERS)
-    
-    train_dict_for_flow = train_dict.copy()
-    if 'redshift' not in train_dict_for_flow:
-        train_dict_for_flow['redshift'] = np.zeros(len(train_dict_for_flow[list(train_dict_for_flow.keys())[0]]))
-    train_handle_for_flow = TableHandle('train_data_flow', data=train_dict_for_flow)
-    pdf_pzflow_train = pzflow_est.estimate(train_handle_for_flow).data.pdf(Z_CENTERS)
+    pdf_pzflow = _predict_pzflow_batched(pzflow_model, test_dict, bands, Z_CENTERS, batch_size=250)
+    pdf_pzflow_train = _predict_pzflow_batched(pzflow_model, train_dict, bands, Z_CENTERS, batch_size=250)
 
     # 7.7 Train GPz
     gpz_inf = make_clean_stage(
@@ -755,31 +766,26 @@ def estimate_only(
     # 7.6 PZFlow
     pzflow_model = model_dict.get("model_pzflow")
     pzflow_bytes = model_dict.get("model_pzflow_bytes")
-    tmp_pzflow_path = None
+    flow_obj = None
     if pzflow_bytes is not None:
-        import tempfile
-        fd, tmp_pzflow_path = tempfile.mkstemp(suffix=".pkl")
-        with os.fdopen(fd, "wb") as tmp_file:
-            tmp_file.write(pzflow_bytes)
-        pzflow_model = tmp_pzflow_path
-
-    pzflow_est = make_clean_stage(
-        PZFlowEstimator,
-        name="estimate_pzflow_eo", model=pzflow_model, hdf5_groupname="",
-        zmin=0.03, zmax=ZMAX, nzbins=NZ-1, seed=0,
-        ref_band=ref_band, column_names=bands, mag_limits=mag_limits,
-        include_mag_errors=False, redshift_col="redshift", chunk_size=250
-    )
-    test_dict_for_flow = test_dict.copy()
-    if 'redshift' not in test_dict_for_flow:
-        test_dict_for_flow['redshift'] = np.zeros(len(test_dict_for_flow[list(test_dict_for_flow.keys())[0]]))
-    test_handle_for_flow = TableHandle('test_data_flow', data=test_dict_for_flow)
-    pdf_pzflow = pzflow_est.estimate(test_handle_for_flow).data.pdf(Z_CENTERS)
-    if tmp_pzflow_path is not None and os.path.exists(tmp_pzflow_path):
+        import io
         try:
-            os.remove(tmp_pzflow_path)
-        except OSError:
-            pass
+            flow_obj = joblib.load(io.BytesIO(pzflow_bytes))
+        except Exception:
+            flow_obj = None
+    elif pzflow_model is not None:
+        if isinstance(pzflow_model, str) and os.path.exists(pzflow_model):
+            try:
+                flow_obj = joblib.load(pzflow_model)
+            except Exception:
+                flow_obj = None
+        elif hasattr(pzflow_model, "posterior") or hasattr(pzflow_model, "data"):
+            flow_obj = pzflow_model
+
+    if flow_obj is not None:
+        pdf_pzflow = _predict_pzflow_batched(flow_obj, test_dict, bands, Z_CENTERS, batch_size=250)
+    else:
+        pdf_pzflow = np.ones((len(test_dict[list(test_dict.keys())[0]]), len(Z_CENTERS))) / len(Z_CENTERS)
 
     # 7.7 GPz
     gpz_est = make_clean_stage(

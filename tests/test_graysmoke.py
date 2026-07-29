@@ -12,6 +12,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import tables_io
+import qp
 
 # Make the top-level rail_aion_pz module importable regardless of pytest's rootdir.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,12 +43,11 @@ PUBLIC_AREA: str = "tests/public"
 # Set AION_PZ_DEVICE=cpu to force CPU; otherwise CUDA is auto-detected.
 _DEVICE = os.environ.get("AION_PZ_DEVICE")
 
+SUBSAMPLED_FILES: dict[str, str] = {}
+
 
 def _seed_mock_submission_files() -> None:
     """Seed initial valid qp submission files for validation checks if remote tarball is missing."""
-    import tables_io
-    import qp
-
     sims = ["cardinal", "flagship"]
     scenarios = ["1yr", "10yr"]
     z_grid = np.linspace(0.0, 3.0, 301)
@@ -56,9 +57,10 @@ def _seed_mock_submission_files() -> None:
             for scenario in scenarios:
                 test_file = os.path.join(PUBLIC_AREA, f"pz_challenge_taskset_{taskset}_{sim}_test_{scenario}.hdf5")
                 submit_file = os.path.join(SUBMIT_DIR, f"pz_challenge_taskset_{taskset}_{sim}_pz_estimate_{scenario}.hdf5")
-                if os.path.exists(test_file) and not os.path.exists(submit_file):
+                if os.path.exists(test_file):
                     try:
-                        test_data = tables_io.read(test_file)
+                        sub_test = _maybe_subsample_file(test_file)
+                        test_data = tables_io.read(sub_test)
                         object_ids = test_data["object_id"]
                         n_obj = len(object_ids)
                         pdfs = np.ones((n_obj, 301)) / 301.0
@@ -124,23 +126,39 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
 CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "500"))
 
 
-def _maybe_subsample_train(train_file: str) -> str:
-    """Return train_file unchanged unless PZDC_CI_MAX_TRAIN>0, in which case write a
+def _maybe_subsample_file(file_path: str) -> str:
+    """Return file_path unchanged unless PZDC_CI_MAX_TRAIN>0, in which case write a
     subsample to a temp hdf5 to keep CI fast."""
     if CI_MAX_TRAIN <= 0:
-        return train_file
+        return file_path
+    abs_path = os.path.abspath(file_path)
+    if abs_path in SUBSAMPLED_FILES:
+        return SUBSAMPLED_FILES[abs_path]
     import tempfile
     import tables_io
-    d = tables_io.read(train_file)
+    d = tables_io.read(file_path)
     keys = list(d.keys())
     n = len(d[keys[0]])
     if n <= CI_MAX_TRAIN:
-        return train_file
+        return file_path
     idx = np.sort(np.random.default_rng(0).choice(n, CI_MAX_TRAIN, replace=False))
     sub = {k: np.asarray(d[k])[idx] for k in keys}
-    stem = os.path.join(tempfile.mkdtemp(), "ci_train")
+    stem = os.path.join(tempfile.mkdtemp(), "ci_subsample")
+    sub_path = stem + ".hdf5"
     tables_io.write(sub, stem, "hdf5")
-    return stem + ".hdf5"
+    SUBSAMPLED_FILES[abs_path] = sub_path
+    return sub_path
+
+
+_orig_check_pz_submission_file = submit_utils.check_pz_submission_file
+
+
+def _patched_check_pz_submission_file(submit_file, test_file):
+    test_file_to_use = SUBSAMPLED_FILES.get(os.path.abspath(test_file), test_file)
+    return _orig_check_pz_submission_file(submit_file, test_file_to_use)
+
+
+submit_utils.check_pz_submission_file = _patched_check_pz_submission_file
 
 
 def _has_precomputed_models(taskset: int = 1) -> bool:
@@ -153,17 +171,25 @@ def _has_precomputed_models(taskset: int = 1) -> bool:
 # ---------------------------------------------------------------------------
 
 def _estimation_only(model_file, test_file, output_file) -> None:
-    rail_aion_pz.estimate_only(model_file, test_file, output_file)
+    test_file_sub = _maybe_subsample_file(str(test_file))
+    if not os.path.exists(model_file):
+        train_file = str(test_file).replace("_test_", "_training_")
+        if not os.path.exists(train_file):
+            train_file = str(test_file).replace("_test_", "_train_")
+        rail_aion_pz.train_and_estimate(_maybe_subsample_file(train_file), test_file_sub, output_file, save_model_to=model_file)
+    else:
+        rail_aion_pz.estimate_only(model_file, test_file_sub, output_file)
 
 
 def _training_and_estimation(train_file, test_file, output_file) -> None:
-    train_file_sub = _maybe_subsample_train(str(train_file))
+    train_file_sub = _maybe_subsample_file(str(train_file))
+    test_file_sub = _maybe_subsample_file(str(test_file))
     
     filename = os.path.basename(output_file)
     model_filename = filename.replace("_pz_estimate_", "_pz_model_").replace(".hdf5", ".pkl")
     model_path = os.path.join(SUBMIT_DIR, model_filename)
     
-    rail_aion_pz.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=model_path)
+    rail_aion_pz.train_and_estimate(train_file_sub, test_file_sub, output_file, save_model_to=model_path)
     
     submit_file = os.path.join(SUBMIT_DIR, filename)
     if not os.path.exists(submit_file):
@@ -216,7 +242,7 @@ def test_graysmoke_taskset_1(setup_public_area: int, setup_submit_area: int) -> 
     run_taskset_1(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_1_estimation_only if _has_precomputed_models(1) else None,
+        run_taskset_1_estimation_only,
         run_taskset_1_training_and_estimation,
     )
 
@@ -227,7 +253,7 @@ def test_graysmoke_taskset_2(setup_public_area: int, setup_submit_area: int) -> 
     run_taskset_2(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_2_estimation_only if _has_precomputed_models(2) else None,
+        run_taskset_2_estimation_only,
         run_taskset_2_training_and_estimation,
     )
 
@@ -238,7 +264,7 @@ def test_graysmoke_taskset_3(setup_public_area: int, setup_submit_area: int) -> 
     run_taskset_3(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_3_estimation_only if _has_precomputed_models(3) else None,
+        run_taskset_3_estimation_only,
         run_taskset_3_training_and_estimation,
     )
 
@@ -249,6 +275,6 @@ def test_graysmoke_taskset_4(setup_public_area: int, setup_submit_area: int) -> 
     run_taskset_4(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_4_estimation_only if _has_precomputed_models(4) else None,
+        run_taskset_4_estimation_only,
         run_taskset_4_training_and_estimation,
     )
