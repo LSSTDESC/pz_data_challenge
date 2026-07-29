@@ -252,14 +252,19 @@ def make_algo_estimate_time_strip_plot(
         mean_task_2 = np.mean(times)
         std_task_2 = np.std(times)
         _ = plt.errorbar(
-            mean_task_2, i_sub, xerr=std_task_2, label=sub_, ls="", marker="."
+            min(mean_task_2, 1e3),
+            i_sub,
+            xerr=min(std_task_2, 1e2),
+            label=sub_,
+            ls="",
+            marker=".",
         )
 
     _ = plt.yticks(np.linspace(0, n_sub - 1, n_sub), submissions)
     _ = plt.xlabel(metric_label)
     _ = plt.xlim(metric_limits)
     _ = plt.ylim(y_min, y_max)
-    _ = plt.legend()
+    # _ = plt.legend()
 
     for metric_range in metric_ranges:
         _ = plt.fill_between(
@@ -275,7 +280,7 @@ def make_algo_inform_time_strip_plot(
     data: dict[str, Any],
     submissions: list[str],
     metric_label: str = "Inform time [s]",
-    metric_limits: list[float] = [10, 1e4],
+    metric_limits: list[float] = [10, 1e5],
     metric_ranges: list[list[float]] = [[1, 60], [1, 300], [1, 1800]],
 ) -> Figure:
     """
@@ -384,49 +389,51 @@ def make_strip_plot(
     >>> fig = make_strip_plot(metric_data, "Bias", [-0.1, 0.1],
     ...                       [[-0.02, 0.02], [-0.05, 0.05]])
     """
-    fig, ax = plt.subplots(figsize=(11, 5))   # wider, and grab ax explicitly
+    fig, ax = plt.subplots(figsize=(11, 5))  # wider, and grab ax explicitly
     method_type = {
-    # --- template-fitting ---
-    'bpz_136temps':         'template-fitting',
-    'bpz_31temps':          'template-fitting',
-    'bpz_31temps_4tasks':   'template-fitting',
-    'bpz_136temps_4tasks':   'template-fitting',
-    'rail_bpz_test':        'template-fitting',
-    'lephare':              'template-fitting',
-
-    # --- machine learning ---
-    'Cin_zs':               'ml',   # pytorch
-    'conclave':             'ml',   # ensemble of ML methods
-    'cosom':                'ml',   # sklearn + SOM augmentation
-    'easy_forest':          'ml',   # random forest
-    'fzb_dimmingtofaint':   'ml',   # flexzboost + augmentation
-    'nn_augmentation':      'ml',   # flexzboost + augmentation
-    'owenqueen':            'ml',   # sklearn
-    'pz_resnet_flow':       'ml',   # resnet
-    'rail_knn_test':        'ml',   # KNN
-    'rail_knn_4tasks':      'ml',   # KNN
-    'tpz_colors_curvature': 'ml',   # TPZ
-    'dnf_roman_fallback':   'ml',
-    'dnf_lsst_fallback':    'ml',
-    # --- mixed ---
-    'maxoptpz':             'mixed',
+        # --- template-fitting ---
+        "bpz_136temps": "template-fitting",
+        "bpz_31temps": "template-fitting",
+        "bpz_31temps_4tasks": "template-fitting",
+        "bpz_136temps_4tasks": "template-fitting",
+        "rail_bpz_test": "template-fitting",
+        "lephare": "template-fitting",
+        # --- machine learning ---
+        "Cin_zs": "ml",  # pytorch
+        "conclave": "ml",  # ensemble of ML methods
+        "cosom": "ml",  # sklearn + SOM augmentation
+        "easy_forest": "ml",  # random forest
+        "fzb_dimmingtofaint": "ml",  # flexzboost + augmentation
+        "nn_augmentation": "ml",  # flexzboost + augmentation
+        "owenqueen": "ml",  # sklearn
+        "pz_resnet_flow": "ml",  # resnet
+        "rail_knn_test": "ml",  # KNN
+        "rail_knn_4tasks": "ml",  # KNN
+        "tpz_colors_curvature": "ml",  # TPZ
+        "dnf_roman_fallback": "ml",
+        "dnf_lsst_fallback": "ml",
+        # --- mixed ---
+        "maxoptpz": "mixed",
     }
     method_id = {k: i for i, k in enumerate(sorted(method_type))}
     has_augmentation = {
-        'cosom': True,
-        'fzb_dimmingtofaint': True,
-        'nn_augmentation': True,
+        "cosom": True,
+        "fzb_dimmingtofaint": True,
+        "nn_augmentation": True,
     }
     # everything else defaults False
 
-    markers = {'template-fitting': 'o', 'ml': 'D', 'mixed': 's'}
+    markers = {"template-fitting": "o", "ml": "D", "mixed": "s"}
     n_y_labels = len(y_label_strings)
     y_min, y_max = -0.5, n_y_labels - 0.5
 
-    scores_per_plot = {k: np.sum(v[0]**2) for k, v in data.items()}
+    scores_per_plot = {k: np.sum(v[0] ** 2) for k, v in data.items()}
     ordered = sorted(scores_per_plot, key=scores_per_plot.get)
-    ordered.remove('owenqueen')
-    colors = plt.cm.tab20(np.linspace(0, 1,20))[:len(method_id)]
+    try:
+        ordered.remove("owenqueen")
+    except ValueError:
+        pass
+    colors = plt.cm.tab20(np.linspace(0, 1, 20))[: len(method_id)]
     # colors = plt.cm.viridis(np.linspace(0, 1, len(ordered)))
 
     # shaded bands first, so they sit under the points
@@ -437,9 +444,25 @@ def make_strip_plot(
     for key in ordered[::-1]:
         val = data[key]
         augmented = has_augmentation.get(key, False)
-        handles[key]=ax.scatter(val[0], val[1], color=colors[method_id[key]], marker=markers[method_type[key]], alpha=0.7,label=key, zorder=3,edgecolors='black' if augmented else 'none',
-           linewidths=1.2 if augmented else 0.5)
-    print(data['owenqueen'])
+        try:
+            handles[key] = ax.scatter(
+                val[0],
+                val[1],
+                color=colors[method_id[key]],
+                marker=markers[method_type[key]],
+                alpha=0.7,
+                label=key,
+                zorder=3,
+                edgecolors="black" if augmented else "none",
+                linewidths=1.2 if augmented else 0.5,
+            )
+        except:
+            pass
+
+    try:
+        print(data["owenqueen"])
+    except KeyError:
+        pass
 
     ax.set_yticks(np.arange(n_y_labels))
     ax.set_yticklabels(y_label_strings)
@@ -447,9 +470,18 @@ def make_strip_plot(
     ax.set_ylim(y_min, y_max)
     ax.set_xlim(metric_limits)
 
-    ax.legend([handles[k] for k in ordered], ordered,
-              loc='center left', bbox_to_anchor=(1.02, 0.5),
-              frameon=False, fontsize=8, handletextpad=0.3)
+    all_handles = []
+    for k in ordered:
+        all_handles.append(k)
+    ax.legend(
+        all_handles,
+        ordered,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+        fontsize=8,
+        handletextpad=0.3,
+    )
     fig.tight_layout()
     return fig
 

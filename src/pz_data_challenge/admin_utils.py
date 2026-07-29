@@ -203,7 +203,7 @@ def make_submission_eval_plots(
                         eval_label="pz_estimate",
                     )
                 except Exception:
-                    continue
+                    raise
                 test_data = sub_data_dict[f"{prefix}_test"]
                 submit_data = sub_data_dict[f"{prefix}_evaluate"]
 
@@ -274,6 +274,8 @@ def make_eval_plots_and_summarize(
         return
 
     for task in ["", "outputs_2", "outputs_3"]:
+        if os.environ.get("SKIP_TASKS_23") and task:
+            continue
         try:
             make_submission_eval_plots(
                 reserved_data_path,
@@ -284,8 +286,6 @@ def make_eval_plots_and_summarize(
         except Exception as exc:
             print(exc)
             raise
-
-    merge_results_summaries(results_dir, submission_name)
 
 
 def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
@@ -563,28 +563,37 @@ def run_submission(
         return
 
     if not os.environ.get("SKIP_INSTALL"):
-        subprocess.run(
-            ["pip", "install", "-r", f"requirements_{submission_name}.txt"], check=True
-        )
+        try:
+            subprocess.run(
+                ["pip", "install", "-r", f"requirements_{submission_name}.txt"],
+                check=True,
+            )
+        except Exception:
+            pass
 
     os.environ["NO_TEARDOWN"] = "1"
-
-    output = subprocess.run(
-        ["py.test", f"tests/test_{submission_name}.py"], check=True, capture_output=True
-    )
 
     try:
         os.makedirs(results_dir)
     except Exception:
         pass
 
-    with open(os.path.join(results_dir, "pytest.log"), "w", encoding="utf-8") as fout:
-        fout.write(output.stdout.decode())
+    if not os.environ.get("SKIP_PYTEST"):
+        output = subprocess.run(
+            ["py.test", f"tests/test_{submission_name}.py"],
+            check=True,
+            capture_output=True,
+        )
+
+        with open(
+            os.path.join(results_dir, "pytest.log"), "w", encoding="utf-8"
+        ) as fout:
+            fout.write(output.stdout.decode())
 
     try:
         copy_file(
             f"{submission_dir}/stats_taskset1.yaml",
-            f"{results_dir}/stats_taskset1.txt",
+            f"{results_dir}/stats_taskset1.yaml",
         )
     except Exception:
         pass
@@ -592,7 +601,7 @@ def run_submission(
     try:
         copy_file(
             f"{submission_dir}/stats_taskset2.yaml",
-            f"{results_dir}/stats_taskset2.txt",
+            f"{results_dir}/stats_taskset2.yaml",
         )
     except Exception:
         pass
@@ -605,6 +614,8 @@ def evaluate_submission(
     results_dir: str,
     results_top_dir: str,
     reserved_data_path: str,
+    *,
+    force: bool = False,
 ) -> None:
     """Evaluate submission results.
 
@@ -620,18 +631,26 @@ def evaluate_submission(
         Path to the directory where results will be summarized.
     reserved_data_path : str
         Path to the reserved/validation data.
+    force: bool
+        Force runnning
     """
 
     # copy files from accepted area back to where they were
-    copy_file(
-        f"{accepted_dir}/requirements_{submission_name}.txt",
-        f"requirements_{submission_name}.txt",
-    )
+    try:
+        copy_file(
+            f"{accepted_dir}/requirements_{submission_name}.txt",
+            f"requirements_{submission_name}.txt",
+        )
+    except:
+        pass
 
-    copy_file(
-        f"{accepted_dir}/test_{submission_name}.py",
-        f"tests/test_{submission_name}.py",
-    )
+    try:
+        copy_file(
+            f"{accepted_dir}/test_{submission_name}.py",
+            f"tests/test_{submission_name}.py",
+        )
+    except:
+        pass
 
     failed = False
     # Run the submssion
@@ -641,24 +660,29 @@ def evaluate_submission(
                 submission_name,
                 submission_dir,
                 results_dir,
+                force=force,
             )
         except Exception:
             failed = True
 
     # Evaluate the results
-    if not os.environ.get("SKIP_EVALUATE") and not failed:
+    if not os.environ.get("SKIP_EVALUATE") and not failed or force:
         try:
             make_eval_plots_and_summarize(
                 submission_name,
                 submission_dir,
                 results_dir,
                 reserved_data_path,
+                force=force,
             )
         except Exception:
             failed = True
+            raise
+
+    merge_results_summaries(results_dir, submission_name)
 
     # Extract the results
-    if not os.environ.get("SKIP_EXTRACT") and not failed:
+    if not os.environ.get("SKIP_EXTRACT") and not failed or force:
         try:
             extract_dataframes(
                 results_top_dir,
@@ -666,7 +690,6 @@ def evaluate_submission(
             )
         except Exception:
             failed = True
-            
 
     # clean up
     try:
@@ -798,13 +821,17 @@ def make_timing_summaries(
         data_dict,
         submissions,
     )
-    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png", dpi=200)
+    fig_algo_estimate_time.savefig(
+        f"{results_dir}/plot_summary_timing_estimate.png", dpi=200
+    )
 
     fig_algo_inform_time = evaluation.make_algo_inform_time_strip_plot(
         data_dict,
         submissions,
     )
-    fig_algo_inform_time.savefig(f"{results_dir}/plot_summary_timing_inform.png", dpi=200)
+    fig_algo_inform_time.savefig(
+        f"{results_dir}/plot_summary_timing_inform.png", dpi=200
+    )
 
 
 def make_PIT_plot(
