@@ -37,6 +37,7 @@ jobs:
       - name: Run unit tests with pytest
         env:
           XLA_PYTHON_CLIENT_PREALLOCATE: "false"
+          XLA_PYTHON_CLIENT_ALLOCATOR: "platform"
           XLA_PYTHON_CLIENT_MEM_FRACTION: ".10"
           PZDC_CI_MAX_TRAIN: "500"
         run: |
