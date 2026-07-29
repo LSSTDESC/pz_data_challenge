@@ -13,9 +13,9 @@ from pz_data_challenge import submit_utils
 # Primary public URL points to GitHub v2.0.0 release asset; NERSC portal acts as secondary fallback.
 PUBLIC_URL: str = os.environ.get(
     "PZDC_PUBLIC_URL",
-    "https://github.com/mardom/pz_data_challenge/releases/download/v2.0.0/public.tgz"
+    "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public.tgz"
 )
-FALLBACK_PUBLIC_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/data_challenge/public.tgz"
+FALLBACK_PUBLIC_URL: str = "https://github.com/mardom/pz_data_challenge/releases/download/v2.0.0/public.tgz"
 
 
 @pytest.fixture(name="setup_public_area", scope="package")
