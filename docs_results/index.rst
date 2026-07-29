@@ -42,6 +42,7 @@ using increasingly realistic data.  Here we present the results.
    results/lephare/index
    results/lsst_v3/index
    results/maxoptpz/index
+   results/mlp_pretrained_subtask12/index
    results/nn_augmentation/index
    results/owenqueen/index
    results/pz_resnet_flow/index

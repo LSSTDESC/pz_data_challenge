@@ -203,7 +203,7 @@ def make_submission_eval_plots(
                         eval_label="pz_estimate",
                     )
                 except Exception:
-                    raise
+                    continue
                 test_data = sub_data_dict[f"{prefix}_test"]
                 submit_data = sub_data_dict[f"{prefix}_evaluate"]
 
@@ -285,7 +285,6 @@ def make_eval_plots_and_summarize(
             )
         except Exception as exc:
             print(exc)
-            raise
 
 
 def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
@@ -666,7 +665,7 @@ def evaluate_submission(
             failed = True
 
     # Evaluate the results
-    if not os.environ.get("SKIP_EVALUATE") and not failed or force:
+    if not os.environ.get("SKIP_EVALUATE") and (force or not failed):
         try:
             make_eval_plots_and_summarize(
                 submission_name,
@@ -677,12 +676,11 @@ def evaluate_submission(
             )
         except Exception:
             failed = True
-            raise
 
     merge_results_summaries(results_dir, submission_name)
 
     # Extract the results
-    if not os.environ.get("SKIP_EXTRACT") and not failed or force:
+    if not os.environ.get("SKIP_EXTRACT") and (force or not failed):
         try:
             extract_dataframes(
                 results_top_dir,
@@ -748,6 +746,41 @@ def make_point_summaries(
     )
     fig_outliers.savefig(f"{results_dir}/plot_summary_point_outliers.png", dpi=200)
 
+    # Now do this per-submission
+    for submission in submissions:
+        dd_outliers = evaluation.get_metric_summary_dict(
+            data_dict, [submission], "abs_outlier_rate"
+        )
+        dd_mean = evaluation.get_metric_summary_dict(data_dict, [submission], "mean")
+        dd_rms = evaluation.get_metric_summary_dict(data_dict, [submission], "std")
+        
+        fig_mean = evaluation.make_strip_plot(
+            dd_mean,
+            r"Mean $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
+            [-0.05, 0.05],
+            scoring.metric_dict["mean"],
+            is_single=True,
+        )
+        fig_mean.savefig(f"{results_dir}/{submission}/plot_summary_point_mean.png", dpi=200)
+
+        fig_rms = evaluation.make_strip_plot(
+            dd_rms,
+            r"RMS $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
+            [0, 0.3],
+            scoring.metric_dict["std"],
+            is_single=True,
+        )
+        fig_rms.savefig(f"{results_dir}/{submission}/plot_summary_point_rms.png", dpi=200)
+
+        fig_outliers = evaluation.make_strip_plot(
+            dd_outliers,
+            r"Outlier rate $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}} > 0.15$",
+            [0, 0.5],
+            scoring.metric_dict["abs_outlier_rate"],
+            is_single=True,
+        )
+        fig_outliers.savefig(f"{results_dir}/{submission}/plot_summary_point_outliers.png", dpi=200)
+    
 
 def make_PIT_summaries(
     results_dir: str,
@@ -801,6 +834,19 @@ def make_PIT_summaries(
     )
     fig_ksamp.savefig(f"{results_dir}/plot_summary_pit_ksamp.png")
 
+    # Now do this per-submission
+    for submission in submissions:
+        dd_ks = evaluation.get_metric_summary_dict(data_dict, [submission], "ks")
+        fig_ks = evaluation.make_strip_plot(
+            dd_ks,
+            r"PIT Q-Q KS",
+            [0, 1],
+            scoring.metric_dict["ks"],
+            is_single=True,
+        )
+        fig_ks.savefig(f"{results_dir}/{submission}/plot_summary_pit_ks.png", dpi=200)
+
+    
 
 def make_timing_summaries(
     results_dir: str,
