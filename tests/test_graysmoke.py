@@ -31,7 +31,7 @@ SUBMISSION_NAME: str = "graysmoke"
 # SUBMISSION_URL points to the release 2.0.0 tarball for graysmoke mixture of experts
 SUBMISSION_URL: str = os.environ.get(
     "GRAYSMOKE_SUBMISSION_URL",
-    "https://github.com/ymuza/pz_challenge/releases/download/v2.0.0/graysmoke_submission.tgz"
+    "https://github.com/mardom/pz_data_challenge/releases/download/v2.0.0/graysmoke_submission.tgz"
 )
 
 # don't change these
@@ -107,7 +107,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
     return 0
 
 
-CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "0"))
+CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "500"))
 
 
 def _maybe_subsample_train(train_file: str) -> str:
