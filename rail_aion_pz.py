@@ -10,6 +10,11 @@ automatic speed scaling for CI mock runs.
 
 import sys
 import os
+
+# Prevent JAX/XLA 23GB default memory pre-allocation in constrained CI runners
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = ".10"
+
 import math
 from pathlib import Path
 from typing import Any

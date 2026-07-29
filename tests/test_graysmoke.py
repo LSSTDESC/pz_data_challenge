@@ -121,7 +121,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
     return 0
 
 
-CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "0"))
+CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "500"))
 
 
 def _maybe_subsample_train(train_file: str) -> str:
