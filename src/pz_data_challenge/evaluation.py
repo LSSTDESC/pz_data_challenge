@@ -358,6 +358,8 @@ def make_strip_plot(
     metric_limits: list[float],
     metric_ranges: list[list[float]],
     y_label_strings: list[str] = Y_LABEL_STRINGS,
+    *,
+    is_single: bool=False,
 ) -> Figure:
     """
     Create a generic strip plot for comparing metrics across configurations.
@@ -404,6 +406,8 @@ def make_strip_plot(
         "cosom": "ml",  # sklearn + SOM augmentation
         "easy_forest": "ml",  # random forest
         "fzb_dimmingtofaint": "ml",  # flexzboost + augmentation
+        "lsst_v3": "ml",  # flexzboost + sklearn
+        "mlp_pretrained_subtask12": "ml",  # mlp
         "nn_augmentation": "ml",  # flexzboost + augmentation
         "owenqueen": "ml",  # sklearn
         "pz_resnet_flow": "ml",  # resnet
@@ -433,7 +437,9 @@ def make_strip_plot(
         ordered.remove("owenqueen")
     except ValueError:
         pass
-    colors = plt.cm.tab20(np.linspace(0, 1, 20))[: len(method_id)]
+
+    n_methods = len(method_id)
+    colors = plt.cm.tab20(np.linspace(0, 1, n_methods))[: n_methods]
     # colors = plt.cm.viridis(np.linspace(0, 1, len(ordered)))
 
     # shaded bands first, so they sit under the points
@@ -443,13 +449,19 @@ def make_strip_plot(
     handles = {}
     for key in ordered[::-1]:
         val = data[key]
-        augmented = has_augmentation.get(key, False)
+        augmented = has_augmentation.get(key, False)        
+        if is_single:
+            color='black'
+            marker='o'
+        else:
+            color=colors[method_id[key]]
+            marker=markers[method_type[key]]
         try:
             handles[key] = ax.scatter(
                 val[0],
                 val[1],
-                color=colors[method_id[key]],
-                marker=markers[method_type[key]],
+                color=color,
+                marker=marker,
                 alpha=0.7,
                 label=key,
                 zorder=3,

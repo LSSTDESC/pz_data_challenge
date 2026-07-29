@@ -3,6 +3,33 @@ Results for {{ dir_name }}
 {{ '-' * (16 + dir_name|length) }}
 
 
+Summary of metrics for {{ dir_name }}
+{{ '-' * (24 + dir_name|length) }}
+
+.. list-table:: Image Gallery
+   :widths: 25 25 25 25
+   :header-rows: 1
+   :class: full-width-table
+
+   * - **Point Estimate Bias**
+     - **Point Estimate RMS**
+     - **Point Estimate Outliers**
+     - **PIT QQ KS**
+   * - .. image:: plot_summary_point_mean.png
+          :width: 200px
+          :align: center
+     - .. image:: plot_summary_point_rms.png
+          :width: 200px
+          :align: center
+     - .. image:: plot_summary_point_outliers.png
+          :width: 200px
+          :align: center
+     - .. image:: plot_summary_pit_ks.png
+          :width: 200px
+          :align: center
+
+
+
 Results for Taskset 1 for {{ dir_name }}
 {{ '-' * (27 + dir_name|length) }}
 
@@ -15,7 +42,7 @@ Results for Taskset 1 for {{ dir_name }}
      - "Cardinal Simulations, 1yr LSST Depth"
      - "Flagship Simulations, 1yr LSST Depth"
      - "Cardinal Simulations, 10yr LSST Depth"
-     - "Flagship Simulations, 10yr LSST Depth"
+     - "Cardinal Simulations, 10yr LSST Depth"
    * - **Point estimate versus true redshift**
      - .. image:: taskset_1_cardinal_1yr_point.png
           :width: 150px
