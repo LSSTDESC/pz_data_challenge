@@ -25,8 +25,6 @@ using increasingly realistic data.  Here we present the results.
    :caption: Summaries of Results
 
    high_level_summary
-   results/taskset_1_summary
-   results/taskset_2_summary
 
 .. toctree::
    :maxdepth: 2
@@ -34,7 +32,6 @@ using increasingly realistic data.  Here we present the results.
 
    results/bpz_136temps_4tasks/index
    results/bpz_31temps_4tasks/index
-   results/bpz_31temps/index
    results/Cin_zs/index
    results/conclave/index
    results/cosom/index
@@ -43,6 +40,7 @@ using increasingly realistic data.  Here we present the results.
    results/easy_forest/index
    results/fzb_dimmingtofaint/index
    results/lephare/index
+   results/lsst_v3/index
    results/maxoptpz/index
    results/nn_augmentation/index
    results/owenqueen/index
