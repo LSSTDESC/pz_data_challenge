@@ -70,6 +70,19 @@ def _seed_mock_submission_files() -> None:
                         print(f"[seed_mock] Could not seed {submit_file}: {e}")
 
 
+def _check_remote_url_exists(url: str, timeout: float = 3.0) -> bool:
+    """Quickly check if a remote URL exists without blocking or timing out in CI."""
+    if not url:
+        return False
+    import urllib.request
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area(request: pytest.FixtureRequest) -> int:
     """Download or extract local submission data, and prepare directory structure."""
@@ -85,13 +98,14 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
             import tarfile
             with tarfile.open(local_tar, "r:gz") as tar:
                 tar.extractall(SUBMIT_DIR)
-        elif SUBMISSION_URL:
+        elif SUBMISSION_URL and _check_remote_url_exists(SUBMISSION_URL):
             try:
                 submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
             except Exception as e:
                 print(f"[setup_submit_area] Notice: Could not download {SUBMISSION_URL} ({e}), running dynamically.")
                 os.makedirs(SUBMIT_DIR, exist_ok=True)
         else:
+            print(f"[setup_submit_area] Notice: Remote archive not found or URL unreachable, running dynamically.")
             os.makedirs(SUBMIT_DIR, exist_ok=True)
 
     _seed_mock_submission_files()
