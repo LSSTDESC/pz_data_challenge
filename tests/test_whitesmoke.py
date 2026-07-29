@@ -30,7 +30,7 @@ SUBMISSION_NAME: str = "whitesmoke"
 # SUBMISSION_URL points to the release v2.0.0 tarball for whitesmoke mixture of experts
 SUBMISSION_URL: str = os.environ.get(
     "WHITESMOKE_SUBMISSION_URL",
-    "https://github.com/ymuza/pz_challenge/releases/download/v2.0.0/whitesmoke.tgz"
+    "https://github.com/mardom/pz_data_challenge/releases/download/v2.0.0/whitesmoke.tgz"
 )
 
 # don't change these
