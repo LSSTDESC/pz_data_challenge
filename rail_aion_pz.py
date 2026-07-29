@@ -530,7 +530,7 @@ def train_and_estimate(
         name="estimate_pzflow", model=pzflow_model, hdf5_groupname="",
         zmin=0.03, zmax=ZMAX, nzbins=NZ-1, seed=0,
         ref_band=ref_band, column_names=bands, mag_limits=mag_limits,
-        include_mag_errors=False, redshift_col="redshift"
+        include_mag_errors=False, redshift_col="redshift", chunk_size=250
     )
     
     test_dict_for_flow = test_dict.copy()
@@ -768,7 +768,7 @@ def estimate_only(
         name="estimate_pzflow_eo", model=pzflow_model, hdf5_groupname="",
         zmin=0.03, zmax=ZMAX, nzbins=NZ-1, seed=0,
         ref_band=ref_band, column_names=bands, mag_limits=mag_limits,
-        include_mag_errors=False, redshift_col="redshift"
+        include_mag_errors=False, redshift_col="redshift", chunk_size=250
     )
     test_dict_for_flow = test_dict.copy()
     if 'redshift' not in test_dict_for_flow:
