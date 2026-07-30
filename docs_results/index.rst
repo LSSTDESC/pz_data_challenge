@@ -39,6 +39,7 @@ using increasingly realistic data.  Here we present the results.
    results/dnf_roman_fallback/index
    results/easy_forest/index
    results/fzb_dimmingtofaint/index
+   results/graysmoke/index
    results/lephare/index
    results/lsst_v3/index
    results/maxoptpz/index
