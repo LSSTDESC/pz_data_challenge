@@ -90,17 +90,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
     """Download or extract local submission data, and prepare directory structure."""
     if not os.path.exists(SUBMIT_DIR):
         local_tar = None
-        for candidate in ("graysmoke_submission.tgz", "whitesmoke.tgz", "rail_aion_submission.tgz"):
-            if os.path.exists(candidate):
-                local_tar = candidate
-                break
-        
-        if local_tar is not None:
-            print(f"[setup_submit_area] Extracting local archive {local_tar} to {SUBMIT_DIR}...")
-            import tarfile
-            with tarfile.open(local_tar, "r:gz") as tar:
-                tar.extractall(SUBMIT_DIR)
-        elif SUBMISSION_URL and _check_remote_url_exists(SUBMISSION_URL):
+        if SUBMISSION_URL and _check_remote_url_exists(SUBMISSION_URL):
             try:
                 submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
             except Exception as e:
@@ -110,7 +100,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
             print(f"[setup_submit_area] Notice: Remote archive not found or URL unreachable, running dynamically.")
             os.makedirs(SUBMIT_DIR, exist_ok=True)
 
-    _seed_mock_submission_files()
+    #_seed_mock_submission_files()
 
     def teardown_submit_area() -> None:
         if not os.environ.get("NO_TEARDOWN") and SUBMISSION_URL and os.path.exists(SUBMIT_DIR):
@@ -123,7 +113,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
     return 0
 
 
-CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "500"))
+CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "-1"))
 
 
 def _maybe_subsample_file(file_path: str) -> str:
