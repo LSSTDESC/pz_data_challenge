@@ -33,11 +33,16 @@ import pytest
 import qp
 import torch
 
+from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
 
 SUBMISSION_NAME: str = "mlpvae_zsep_v4_speculator"
-SUBMISSION_URL: str = ""
+# Premade p(z) estimates (fine-tuned model, qp.interp with zmode+object_id)
+# plus the pz_model files subtask 2 loads; contents sit at archive root.
+SUBMISSION_URL: str = (
+    "https://github.com/Klinjin/photoz_mlpvae/raw/refs/heads/main/pz_challenge_submission/mlpvae_zsep_v4_speculator_submission.tgz"
+)
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -67,9 +72,9 @@ def _clone_if_missing(url: str, dest: Path) -> None:
     _run(["git", "clone", "--depth", "1", url, str(dest)])
 
 
-def ensure_model_deps() -> tuple[str, str, str, str]:
+def ensure_model_deps() -> tuple[str, str, str]:
     """Clone dependency repos if needed; return (baseline_ckpt, speculator_dir,
-    filter_dir, finetuned_dir)."""
+    filter_dir)."""
     photoz_mlpvae_dir = DEPS_DIR / "photoz_mlpvae"
     speculator_repo_dir = DEPS_DIR / "speculator"
 
@@ -91,16 +96,15 @@ def ensure_model_deps() -> tuple[str, str, str, str]:
     )
     speculator_dir = speculator_repo_dir / "trained" / "Inoue_IGM"
     filter_dir = photoz_mlpvae_dir / "obs_catalog" / "filters"
-    finetuned_dir = photoz_mlpvae_dir / "trained" / "mlpvae_zsep_v4_speculator_finetuned"
 
-    for p in (baseline_ckpt, speculator_dir, filter_dir, finetuned_dir):
+    for p in (baseline_ckpt, speculator_dir, filter_dir):
         if not p.exists():
             raise FileNotFoundError(f"Expected submission dependency missing: {p}")
 
-    return str(baseline_ckpt), str(speculator_dir), str(filter_dir), str(finetuned_dir)
+    return str(baseline_ckpt), str(speculator_dir), str(filter_dir)
 
 
-BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR, FINETUNED_DIR = ensure_model_deps()
+BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
 
 from obs_catalog.dataloader import build_features  # noqa: E402
 from photoz_mlpvae.model.photoz_mlpvae import PhotozMLPVAE  # noqa: E402
@@ -214,12 +218,14 @@ def _infer(model: PhotozMLPVAE, X: np.ndarray, device: str) -> tuple[np.ndarray,
 def _run_estimation_only(
     model_file: str | Path, test_file: str | Path, output_file: str | Path,
 ) -> None:
-    """Subtask 2: inference with a pre-trained checkpoint.
+    """Subtask 2: inference with the pre-trained checkpoint in `model_file`.
 
-    `model_file` is populated by setup_submit_area with our combo-specific
-    FINE-TUNED checkpoint (precomputed once), not the raw baseline --
-    same rationale as mlpvae_speculator_v2 (see PLAN.md): fine-tuning is a
-    large, consistent accuracy improvement, so ship the better model.
+    In the shipped tarball (SUBMISSION_URL), each combo's pz_model file is
+    the exact fine-tuned checkpoint that generated its premade pz_estimate
+    file -- so running this on the same test file reproduces the premade
+    estimates. Subtask 3 (_run_training_and_estimation) demonstrates the
+    training pipeline itself: it re-derives such a checkpoint live from
+    the baseline during the CI run.
     """
     device = _device()
     model, scaler, col_medians = PhotozMLPVAE.load(
@@ -369,10 +375,26 @@ def run_taskset_2_training_and_estimation(
 
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area() -> int:
-    """Populate SUBMIT_DIR for Task Sets 1 & 2 -- see mlpvae_speculator_v2's
-    fixture (PLAN.md) for the full rationale, identical here."""
+    """Populate SUBMIT_DIR for Task Sets 1 & 2.
+
+    Primary path: download SUBMISSION_URL's tarball -- premade pz_estimate
+    files plus, per combo, the pz_model file holding the exact fine-tuned
+    checkpoint that generated that combo's premade estimates (so subtask 2
+    reproduces them). The loop after is a fallback that regenerates any
+    file still missing from BASELINE_CKPT (self-consistent too: fallback
+    estimates then come from the same baseline model_file) -- a plain
+    existence check rather than `if not os.path.exists(SUBMIT_DIR)`
+    because ensure_model_deps() already created SUBMIT_DIR/_deps at
+    import time.
+    """
     os.makedirs(os.path.join(SUBMIT_DIR, "outputs_2"), exist_ok=True)
     os.makedirs(os.path.join(SUBMIT_DIR, "outputs_3"), exist_ok=True)
+
+    marker = os.path.join(
+        SUBMIT_DIR, "pz_challenge_taskset_1_cardinal_pz_estimate_1yr.hdf5"
+    )
+    if SUBMISSION_URL and not os.path.exists(marker):
+        submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
 
     for taskset in TASKSETS:
         estimation_only = (
@@ -385,8 +407,7 @@ def setup_submit_area() -> int:
                     f"pz_challenge_taskset_{taskset}_{sim}_pz_model_{scenario}.pkl",
                 )
                 if not os.path.exists(model_file):
-                    finetuned_src = Path(FINETUNED_DIR) / f"taskset{taskset}_{sim}_{scenario}.pt"
-                    Path(model_file).write_bytes(finetuned_src.read_bytes())
+                    Path(model_file).write_bytes(Path(BASELINE_CKPT).read_bytes())
 
                 estimate_file = os.path.join(
                     SUBMIT_DIR,
