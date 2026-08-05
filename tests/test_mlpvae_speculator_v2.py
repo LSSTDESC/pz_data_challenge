@@ -31,11 +31,16 @@ import pytest
 import qp
 import torch
 
+from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
 
 SUBMISSION_NAME: str = "mlpvae_speculator_v2"
-SUBMISSION_URL: str = ""
+# Premade p(z) estimates (fine-tuned model, qp.interp with zmode+object_id)
+# plus the pz_model files subtask 2 loads; contents sit at archive root.
+SUBMISSION_URL: str = (
+    "https://github.com/Klinjin/photoz_mlpvae/raw/refs/heads/main/pz_challenge_submission/mlpvae_speculator_v2_submission.tgz"
+)
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -69,11 +74,11 @@ def _clone_if_missing(url: str, dest: Path) -> None:
     _run(["git", "clone", "--depth", "1", url, str(dest)])
 
 
-def ensure_model_deps() -> tuple[str, str, str, str]:
+def ensure_model_deps() -> tuple[str, str, str]:
     """Clone dependency repos if needed; return (baseline_ckpt, speculator_dir,
-    filter_dir, finetuned_dir). Also inserts the sys.path entries needed to
-    import `photoz_mlpvae.*`, `obs_catalog.*`, and `photoz_vae.*` -- all
-    three live inside the photoz_mlpvae clone.
+    filter_dir). Also inserts the sys.path entries needed to import
+    `photoz_mlpvae.*`, `obs_catalog.*`, and `photoz_vae.*` -- all three live
+    inside the photoz_mlpvae clone.
     """
     photoz_mlpvae_dir = DEPS_DIR / "photoz_mlpvae"
     speculator_repo_dir = DEPS_DIR / "speculator"
@@ -97,16 +102,15 @@ def ensure_model_deps() -> tuple[str, str, str, str]:
     baseline_ckpt = photoz_mlpvae_dir / "trained" / "mlpvae_v2_lsst_gaap1p0" / "best.pt"
     speculator_dir = speculator_repo_dir / "trained" / "Inoue_IGM"
     filter_dir = photoz_mlpvae_dir / "obs_catalog" / "filters"
-    finetuned_dir = photoz_mlpvae_dir / "trained" / "mlpvae_speculator_v2_finetuned"
 
-    for p in (baseline_ckpt, speculator_dir, filter_dir, finetuned_dir):
+    for p in (baseline_ckpt, speculator_dir, filter_dir):
         if not p.exists():
             raise FileNotFoundError(f"Expected submission dependency missing: {p}")
 
-    return str(baseline_ckpt), str(speculator_dir), str(filter_dir), str(finetuned_dir)
+    return str(baseline_ckpt), str(speculator_dir), str(filter_dir)
 
 
-BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR, FINETUNED_DIR = ensure_model_deps()
+BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
 
 from obs_catalog.dataloader import build_features  # noqa: E402
 from photoz_mlpvae.model.photoz_mlpvae_old import PhotozMLPVAE  # noqa: E402
@@ -212,14 +216,15 @@ def _infer(model: PhotozMLPVAE, X: np.ndarray, device: str) -> tuple[np.ndarray,
 def _run_estimation_only(
     model_file: str | Path, test_file: str | Path, output_file: str | Path,
 ) -> None:
-    """Subtask 2: inference with a pre-trained checkpoint.
+    """Subtask 2: zero-shot inference with the pre-trained baseline checkpoint.
 
-    `model_file` is populated by setup_submit_area with our combo-specific
-    FINE-TUNED checkpoint (precomputed once, see PLAN.md), not the raw
-    zero-shot DP1 baseline -- fine-tuning gives a large accuracy
-    improvement (sigma_NMAD 0.089->0.030, outlier rate 17%->0.7% on
-    cardinal/1yr), so shipping the fine-tuned model is the better
-    "pretrained model" to submit here, not a weaker sanity-check baseline.
+    `model_file` is populated by setup_submit_area with BASELINE_CKPT --
+    the raw, un-fine-tuned DP1 checkpoint. Subtask 3
+    (_run_training_and_estimation) is the only place that produces or
+    uses a fine-tuned model; keeping subtask 2 zero-shot preserves the
+    distinction the framework's two subtasks are meant to represent
+    (fixed pretrained model vs. train+estimate), rather than blurring
+    them into two copies of the fine-tuned result.
     """
     device = _device()
     model, scaler, col_medians = PhotozMLPVAE.load(
@@ -360,20 +365,25 @@ def run_taskset_2_training_and_estimation(
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area() -> int:
     """
-    Populate SUBMIT_DIR for Task Sets 1 & 2 without a SUBMISSION_URL tarball.
+    Populate SUBMIT_DIR for Task Sets 1 & 2.
 
-    This submission's model/code dependencies live in two separate GitHub
-    repos (cloned on demand by ensure_model_deps), not a single hosted
-    tarball -- so instead of the template's download-and-extract, this
-    generates what SUBMIT_DIR needs directly: a model_file per
-    taskset/sim/scenario combo, populated from the precomputed fine-tuned
-    checkpoint for that exact combo (see _run_estimation_only), and each
-    combo's subtask-1 "premade" qp file (taken as a fixed snapshot from
-    that same fine-tuned model -- the live subtask 2/3 runs below
-    regenerate their own outputs fresh either way).
+    Primary path: download SUBMISSION_URL's tarball -- premade pz_estimate
+    files (from the FINE-TUNED per-combo checkpoints, our actual submitted
+    p(z)) plus the pz_model files (raw BASELINE checkpoint; subtask 2 is
+    deliberately zero-shot, only subtask 3 fine-tunes, live, during its own
+    test run below). The loop after is a fallback that regenerates any file
+    still missing from BASELINE_CKPT -- a plain existence check rather than
+    `if not os.path.exists(SUBMIT_DIR)` because ensure_model_deps() already
+    created SUBMIT_DIR/_deps at import time.
     """
     os.makedirs(os.path.join(SUBMIT_DIR, "outputs_2"), exist_ok=True)
     os.makedirs(os.path.join(SUBMIT_DIR, "outputs_3"), exist_ok=True)
+
+    marker = os.path.join(
+        SUBMIT_DIR, "pz_challenge_taskset_1_cardinal_pz_estimate_1yr.hdf5"
+    )
+    if SUBMISSION_URL and not os.path.exists(marker):
+        submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
 
     for taskset in TASKSETS:
         estimation_only = (
@@ -386,8 +396,7 @@ def setup_submit_area() -> int:
                     f"pz_challenge_taskset_{taskset}_{sim}_pz_model_{scenario}.pkl",
                 )
                 if not os.path.exists(model_file):
-                    finetuned_src = Path(FINETUNED_DIR) / f"taskset{taskset}_{sim}_{scenario}.pt"
-                    Path(model_file).write_bytes(finetuned_src.read_bytes())
+                    Path(model_file).write_bytes(Path(BASELINE_CKPT).read_bytes())
 
                 estimate_file = os.path.join(
                     SUBMIT_DIR,
@@ -410,8 +419,8 @@ def test_mlpvae_speculator_v2_taskset_1(
     """
     Validate the mlpvae_speculator_v2 submission for Task Set 1.
 
-    Runs all three subtasks: the premade snapshot (subtask 1), estimation
-    from our precomputed fine-tuned checkpoint (subtask 2), and a fresh
+    Runs all three subtasks: the premade snapshot (subtask 1), zero-shot
+    estimation from the fixed baseline checkpoint (subtask 2), and a fresh
     warm-started fine-tune on this combo's own training file (subtask 3).
     """
     assert setup_public_area == 0
