@@ -401,13 +401,17 @@ def make_strip_plot(
         "rail_bpz_test": "template-fitting",
         "lephare": "template-fitting",
         # --- machine learning ---
+        "aion": "ml", # aion
         "Cin_zs": "ml",  # pytorch
         "conclave": "ml",  # ensemble of ML methods
         "cosom": "ml",  # sklearn + SOM augmentation
         "easy_forest": "ml",  # random forest
         "fzb_dimmingtofaint": "ml",  # flexzboost + augmentation
+        "graysmoke": "ml", 
         "lsst_v3": "ml",  # flexzboost + sklearn
         "mlp_pretrained_subtask12": "ml",  # mlp
+        "mlpvae_speculator_v2": "ml", # mlp
+        "mlpvae_zsep_v4_speculator": "ml", # mlp
         "nn_augmentation": "ml",  # flexzboost + augmentation
         "owenqueen": "ml",  # sklearn
         "pz_resnet_flow": "ml",  # resnet
@@ -470,11 +474,6 @@ def make_strip_plot(
             )
         except:
             pass
-
-    try:
-        print(data["owenqueen"])
-    except KeyError:
-        pass
 
     ax.set_yticks(np.arange(n_y_labels))
     ax.set_yticklabels(y_label_strings)
