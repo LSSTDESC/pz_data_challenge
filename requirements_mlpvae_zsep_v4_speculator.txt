@@ -1,0 +1,6 @@
+torch>=2.0.0
+scikit-learn>=1.3.0
+h5py>=3.8.0
+# astro-sedpy, NOT sedpy -- bare "sedpy" on PyPI is an unrelated typosquat
+# package that installs under the same `sedpy` import name.
+astro-sedpy>=0.4.0
