@@ -30,6 +30,7 @@ using increasingly realistic data.  Here we present the results.
    :maxdepth: 2
    :caption: Results of individual submissions
 
+   results/aion/index
    results/bpz_136temps_4tasks/index
    results/bpz_31temps_4tasks/index
    results/Cin_zs/index
@@ -43,6 +44,8 @@ using increasingly realistic data.  Here we present the results.
    results/lephare/index
    results/lsst_v3/index
    results/maxoptpz/index
+   results/mlpvae_speculator_v2/index
+   results/mlpvae_zsep_v4_speculator/index
    results/mlp_pretrained_subtask12/index
    results/nn_augmentation/index
    results/owenqueen/index

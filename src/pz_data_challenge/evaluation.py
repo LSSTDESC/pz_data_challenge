@@ -401,6 +401,7 @@ def make_strip_plot(
         "rail_bpz_test": "template-fitting",
         "lephare": "template-fitting",
         # --- machine learning ---
+        "aion": "ml", # aion
         "Cin_zs": "ml",  # pytorch
         "conclave": "ml",  # ensemble of ML methods
         "cosom": "ml",  # sklearn + SOM augmentation
@@ -409,6 +410,8 @@ def make_strip_plot(
         "graysmoke": "ml", 
         "lsst_v3": "ml",  # flexzboost + sklearn
         "mlp_pretrained_subtask12": "ml",  # mlp
+        "mlpvae_speculator_v2": "ml", # mlp
+        "mlpvae_zsep_v4_speculator": "ml", # mlp
         "nn_augmentation": "ml",  # flexzboost + augmentation
         "owenqueen": "ml",  # sklearn
         "pz_resnet_flow": "ml",  # resnet

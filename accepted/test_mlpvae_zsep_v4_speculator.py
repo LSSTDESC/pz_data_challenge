@@ -1,19 +1,21 @@
-"""mlpvae_speculator_v2 submission for the PZ Data Challenge (Task Sets 1 & 2).
+"""mlpvae_zsep_v4_speculator submission for the PZ Data Challenge (Task Sets 1 & 2).
 
-Self-contained on purpose: a submission PR only adds this one file plus
-requirements_mlpvae_speculator_v2.txt and the workflow yaml (see PLAN.md's
-submission-mechanism notes) -- `submissions_src/` is local dev scratch,
-gitignored, and never committed, so nothing here may import from it.
+Same design as mlpvae_speculator_v2 (see PLAN.md) -- self-contained on
+purpose (a submission PR only adds this one file plus
+requirements_mlpvae_zsep_v4_speculator.txt and the workflow yaml;
+`submissions_src/` is local dev scratch, gitignored, never committed).
 
-Neither of this model's two dependencies is pip-installable: one repo
-(github.com/Klinjin/photoz_mlpvae) carries vendored plain-Python source
-(the model class, a third package `photoz_vae` it imports from, and
-obs_catalog's feature pipeline) plus small checkpoints; the other
-(github.com/Klinjin/speculator) carries ~1.5GB of Speculator weights via
-Git LFS. `ensure_model_deps` below clones both on demand into
-SUBMIT_DIR/_deps (SUBMIT_DIR is already gitignored, so no new rule
-needed) instead of relying on hardcoded local paths, which a CI runner
-would not have.
+Model: mlpvae_zsep_v4_lsst_gaap1p0_e2000_lzmin20, the z-separated
+architecture (photoz_mlpvae.model.photoz_mlpvae.PhotozMLPVAE, NOT the older
+photoz_mlpvae_old.PhotozMLPVAE mlpvae_speculator_v2 uses) -- z gets its own
+supervised latent + MLP head; the 15 SPS params keep a VAE latent
+conditioned on z. Same two GitHub-hosted dependencies as mlpvae_speculator_v2
+(github.com/Klinjin/photoz_mlpvae for vendored source + checkpoints,
+github.com/Klinjin/speculator for the Speculator weights via Git LFS) --
+same speculator_dir/filter_dir, same use_colors/use_euclid/use_gaap
+settings, so no adapter or dependency-hosting changes were needed, only a
+different model module/checkpoint path and a different subtask-3 fine-tune
+loop (see below).
 """
 
 from __future__ import annotations
@@ -35,11 +37,11 @@ from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
 
-SUBMISSION_NAME: str = "mlpvae_speculator_v2"
+SUBMISSION_NAME: str = "mlpvae_zsep_v4_speculator"
 # Premade p(z) estimates (fine-tuned model, qp.interp with zmode+object_id)
 # plus the pz_model files subtask 2 loads; contents sit at archive root.
 SUBMISSION_URL: str = (
-    "https://github.com/Klinjin/photoz_mlpvae/raw/refs/heads/main/pz_challenge_submission/mlpvae_speculator_v2_submission.tgz"
+    "https://github.com/Klinjin/photoz_mlpvae/raw/refs/heads/main/pz_challenge_submission/mlpvae_zsep_v4_speculator_submission.tgz"
 )
 
 # don't change these
@@ -48,9 +50,6 @@ PUBLIC_AREA: str = "tests/public"
 
 SIMS = ["cardinal", "flagship"]
 SCENARIOS = ["1yr", "10yr"]
-# Task Set 2 shares Task Set 1's exact column schema (its distinguishing
-# feature is training/test distribution mismatch, not a different format --
-# see PLAN.md), so both are set up identically here.
 TASKSETS = [1, 2]
 
 # ---------------------------------------------------------------------------
@@ -59,7 +58,6 @@ TASKSETS = [1, 2]
 DEPS_DIR = Path(SUBMIT_DIR) / "_deps"
 PHOTOZ_MLPVAE_URL = "https://github.com/Klinjin/photoz_mlpvae.git"
 SPECULATOR_URL = "https://github.com/Klinjin/speculator.git"
-# Below this, a Speculator .npz is still an unsmudged Git LFS pointer (~130 bytes).
 _LFS_SMUDGED_MIN_BYTES = 1_000_000
 
 
@@ -76,16 +74,10 @@ def _clone_if_missing(url: str, dest: Path) -> None:
 
 def ensure_model_deps() -> tuple[str, str, str]:
     """Clone dependency repos if needed; return (baseline_ckpt, speculator_dir,
-    filter_dir). Also inserts the sys.path entries needed to import
-    `photoz_mlpvae.*`, `obs_catalog.*`, and `photoz_vae.*` -- all three live
-    inside the photoz_mlpvae clone.
-    """
+    filter_dir)."""
     photoz_mlpvae_dir = DEPS_DIR / "photoz_mlpvae"
     speculator_repo_dir = DEPS_DIR / "speculator"
 
-    # Registers the filter.lfs.* smudge/clean hooks in ~/.gitconfig -- without
-    # this, `git lfs pull` refuses to check out objects ("Git LFS is not
-    # installed for this repository") even though the git-lfs binary exists.
     _run(["git", "lfs", "install", "--skip-repo"])
 
     _clone_if_missing(PHOTOZ_MLPVAE_URL, photoz_mlpvae_dir)
@@ -99,7 +91,9 @@ def ensure_model_deps() -> tuple[str, str, str]:
         if p not in sys.path:
             sys.path.insert(0, p)
 
-    baseline_ckpt = photoz_mlpvae_dir / "trained" / "mlpvae_v2_lsst_gaap1p0" / "best.pt"
+    baseline_ckpt = (
+        photoz_mlpvae_dir / "trained" / "mlpvae_zsep_v4_lsst_gaap1p0_e2000_lzmin20" / "best.pt"
+    )
     speculator_dir = speculator_repo_dir / "trained" / "Inoue_IGM"
     filter_dir = photoz_mlpvae_dir / "obs_catalog" / "filters"
 
@@ -110,19 +104,19 @@ def ensure_model_deps() -> tuple[str, str, str]:
     return str(baseline_ckpt), str(speculator_dir), str(filter_dir)
 
 
-BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
+try:
+    BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
 
-from obs_catalog.dataloader import build_features  # noqa: E402
-from photoz_mlpvae.model.photoz_mlpvae_old import PhotozMLPVAE  # noqa: E402
-
+    from obs_catalog.dataloader import build_features  # noqa: E402
+    from photoz_mlpvae.model.photoz_mlpvae import PhotozMLPVAE  # noqa: E402
+except:
+    pass
+    
 # ---------------------------------------------------------------------------
-# Adapter: challenge HDF5 schema (mag_{band}_lsst[_err]) -> the model's
-# GAAP-named feature columns ({band}_gaap1p0Mag[Err]) -- a thin rename, not
-# a reimplementation. build_features's imputation/scaling already handles
-# NaN non-detections generically.
+# Adapter: challenge HDF5 schema -> the model's GAAP-named feature columns
 # ---------------------------------------------------------------------------
 LSST_BANDS = ["u", "g", "r", "i", "z", "y"]
-TARGET_COL = "redshift"  # obs_catalog.dataloader.TARGET_COL
+TARGET_COL = "redshift"
 
 
 def load_challenge_hdf5(path: str | Path) -> pd.DataFrame:
@@ -175,6 +169,12 @@ DEFAULT_FINETUNE_EPOCHS = 60
 DEFAULT_FINETUNE_LR = 1e-4
 DEFAULT_FINETUNE_BATCH = 256
 DEFAULT_FINETUNE_PATIENCE = 15
+# Same mix as this checkpoint's own config.yaml (lam_z=20.0, lam_r=0.1,
+# sigma_floor=0.3); beta=0.0 (no KL term) -- a short warm-start fine-tune
+# doesn't need the original run's beta annealing schedule.
+FINETUNE_LAM_Z = 20.0
+FINETUNE_LAM_R = 0.1
+FINETUNE_SIGMA_FLOOR = 0.3
 
 
 def _device() -> str:
@@ -207,9 +207,14 @@ def _write_qp_output(
 
 
 def _infer(model: PhotozMLPVAE, X: np.ndarray, device: str) -> tuple[np.ndarray, np.ndarray]:
+    """PhotozMLPVAE.predict_z returns (z_samples, z_mean, z_std) -- same
+    3-tuple shape/semantics in both the old and new (z-separated) model
+    classes, so this is unchanged from mlpvae_speculator_v2."""
     model.eval()
     with torch.no_grad():
-        _, z_pred_t, sigma_z_t = model.predict_z(torch.from_numpy(X).to(device), n_samples=1)
+        _, z_pred_t, sigma_z_t = model.predict_z(
+            torch.from_numpy(X).to(device), n_samples=1
+        )
     return z_pred_t.cpu().numpy(), sigma_z_t.cpu().numpy()
 
 
@@ -254,12 +259,14 @@ def _run_training_and_estimation(
     """Subtask 3: fine-tune the baseline checkpoint on the framework's own
     training file, live during this call, then infer on the test file.
 
-    Warm-starts from BASELINE_CKPT (same partial-state_dict pattern as
-    PhotozMLPVAE.load) rather than training from scratch, since the
-    baseline was itself warm-started from a synthetic SED pretrain and a
-    from-scratch fit is unlikely to beat that on a single task-set's
-    training split. Unlike subtask 2's precomputed fine-tune, this always
-    trains fresh -- that is subtask 3's whole contract.
+    Unlike mlpvae_speculator_v2's fine-tune loop (which called
+    model.encoder(x) directly with a hand-rolled z-only NLL), this uses
+    PhotozMLPVAE.loss() -- the z-separated model's encoder returns a
+    5-tuple (z_pred, mu_z, log_var_z, mu_15, log_var_15), not the old
+    4-tuple (z_pred, log_sigma_z, mu_15, log_var_15), so the old hand-rolled
+    loss doesn't apply. .loss() is the model's own native training
+    objective, and build_features already returns the mags/errs/mask it
+    needs for free.
     """
     device = _device()
 
@@ -281,7 +288,6 @@ def _run_training_and_estimation(
     )
 
     model, _, _ = PhotozMLPVAE.load(BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR, device=device)
-
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     def _batches(n, bs):
@@ -290,8 +296,15 @@ def _run_training_and_estimation(
             yield order[start:start + bs]
 
     x_tr_t = torch.from_numpy(X_tr).to(device)
+    mags_tr_t = torch.from_numpy(mags_tr).to(device)
+    errs_tr_t = torch.from_numpy(errs_tr).to(device)
+    mask_tr_t = torch.from_numpy(mask_tr).to(device)
     z_tr_t = torch.from_numpy(z_tr).to(device)
+
     x_val_t = torch.from_numpy(X_val).to(device)
+    mags_val_t = torch.from_numpy(mags_val).to(device)
+    errs_val_t = torch.from_numpy(errs_val).to(device)
+    mask_val_t = torch.from_numpy(mask_val).to(device)
     z_val_t = torch.from_numpy(z_val).to(device)
 
     best_val = float("inf")
@@ -301,21 +314,23 @@ def _run_training_and_estimation(
     for epoch in range(epochs):
         model.train()
         for batch_idx in _batches(len(X_tr), batch_size):
-            xb = x_tr_t[batch_idx]
-            zb = z_tr_t[batch_idx]
-            z_pred_b, log_sigma_z_b, _, _ = model.encoder(xb)
-            sigma_b = torch.exp(log_sigma_z_b).clamp(min=1e-3)
-            nll = (
-                0.5 * ((zb - z_pred_b) / sigma_b) ** 2 + torch.log(sigma_b)
-            ).mean()
+            loss_dict = model.loss(
+                x_tr_t[batch_idx], mags_tr_t[batch_idx], errs_tr_t[batch_idx],
+                mask_tr_t[batch_idx], z_tr_t[batch_idx],
+                lam_z=FINETUNE_LAM_Z, lam_r=FINETUNE_LAM_R, beta=0.0,
+                sigma_floor=FINETUNE_SIGMA_FLOOR, use_nll_z=True,
+            )
             opt.zero_grad(set_to_none=True)
-            nll.backward()
+            loss_dict["total"].backward()
             opt.step()
 
         model.eval()
         with torch.no_grad():
-            z_pred_val, _, _, _ = model.encoder(x_val_t)
-            val_loss = torch.mean((z_pred_val.squeeze(-1) - z_val_t) ** 2).item()
+            val_loss = model.loss(
+                x_val_t, mags_val_t, errs_val_t, mask_val_t, z_val_t,
+                lam_z=FINETUNE_LAM_Z, lam_r=FINETUNE_LAM_R, beta=0.0,
+                sigma_floor=FINETUNE_SIGMA_FLOOR, use_nll_z=True,
+            )["z_sup"].item()
 
         if val_loss < best_val:
             best_val = val_loss
@@ -363,8 +378,7 @@ def run_taskset_2_training_and_estimation(
 
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area() -> int:
-    """
-    Populate SUBMIT_DIR for Task Sets 1 & 2.
+    """Populate SUBMIT_DIR for Task Sets 1 & 2.
 
     Primary path: download SUBMISSION_URL's tarball -- premade pz_estimate
     files plus, per combo, the pz_model file holding the exact fine-tuned
@@ -412,17 +426,10 @@ def setup_submit_area() -> int:
     return 0
 
 
-def test_mlpvae_speculator_v2_taskset_1(
+def test_mlpvae_zsep_v4_speculator_taskset_1(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
-    """
-    Validate the mlpvae_speculator_v2 submission for Task Set 1.
-
-    Runs all three subtasks: the premade snapshot (subtask 1), zero-shot
-    estimation from the fixed baseline checkpoint (subtask 2), and a fresh
-    warm-started fine-tune on this combo's own training file (subtask 3).
-    """
     assert setup_public_area == 0
     assert setup_submit_area == 0
 
@@ -434,19 +441,10 @@ def test_mlpvae_speculator_v2_taskset_1(
     )
 
 
-def test_mlpvae_speculator_v2_taskset_2(
+def test_mlpvae_zsep_v4_speculator_taskset_2(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
-    """
-    Validate the mlpvae_speculator_v2 submission for Task Set 2.
-
-    Same model/pipeline as Task Set 1 -- Task Set 2's training files apply
-    spectroscopic-selection emulation (median i-mag ~22.6) while test files
-    go deeper (~i<25.4, median ~24.3), a training/test distribution
-    mismatch Task Set 1 doesn't have. No code path differs; subtask 3's
-    fine-tune just has a harder generalization problem on this task set.
-    """
     assert setup_public_area == 0
     assert setup_submit_area == 0
 
