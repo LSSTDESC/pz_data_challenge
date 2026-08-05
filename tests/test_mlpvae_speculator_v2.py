@@ -216,15 +216,14 @@ def _infer(model: PhotozMLPVAE, X: np.ndarray, device: str) -> tuple[np.ndarray,
 def _run_estimation_only(
     model_file: str | Path, test_file: str | Path, output_file: str | Path,
 ) -> None:
-    """Subtask 2: zero-shot inference with the pre-trained baseline checkpoint.
+    """Subtask 2: inference with the pre-trained checkpoint in `model_file`.
 
-    `model_file` is populated by setup_submit_area with BASELINE_CKPT --
-    the raw, un-fine-tuned DP1 checkpoint. Subtask 3
-    (_run_training_and_estimation) is the only place that produces or
-    uses a fine-tuned model; keeping subtask 2 zero-shot preserves the
-    distinction the framework's two subtasks are meant to represent
-    (fixed pretrained model vs. train+estimate), rather than blurring
-    them into two copies of the fine-tuned result.
+    In the shipped tarball (SUBMISSION_URL), each combo's pz_model file is
+    the exact fine-tuned checkpoint that generated its premade pz_estimate
+    file -- so running this on the same test file reproduces the premade
+    estimates. Subtask 3 (_run_training_and_estimation) demonstrates the
+    training pipeline itself: it re-derives such a checkpoint live from
+    the baseline during the CI run.
     """
     device = _device()
     model, scaler, col_medians = PhotozMLPVAE.load(
@@ -368,13 +367,14 @@ def setup_submit_area() -> int:
     Populate SUBMIT_DIR for Task Sets 1 & 2.
 
     Primary path: download SUBMISSION_URL's tarball -- premade pz_estimate
-    files (from the FINE-TUNED per-combo checkpoints, our actual submitted
-    p(z)) plus the pz_model files (raw BASELINE checkpoint; subtask 2 is
-    deliberately zero-shot, only subtask 3 fine-tunes, live, during its own
-    test run below). The loop after is a fallback that regenerates any file
-    still missing from BASELINE_CKPT -- a plain existence check rather than
-    `if not os.path.exists(SUBMIT_DIR)` because ensure_model_deps() already
-    created SUBMIT_DIR/_deps at import time.
+    files plus, per combo, the pz_model file holding the exact fine-tuned
+    checkpoint that generated that combo's premade estimates (so subtask 2
+    reproduces them). The loop after is a fallback that regenerates any
+    file still missing from BASELINE_CKPT (self-consistent too: fallback
+    estimates then come from the same baseline model_file) -- a plain
+    existence check rather than `if not os.path.exists(SUBMIT_DIR)`
+    because ensure_model_deps() already created SUBMIT_DIR/_deps at
+    import time.
     """
     os.makedirs(os.path.join(SUBMIT_DIR, "outputs_2"), exist_ok=True)
     os.makedirs(os.path.join(SUBMIT_DIR, "outputs_3"), exist_ok=True)
