@@ -1,0 +1,4 @@
+pz-rail-base>=2.0.0
+pz-rail-sklearn>=2.0.0
+qp-prob>=1.0.0
+tables_io>=1.0.0

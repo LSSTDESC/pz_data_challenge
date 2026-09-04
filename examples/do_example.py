@@ -2,7 +2,7 @@ from rail.core.data import TableHandle
 from rail.estimation.algos import sklearn_neurnet
 from rail.utils import catalog_utils
 
-TASKSETS = ["taskset_1", "taskset_2"]
+TASKSETS = ["taskset_1", "taskset_2", "taskset_3", "taskset_4"]
 SIMS = ["cardinal", "flagship"]
 SCENARIOS = ["1yr", "10yr"]
 

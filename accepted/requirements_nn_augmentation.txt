@@ -1,0 +1,7 @@
+scipy
+pz-rail-base>=2.0.0
+pz-rail-flexzboost
+tables_io>=1.0.0
+numpy
+qp-prob>=1.0.0
+

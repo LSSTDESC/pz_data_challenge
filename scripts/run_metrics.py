@@ -6,7 +6,7 @@ DATADIR = 'public'
 EVALUATION_DIR = 'evaluation'
 PLOTS_DIR = 'metric_plots'
 
-TASKSETS = ["taskset_1", "taskset_2"]
+TASKSETS = ["taskset_1", "taskset_2", "taskset_3", "taskset_4"]
 SIMS = ["cardinal", "flagship"]
 SCENARIOS = ["1yr", "10yr"]
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
                 prefix = f"{taskset_}_{sim_}_{scenario_}"
                 
                 sub_data_dict = metrics.get_truth_and_qp_ensemble(
-                    DATADIR, EVALUATION_DIR, taskset_, sim_, scenario_
+                    DATADIR, EVALUATION_DIR, taskset_, sim_, scenario_,
                 )
                 test_data = sub_data_dict[f"{prefix}_test"]
                 submit_data = sub_data_dict[f"{prefix}_evaluate"]
@@ -48,6 +48,7 @@ if __name__ == '__main__':
 
     for k, v in data_dict.items():
         v.savefig(k.replace("0.0",""), PLOTS_DIR)
+        v.savedata(PLOTS_DIR)
 
     print(f"\nSaved {len(data_dict)} plots to {PLOTS_DIR}")
             
