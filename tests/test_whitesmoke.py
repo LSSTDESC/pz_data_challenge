@@ -19,6 +19,11 @@ if _REPO_ROOT not in sys.path:
 
 import rail_aion_pz  # noqa: E402
 
+try:
+    import pontifex
+except ImportError:
+    pontifex = None
+
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
 from pz_data_challenge.taskset_3 import run_taskset_3
@@ -152,7 +157,10 @@ def _has_precomputed_models(taskset: int = 1) -> bool:
 # ---------------------------------------------------------------------------
 
 def _estimation_only(model_file, test_file, output_file) -> None:
-    rail_aion_pz.estimate_only(model_file, test_file, output_file)
+    if pontifex is not None:
+        pontifex.estimate_only(model_file, test_file, output_file)
+    else:
+        rail_aion_pz.estimate_only(model_file, test_file, output_file)
 
 
 def _training_and_estimation(train_file, test_file, output_file) -> None:
@@ -162,7 +170,10 @@ def _training_and_estimation(train_file, test_file, output_file) -> None:
     model_filename = filename.replace("_pz_estimate_", "_pz_model_").replace(".hdf5", ".pkl")
     model_path = os.path.join(SUBMIT_DIR, model_filename)
     
-    rail_aion_pz.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=model_path)
+    if pontifex is not None:
+        pontifex.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=model_path)
+    else:
+        rail_aion_pz.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=model_path)
     
     submit_file = os.path.join(SUBMIT_DIR, filename)
     if not os.path.exists(submit_file):
