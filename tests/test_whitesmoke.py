@@ -74,7 +74,7 @@ def _seed_mock_submission_files() -> None:
                         print(f"[seed_mock] Could not seed {submit_file}: {e}")
 
 
-def _check_remote_url_exists(url: str, timeout: float = 3.0) -> bool:
+def _check_remote_url_exists(url: str, timeout: float = 15.0) -> bool:
     """Quickly check if a remote URL exists without blocking or timing out in CI."""
     if not url:
         return False

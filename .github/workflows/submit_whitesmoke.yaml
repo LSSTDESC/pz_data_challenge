@@ -34,9 +34,6 @@ jobs:
           pip install wheel
           pip install .
           pip install .[dev]
-          if [ -n "$PONTIFEX_PAT" ]; then
-            pip install "git+https://${PONTIFEX_PAT}@github.com/mardom/Pontifex.git@main#egg=pontifex"
-          fi
           if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install -r requirements_${{ matrix.submission }}.txt || true; fi
           if [ -f requirements_rail_aion.txt ]; then pip install -r requirements_rail_aion.txt; fi
       - name: Run unit tests with pytest
