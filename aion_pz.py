@@ -400,6 +400,9 @@ def fit_temperature(
     temps: np.ndarray | None = None,
 ) -> float:
     """Pick the temperature that minimises PIT-KS on the calibration set."""
+    pz_calib = np.nan_to_num(pz_calib, nan=0.0, posinf=0.0, neginf=0.0)
+    row_sums = pz_calib.sum(axis=1, keepdims=True)
+    pz_calib = np.where(row_sums > 0, pz_calib / row_sums, 1.0 / len(grid))
     if temps is None:
         temps = np.linspace(0.5, 5.0, 46)
     best_t, best_ks = 1.0, np.inf
@@ -451,12 +454,16 @@ def write_qp(
     z_grid: np.ndarray | None = None,
 ) -> None:
     """Write an interpolated qp ensemble with object_id + zmode ancil."""
+    import os
     import qp
 
     grid = Z_GRID if z_grid is None else np.asarray(z_grid, dtype="float64")
     ens = qp.Ensemble(qp.interp, data={"xvals": grid, "yvals": pz})
     zmode = grid[np.argmax(pz, axis=1)]
     ens.set_ancil({"object_id": np.asarray(object_id).astype(int), "zmode": zmode})
+    out_dir = os.path.dirname(str(output_file))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     ens.write_to(str(output_file))
 
 

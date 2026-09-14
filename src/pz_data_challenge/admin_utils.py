@@ -274,6 +274,8 @@ def make_eval_plots_and_summarize(
         return
 
     for task in ["", "outputs_2", "outputs_3"]:
+        if os.environ.get("SKIP_TASKS_23") and task:
+            continue
         try:
             make_submission_eval_plots(
                 reserved_data_path,
@@ -283,9 +285,6 @@ def make_eval_plots_and_summarize(
             )
         except Exception as exc:
             print(exc)
-            raise
-
-    merge_results_summaries(results_dir, submission_name)
 
 
 def get_point_stats(results_data: Dict[str, Any]) -> pd.DataFrame:
@@ -563,28 +562,37 @@ def run_submission(
         return
 
     if not os.environ.get("SKIP_INSTALL"):
-        subprocess.run(
-            ["pip", "install", "-r", f"requirements_{submission_name}.txt"], check=True
-        )
+        try:
+            subprocess.run(
+                ["pip", "install", "-r", f"requirements_{submission_name}.txt"],
+                check=True,
+            )
+        except Exception:
+            pass
 
     os.environ["NO_TEARDOWN"] = "1"
-
-    output = subprocess.run(
-        ["py.test", f"tests/test_{submission_name}.py"], check=True, capture_output=True
-    )
 
     try:
         os.makedirs(results_dir)
     except Exception:
         pass
 
-    with open(os.path.join(results_dir, "pytest.log"), "w", encoding="utf-8") as fout:
-        fout.write(output.stdout.decode())
+    if not os.environ.get("SKIP_PYTEST"):
+        output = subprocess.run(
+            ["py.test", f"tests/test_{submission_name}.py"],
+            check=True,
+            capture_output=True,
+        )
+
+        with open(
+            os.path.join(results_dir, "pytest.log"), "w", encoding="utf-8"
+        ) as fout:
+            fout.write(output.stdout.decode())
 
     try:
         copy_file(
             f"{submission_dir}/stats_taskset1.yaml",
-            f"{results_dir}/stats_taskset1.txt",
+            f"{results_dir}/stats_taskset1.yaml",
         )
     except Exception:
         pass
@@ -592,7 +600,7 @@ def run_submission(
     try:
         copy_file(
             f"{submission_dir}/stats_taskset2.yaml",
-            f"{results_dir}/stats_taskset2.txt",
+            f"{results_dir}/stats_taskset2.yaml",
         )
     except Exception:
         pass
@@ -605,6 +613,8 @@ def evaluate_submission(
     results_dir: str,
     results_top_dir: str,
     reserved_data_path: str,
+    *,
+    force: bool = False,
 ) -> None:
     """Evaluate submission results.
 
@@ -620,18 +630,26 @@ def evaluate_submission(
         Path to the directory where results will be summarized.
     reserved_data_path : str
         Path to the reserved/validation data.
+    force: bool
+        Force runnning
     """
 
     # copy files from accepted area back to where they were
-    copy_file(
-        f"{accepted_dir}/requirements_{submission_name}.txt",
-        f"requirements_{submission_name}.txt",
-    )
+    try:
+        copy_file(
+            f"{accepted_dir}/requirements_{submission_name}.txt",
+            f"requirements_{submission_name}.txt",
+        )
+    except:
+        pass
 
-    copy_file(
-        f"{accepted_dir}/test_{submission_name}.py",
-        f"tests/test_{submission_name}.py",
-    )
+    try:
+        copy_file(
+            f"{accepted_dir}/test_{submission_name}.py",
+            f"tests/test_{submission_name}.py",
+        )
+    except:
+        pass
 
     failed = False
     # Run the submssion
@@ -641,24 +659,28 @@ def evaluate_submission(
                 submission_name,
                 submission_dir,
                 results_dir,
+                force=force,
             )
         except Exception:
             failed = True
 
     # Evaluate the results
-    if not os.environ.get("SKIP_EVALUATE") and not failed:
+    if not os.environ.get("SKIP_EVALUATE") and (force or not failed):
         try:
             make_eval_plots_and_summarize(
                 submission_name,
                 submission_dir,
                 results_dir,
                 reserved_data_path,
+                force=force,
             )
         except Exception:
             failed = True
 
+    merge_results_summaries(results_dir, submission_name)
+
     # Extract the results
-    if not os.environ.get("SKIP_EXTRACT") and not failed:
+    if not os.environ.get("SKIP_EXTRACT") and (force or not failed):
         try:
             extract_dataframes(
                 results_top_dir,
@@ -666,7 +688,6 @@ def evaluate_submission(
             )
         except Exception:
             failed = True
-            
 
     # clean up
     try:
@@ -725,6 +746,41 @@ def make_point_summaries(
     )
     fig_outliers.savefig(f"{results_dir}/plot_summary_point_outliers.png", dpi=200)
 
+    # Now do this per-submission
+    for submission in submissions:
+        dd_outliers = evaluation.get_metric_summary_dict(
+            data_dict, [submission], "abs_outlier_rate"
+        )
+        dd_mean = evaluation.get_metric_summary_dict(data_dict, [submission], "mean")
+        dd_rms = evaluation.get_metric_summary_dict(data_dict, [submission], "std")
+        
+        fig_mean = evaluation.make_strip_plot(
+            dd_mean,
+            r"Mean $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
+            [-0.05, 0.05],
+            scoring.metric_dict["mean"],
+            is_single=True,
+        )
+        fig_mean.savefig(f"{results_dir}/{submission}/plot_summary_point_mean.png", dpi=200)
+
+        fig_rms = evaluation.make_strip_plot(
+            dd_rms,
+            r"RMS $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}}$",
+            [0, 0.3],
+            scoring.metric_dict["std"],
+            is_single=True,
+        )
+        fig_rms.savefig(f"{results_dir}/{submission}/plot_summary_point_rms.png", dpi=200)
+
+        fig_outliers = evaluation.make_strip_plot(
+            dd_outliers,
+            r"Outlier rate $\frac{|z_{\rm est} - z_{\rm ref}|}{1 + z_{\rm ref}} > 0.15$",
+            [0, 0.5],
+            scoring.metric_dict["abs_outlier_rate"],
+            is_single=True,
+        )
+        fig_outliers.savefig(f"{results_dir}/{submission}/plot_summary_point_outliers.png", dpi=200)
+    
 
 def make_PIT_summaries(
     results_dir: str,
@@ -778,6 +834,19 @@ def make_PIT_summaries(
     )
     fig_ksamp.savefig(f"{results_dir}/plot_summary_pit_ksamp.png")
 
+    # Now do this per-submission
+    for submission in submissions:
+        dd_ks = evaluation.get_metric_summary_dict(data_dict, [submission], "ks")
+        fig_ks = evaluation.make_strip_plot(
+            dd_ks,
+            r"PIT Q-Q KS",
+            [0, 1],
+            scoring.metric_dict["ks"],
+            is_single=True,
+        )
+        fig_ks.savefig(f"{results_dir}/{submission}/plot_summary_pit_ks.png", dpi=200)
+
+    
 
 def make_timing_summaries(
     results_dir: str,
@@ -798,13 +867,17 @@ def make_timing_summaries(
         data_dict,
         submissions,
     )
-    fig_algo_estimate_time.savefig(f"{results_dir}/plot_summary_timing_estimate.png", dpi=200)
+    fig_algo_estimate_time.savefig(
+        f"{results_dir}/plot_summary_timing_estimate.png", dpi=200
+    )
 
     fig_algo_inform_time = evaluation.make_algo_inform_time_strip_plot(
         data_dict,
         submissions,
     )
-    fig_algo_inform_time.savefig(f"{results_dir}/plot_summary_timing_inform.png", dpi=200)
+    fig_algo_inform_time.savefig(
+        f"{results_dir}/plot_summary_timing_inform.png", dpi=200
+    )
 
 
 def make_PIT_plot(

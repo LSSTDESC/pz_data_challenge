@@ -25,16 +25,14 @@ using increasingly realistic data.  Here we present the results.
    :caption: Summaries of Results
 
    high_level_summary
-   results/taskset_1_summary
-   results/taskset_2_summary
 
 .. toctree::
    :maxdepth: 2
    :caption: Results of individual submissions
 
+   results/aion/index
    results/bpz_136temps_4tasks/index
    results/bpz_31temps_4tasks/index
-   results/bpz_31temps/index
    results/Cin_zs/index
    results/conclave/index
    results/cosom/index
@@ -42,8 +40,13 @@ using increasingly realistic data.  Here we present the results.
    results/dnf_roman_fallback/index
    results/easy_forest/index
    results/fzb_dimmingtofaint/index
+   results/graysmoke/index
    results/lephare/index
+   results/lsst_v3/index
    results/maxoptpz/index
+   results/mlpvae_speculator_v2/index
+   results/mlpvae_zsep_v4_speculator/index
+   results/mlp_pretrained_subtask12/index
    results/nn_augmentation/index
    results/owenqueen/index
    results/pz_resnet_flow/index
