@@ -24,7 +24,7 @@ from pz_data_challenge import submit_utils
 # and a URL to download the sumission data files
 # and needed model files
 SUBMISSION_NAME: str = "pz_resnet_flow"
-SUBMISSION_URL: str = "https://github.com/kpngbsee/pz_data_challenge/releases/download/v1.0/pzdatachallenge_resnet_flow_combined_20260910_185823.tgz"
+SUBMISSION_URL: str = "https://github.com/kpngbsee/pz_data_challenge/releases/download/v1.0/pzdatachallenge_resnet_flow_combined_20260918_193036.tgz"
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -561,14 +561,9 @@ def run_taskset_3_estimation_only(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"  Device: {device}")
     
-    # ============================================
-    # 1. LOAD CHECKPOINT
-    # ============================================
+    # Load checkpoint and model
     checkpoint = torch.load(model_file, map_location=device, weights_only=False)
     
-    # ============================================
-    # 2. LOAD MODEL
-    # ============================================
     model = ConditionalResNetWithTimeEmbedding(
         z_dim=1, t_dim=1, x_dim=6,
         hidden_dim=512, num_blocks=5, dropout=0.1, time_emb_dim=32
@@ -577,9 +572,7 @@ def run_taskset_3_estimation_only(
     model = model.to(device)
     model.eval()
     
-    # ============================================
-    # 3. LOAD SCALERS
-    # ============================================
+    # Load scalers and imputer
     scaler_X = StandardScaler()
     scaler_X.mean_ = checkpoint['scaler_X_mean']
     scaler_X.scale_ = checkpoint['scaler_X_scale']
@@ -588,9 +581,6 @@ def run_taskset_3_estimation_only(
     scaler_y.mean_ = checkpoint['scaler_y_mean']
     scaler_y.scale_ = checkpoint['scaler_y_scale']
     
-    # ============================================
-    # 4. LOAD IMPUTER
-    # ============================================
     imputer_dict = checkpoint.get('imputer_dict', None)
     col_medians = imputer_dict.get('col_medians', np.zeros(6)) if imputer_dict else np.zeros(6)
     
@@ -599,9 +589,7 @@ def run_taskset_3_estimation_only(
     else:
         print("  ⚠️ No imputer found in checkpoint, using fallback (nan_to_num with 99.0)")
     
-    # ============================================
-    # 5. LOAD TEST DATA
-    # ============================================
+    # Load test data
     feature_columns = ['mag_u_lsst', 'mag_g_lsst', 'mag_r_lsst', 
                        'mag_i_lsst', 'mag_z_lsst', 'mag_y_lsst']
     
@@ -609,12 +597,7 @@ def run_taskset_3_estimation_only(
     X_test = test_data[feature_columns].values
     object_ids = test_data['object_id'].values
     
-    print(f"  Test data shape: {X_test.shape}")
-    print(f"  NaNs in test data: {np.isnan(X_test).sum()}")
-    
-    # ============================================
-    # 6. APPLY IMPUTATION TO TEST DATA
-    # ============================================
+    # Imputation on test data
     if imputer_dict is not None:
         print("  Applying ML imputation to test data...")
         X_test_imp = X_test.copy()
@@ -650,15 +633,11 @@ def run_taskset_3_estimation_only(
         print("  Using fallback imputation (99.0 for non-detections)")
         X_test = np.nan_to_num(X_test, nan=99.0)
     
-    # ============================================
-    # 7. SCALE DATA
-    # ============================================
+    # Scale data
     X_test_scaled = scaler_X.transform(X_test)
     X_test_torch = torch.from_numpy(X_test_scaled).float().to(device)
     
-    # ============================================
-    # 8. GENERATE PREDICTIONS
-    # ============================================
+    # Generate predictions
     print("  Generating predictions...")
     
     n_samples = 500
@@ -696,9 +675,6 @@ def run_taskset_3_estimation_only(
     
     all_samples = np.concatenate(all_samples, axis=0)
     
-    # ============================================
-    # 9. COMPUTE MODE FOR EACH OBJECT
-    # ============================================
     z_modes = []
     for i in range(len(all_samples)):
         hist, bin_edges = np.histogram(all_samples[i], bins=50)
@@ -707,12 +683,7 @@ def run_taskset_3_estimation_only(
     
     z_modes = np.array(z_modes)
     
-    print(f"  Generated predictions for {len(object_ids)} objects")
-    print(f"  z_mode range: [{z_modes.min():.3f}, {z_modes.max():.3f}]")
-    
-    # ============================================
-    # 10. SAVE IN QP FORMAT
-    # ============================================
+    # Save in qp format
     z_grid = np.linspace(0, 3.0, 301)
     n_bins = len(z_grid) - 1
     bin_centers = (z_grid[:-1] + z_grid[1:]) / 2
@@ -791,6 +762,153 @@ def run_taskset_4_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
+    import torch
+    import numpy as np
+    import tables_io
+    import qp
+    from pathlib import Path
+    from sklearn.preprocessing import StandardScaler
+    
+    print(f"Run Taskset 4 - Estimation Only")
+    print(f"  Model: {model_file}")
+    print(f"  Test: {test_file}")
+    print(f"  Output: {output_file}")
+    
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"  Device: {device}")
+    
+    # Load checkpoint and reconstruct model
+    checkpoint = torch.load(model_file, map_location=device, weights_only=False)
+    
+    model = ConditionalResNetWithTimeEmbedding(
+        z_dim=1, t_dim=1, x_dim=6,
+        hidden_dim=512, num_blocks=5, dropout=0.1, time_emb_dim=32
+    )
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model = model.to(device)
+    model.eval()
+    
+    # Load scalers and imputer
+    scaler_X = StandardScaler()
+    scaler_X.mean_ = checkpoint['scaler_X_mean']
+    scaler_X.scale_ = checkpoint['scaler_X_scale']
+    
+    scaler_y = StandardScaler()
+    scaler_y.mean_ = checkpoint['scaler_y_mean']
+    scaler_y.scale_ = checkpoint['scaler_y_scale']
+    
+    imputer_dict = checkpoint.get('imputer_dict', None)
+    if imputer_dict is not None:
+        print(f"  Loaded imputer with {len(imputer_dict)} models")
+    else:
+        print(f"  ⚠️ No imputer found - using fallback (99.0)")
+    
+    # Load test data
+    feature_columns = ['mag_u_lsst', 'mag_g_lsst', 'mag_r_lsst', 
+                       'mag_i_lsst', 'mag_z_lsst', 'mag_y_lsst']
+    
+    test_data = tables_io.read(test_file, tables_io.types.PD_DATAFRAME)
+    X_test = test_data[feature_columns].values
+    object_ids = test_data['object_id'].values
+    
+    # Imputation on test data
+    if imputer_dict is not None:
+        print("  Applying ML imputation from training...")
+        X_test_imp = X_test.copy()
+        col_medians = imputer_dict.get('col_medians', np.zeros(6))
+        
+        for col_idx in range(X_test_imp.shape[1]):
+            mask_missing = np.isnan(X_test_imp[:, col_idx])
+            if mask_missing.any():
+                imputer = imputer_dict.get(f'col_{col_idx}')
+                if imputer is not None:
+                    X_pred = X_test_imp[mask_missing].copy()
+                    for j in range(X_pred.shape[1]):
+                        if j != col_idx:
+                            X_pred[np.isnan(X_pred[:, j]), j] = col_medians[j]
+                    X_test_imp[mask_missing, col_idx] = imputer.predict(X_pred)
+                else:
+                    X_test_imp[mask_missing, col_idx] = col_medians[col_idx]
+        X_test = X_test_imp
+        print(f"  NaNs after imputation: {np.isnan(X_test).sum()}")
+    else:
+        print("  Using fallback imputation (99.0)")
+        X_test = np.nan_to_num(X_test, nan=99.0)
+    
+    # Scale data
+    X_test_scaled = scaler_X.transform(X_test)
+    X_test_torch = torch.from_numpy(X_test_scaled).float().to(device)
+    
+    # Generate predictions
+    print("  Generating predictions...")
+    
+    n_samples = 500
+    n_ode_steps = 20
+    all_samples = []
+    
+    def velocity_wrapper(x, t, condition=None):
+        return model(x, t, condition=condition)
+    
+    with torch.no_grad():
+        for i in range(0, len(X_test_torch), 50):
+            x_batch = X_test_torch[i:min(i+50, len(X_test_torch))]
+            batch_size = len(x_batch)
+            
+            x_init = torch.randn(batch_size, n_samples, 1, device=device)
+            x_init_flat = x_init.view(-1, 1)
+            x_batch_expanded = x_batch.repeat_interleave(n_samples, dim=0)
+            
+            z_T = ode_sample(
+                velocity_model=velocity_wrapper,
+                x0=x_init_flat,
+                t0=0.0,
+                t1=1.0,
+                n_steps=n_ode_steps,
+                method='rk4',
+                return_traj=False,
+                condition=x_batch_expanded
+            )
+            
+            z_T = z_T.view(batch_size, n_samples, 1)
+            z_T_np = z_T.cpu().numpy()
+            
+            samples_orig = scaler_y.inverse_transform(
+                z_T_np.reshape(-1, 1)
+            ).reshape(batch_size, n_samples)
+            all_samples.append(samples_orig)
+    
+    all_samples = np.concatenate(all_samples, axis=0)
+    
+    z_modes = []
+    for i in range(len(all_samples)):
+        hist, bin_edges = np.histogram(all_samples[i], bins=50)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        z_modes.append(bin_centers[np.argmax(hist)])
+    
+    z_modes = np.array(z_modes)
+    
+    # Save in qp format
+    z_grid = np.linspace(0, 3.0, 301)
+    bin_centers = (z_grid[:-1] + z_grid[1:]) / 2
+    n_bins = len(bin_centers)
+    
+    pdfs = np.zeros((len(object_ids), n_bins))
+    for i in range(len(object_ids)):
+        hist, _ = np.histogram(all_samples[i], bins=z_grid)
+        pdfs[i] = hist / (hist.sum() + 1e-10)
+    
+    ensemble = qp.interp.create_ensemble(
+        xvals=bin_centers,
+        yvals=pdfs,
+        ancil={
+            'object_id': object_ids,
+            'zmode': z_modes
+        }
+    )
+    
+    ensemble.write_to(output_file)
+    print(f"  ✅ Saved: {output_file}")
+    print(f"  Objects: {len(object_ids)}")
     return
 
 
