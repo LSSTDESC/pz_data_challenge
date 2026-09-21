@@ -25,6 +25,14 @@ Y_LABEL_STRINGS = [
     "taskset_2_1yr_flagship",
     "taskset_2_10yr_cardinal",
     "taskset_2_10yr_flagship",
+    "taskset_3_1yr_cardinal",
+    "taskset_3_1yr_flagship",
+    "taskset_3_10yr_cardinal",
+    "taskset_3_10yr_flagship",
+    "taskset_4_1yr_cardinal",
+    "taskset_4_1yr_flagship",
+    "taskset_4_10yr_cardinal",
+    "taskset_4_10yr_flagship",    
 ]
 
 
@@ -458,8 +466,12 @@ def make_strip_plot(
             color='black'
             marker='o'
         else:
-            color=colors[method_id[key]]
-            marker=markers[method_type[key]]
+            try:
+                color=colors[method_id[key]]
+                marker=markers[method_type[key]]
+            except KeyError:
+                color='black'
+                marker='o'
         try:
             handles[key] = ax.scatter(
                 val[0],
