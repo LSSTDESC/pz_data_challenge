@@ -23,7 +23,8 @@ SUBMISSION_TOP_DIR = "submissions"
 RESULTS_TOP_DIR = "results"
 SUBMISSION_TEMPLATE = "docs_results/_templates/entry_summary.rst.j2"
 
-TASKSETS = ["taskset_1", "taskset_2"]
+TASKSETS = ["taskset_1", "taskset_2", "taskset_3", "taskset_4"]
+N_TASKSETS = len(TASKSETS)
 TASKS = ["", "outputs_2/", "outputs_3/"]
 SIMS = ["cardinal", "flagship"]
 SCENARIOS = ["1yr", "10yr"]
@@ -950,8 +951,8 @@ def make_scores(
         List of submission identifiers to score.
     """
     data_dict = evaluation.build_summary_data_dict(results_dir, submissions, "point")
-    score_dict = scoring.score_all_metrics(data_dict, scoring.metric_dict)
-    scores = scoring.extract_score(score_dict, "percentages")
+    score_dict = scoring.score_all_metrics(data_dict, scoring.metric_dict, n_tasksets=N_TASKSETS)
+    scores = scoring.extract_score(score_dict, "percentages", n_tasksets=N_TASKSETS)
     with open(f"{results_dir}/scores_full.csv", "w", encoding="utf-8") as fout:
         yaml.dump(score_dict, fout)
     scores.to_csv(f"{results_dir}/scores_summary.csv", index=False)
@@ -974,6 +975,9 @@ def make_all_summary_plots_and_files(
         make_point_summaries(results_dir, submissions)
         make_PIT_summaries(results_dir, submissions)
         make_timing_summaries(results_dir, submissions)
-        make_PIT_plot(results_dir, submissions)
+        try:
+            make_PIT_plot(results_dir, submissions)
+        except:
+            pass
         make_scores(results_dir, submissions)
         make_submission_summary_rst(results_dir, submissions, SUBMISSION_TEMPLATE)

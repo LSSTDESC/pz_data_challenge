@@ -23,7 +23,7 @@ metric_dict: dict[str, list[list[float]]] = dict(
 def score_metrics(
     data: pd.DataFrame,
     metric_dict: dict[str, list[list[float]]],
-    n_tasksets: int = 2,
+    n_tasksets: int = 4,
 ) -> dict[str, list]:
     """
     Score submission metrics against predefined acceptable ranges.
@@ -40,7 +40,7 @@ def score_metrics(
         Dictionary mapping metric names to lists of acceptable [min, max] ranges.
         Each metric can have multiple ranges corresponding to different scoring tiers.
     n_tasksets
-        Number of tasksets to evaluate. Default is 2.
+        Number of tasksets to evaluate. Default is 4.
 
     Returns
     -------
@@ -83,6 +83,7 @@ def score_metrics(
 def score_all_metrics(
     data_dict: dict[str, pd.DataFrame],
     metric_dict: dict[str, list[list[float]]],
+    n_tasksets: int = 4,    
 ) -> dict[str, dict[str, list]]:
     """
     Score metrics for all submissions in a data dictionary.
@@ -96,6 +97,8 @@ def score_all_metrics(
         Dictionary mapping submission names to their result DataFrames.
     metric_dict
         Dictionary mapping metric names to lists of acceptable [min, max] ranges.
+    n_tasksets
+        Number of tasksets to evaluate. Default is 4.
 
     Returns
     -------
@@ -109,13 +112,13 @@ def score_all_metrics(
     >>> print(all_scores['baseline']['percentages'])
     [0.85 0.92]
     """
-    return {k: score_metrics(v, metric_dict) for k, v in data_dict.items()}
+    return {k: score_metrics(v, metric_dict, n_tasksets=n_tasksets) for k, v in data_dict.items()}
 
 
 def extract_score(
     score_dict: dict[str, dict[str, list]],
     which_score: str,
-    n_tasksets: int = 2,
+    n_tasksets: int = 4,
 ) -> pd.DataFrame:
     """
     Extract specific score type into a formatted DataFrame.
@@ -132,7 +135,7 @@ def extract_score(
         Name of the score component to extract (e.g., 'percentages',
         'taskset_scores', 'norms', or any metric name).
     n_tasksets
-        Number of tasksets. Default is 2.
+        Number of tasksets. Default is 4.
 
     Returns
     -------
