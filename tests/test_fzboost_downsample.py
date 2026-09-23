@@ -18,9 +18,9 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 # Change these to match the name of the submission
 # and a URL to download the sumission data files
 # and needed model files
-SUBMISSION_NAME: str = "fzboost_base"
+SUBMISSION_NAME: str = "fzboost_downsample"
 SUBMISSION_URL: str = (
-    "https://portal.nersc.gov/cfs/lsst/tqzhang/submit_fzboost_base.tgz"
+    "https://portal.nersc.gov/cfs/lsst/tqzhang/submit_fzboost_downsample.tgz"
 )
 
 # don't change these
@@ -40,6 +40,43 @@ _ZGRID = np.linspace(_ZMIN, _ZMAX, _NZ)
 # "best" estimate.  These names are the tokens understood by RAIL's
 # PointEstimationMixin, which writes them to ancil under the same names.
 _POINT_ESTIMATES = ["zmode", "zbest"]
+
+# Magnitude-redshift downsampling.  The reference samples pile labels up at
+# bright magnitudes and particular redshifts; training on that imprints the
+# selection on the posteriors as an effective prior.  Binning on a
+# (magnitude, redshift) grid and capping every cell flattens the distribution
+# without discarding the sparsely populated regions.
+#
+# Cell size follows the DESC dp2 hscfy_pz_prepare pipeline (d_mag = d_z = 0.1).
+#
+# _DOWNSAMPLE_CAP was chosen by sweeping {10, 15, 20, 25, 50, 75, 100, 150, 200,
+# 300} and scoring each against the challenge's own metric tiers
+# (pz_data_challenge.scoring.metric_dict) on a held-out COSMOS2020 benchmark --
+# see nb/fzboost_downsample/downsample_benchmark.ipynb.  Summed over six
+# taskset x (sim, scenario) corners, splitting the tiers into point-estimate
+# metrics (mean, std, abs_outlier_rate; 18 max each) and distribution metrics
+# (CvM, ks, ksamp, outlier):
+#
+#     cap      point   calib   total
+#     none        35      57      92     <- no downsampling
+#     10          33      69     102
+#     25          36      64     100
+#     50+         35      59      94
+#
+# 25 is the only setting that improves on *both* axes.  Caps below it buy
+# calibration by giving back point-estimate accuracy -- cap 10 scores 2 points
+# higher in total but drops the point tier below no-downsampling at all, which
+# is the wrong trade for a photo-z estimate.  Caps of 50 and above barely bite
+# (the busiest cell holds 310-816 objects, so 300 is nearly a no-op).
+#
+# The totals alone do not separate 25 from 10: re-running cap 25 at downsampling
+# seeds 43 and 44 moves the score by 1 point on a 63-point subset, which rescales
+# to about the same 2 points.  The choice rests on the point/calibration split
+# above, which is structural, not on the aggregate margin.
+_D_MAG = 0.1
+_D_Z = 0.1
+_DOWNSAMPLE_CAP = 25
+_DOWNSAMPLE_SEED = 42
 
 
 def _attach_ancil(estimator: FlexZBoostEstimator, pz_out, test_data: TableHandle) -> None:
@@ -91,6 +128,69 @@ def _load_training_data(train_file: str | Path) -> dict[str, np.ndarray]:
     out = {key: np.asarray(val)[good] for key, val in data.items()}
     out["redshift"] = redshift[good]
     return out
+
+
+def _bin_cap_mask(
+    mag: np.ndarray,
+    redshift: np.ndarray,
+    cap: int,
+    d_mag: float,
+    d_z: float,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Boolean mask keeping at most ``cap`` rows per (magnitude, redshift) cell.
+
+    A direct port of ``MagRedshiftDownsampler`` from the DESC dp2
+    ``rail.creation.degraders.pz_prepare`` pipeline, written out in numpy so
+    this submission needs no dependency beyond what the base one already has.
+
+    Bins are origin-anchored (``floor(x / d)``), so a cell is
+    ``[k*d, (k+1)*d)``.  Cells at or below the cap are kept whole -- the cap is
+    a ceiling, never a target, and nothing is ever upsampled.  Rows with a
+    non-finite magnitude or redshift cannot be binned, so they are kept and do
+    not count against any cell's quota; dropping them here would be a silent
+    photometric cut rather than a downsampling.
+    """
+    keep = np.zeros(len(mag), dtype=bool)
+    finite = np.isfinite(mag) & np.isfinite(redshift)
+    keep[~finite] = True
+
+    idx = np.where(finite)[0]
+    if idx.size == 0:
+        return keep
+
+    mag_bin = np.floor(mag[idx] / d_mag).astype(np.int64)
+    z_bin = np.floor(redshift[idx] / d_z).astype(np.int64)
+    # lexsort's last key is primary, so this groups by (mag_bin, z_bin);
+    # it is stable, so within a cell the rows stay in input order.
+    order = np.lexsort((z_bin, mag_bin))
+    idx, mag_bin, z_bin = idx[order], mag_bin[order], z_bin[order]
+
+    new_cell = np.empty(len(idx), dtype=bool)
+    new_cell[0] = True
+    new_cell[1:] = (mag_bin[1:] != mag_bin[:-1]) | (z_bin[1:] != z_bin[:-1])
+    starts = np.where(new_cell)[0]
+    ends = np.append(starts[1:], len(idx))
+
+    for start, end in zip(starts, ends):
+        members = idx[start:end]
+        if len(members) > cap:
+            members = rng.choice(members, size=cap, replace=False)
+        keep[members] = True
+    return keep
+
+
+def _downsample(data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    """Flatten the magnitude-redshift distribution of a training table."""
+    keep = _bin_cap_mask(
+        np.asarray(data["mag_i_lsst"], dtype="float64"),
+        np.asarray(data["redshift"], dtype="float64"),
+        _DOWNSAMPLE_CAP,
+        _D_MAG,
+        _D_Z,
+        np.random.default_rng(_DOWNSAMPLE_SEED),
+    )
+    return {key: val[keep] for key, val in data.items()}
 
 
 def _make_fzb_informer() -> FlexZBoostInformer:
@@ -183,9 +283,13 @@ def run_taskset_x_training_and_estimation(
     train_file: str | Path,
     test_file: str | Path,
     output_file: str | Path,
+    *,
+    downsample: bool,
 ) -> None:
     """Train a FlexZBoost model on the training set and estimate p(z) for the test set."""
     train_data = _load_training_data(train_file)
+    if downsample:
+        train_data = _downsample(train_data)
     test_data = TableHandle("test", path=str(test_file))
     informer = _make_fzb_informer()
     model = informer.inform(train_data)
@@ -209,7 +313,13 @@ def run_taskset_1_training_and_estimation(
     test_file: str | Path,
     output_file: str | Path,
 ) -> None:
-    run_taskset_x_training_and_estimation(train_file, test_file, output_file)
+    # Taskset 1 is the representative case -- its training and test sets are
+    # drawn from the same distribution (mag_i median 22.10 for both), so there
+    # is nothing to flatten and downsampling would only move the training set
+    # away from the test set while discarding rows.
+    run_taskset_x_training_and_estimation(
+        train_file, test_file, output_file, downsample=False
+    )
 
 
 def run_taskset_2_estimation_only(
@@ -225,7 +335,10 @@ def run_taskset_2_training_and_estimation(
     test_file: str | Path,
     output_file: str | Path,
 ) -> None:
-    run_taskset_x_training_and_estimation(train_file, test_file, output_file)
+    # Non-representative training set: flatten it.
+    run_taskset_x_training_and_estimation(
+        train_file, test_file, output_file, downsample=True
+    )
 
 
 def run_taskset_3_estimation_only(
@@ -241,7 +354,10 @@ def run_taskset_3_training_and_estimation(
     test_file: str | Path,
     output_file: str | Path,
 ) -> None:
-    run_taskset_x_training_and_estimation(train_file, test_file, output_file)
+    # Non-representative training set: flatten it.
+    run_taskset_x_training_and_estimation(
+        train_file, test_file, output_file, downsample=True
+    )
 
 
 def run_taskset_4_estimation_only(
@@ -257,7 +373,10 @@ def run_taskset_4_training_and_estimation(
     test_file: str | Path,
     output_file: str | Path,
 ) -> None:
-    run_taskset_x_training_and_estimation(train_file, test_file, output_file)
+    # Non-representative training set: flatten it.
+    run_taskset_x_training_and_estimation(
+        train_file, test_file, output_file, downsample=True
+    )
 
 
 def test_example_taskset_1(
