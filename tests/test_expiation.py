@@ -28,10 +28,13 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 from pz_data_challenge import submit_utils  # noqa: F401
 
 SUBMISSION_NAME: str = "expiation"
-# SUBMISSION_URL points to the release v2.0.0 tarball for expiation mixture of experts
+# SUBMISSION_URL points to the release v4.0.0 tarball for expiation mixture of experts
 SUBMISSION_URL: str = os.environ.get(
-    "WHITESMOKE_SUBMISSION_URL",
-    "https://github.com/ymuza/pz_challenge/releases/download/v2.0.0/expiation.tgz"
+    "EXPIATION_SUBMISSION_URL",
+    os.environ.get(
+        "WHITESMOKE_SUBMISSION_URL",
+        "https://github.com/mardom/pz_data_challenge/releases/download/v4.0.0/expiation.tgz"
+    )
 )
 
 # don't change these
