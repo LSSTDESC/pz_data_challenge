@@ -228,6 +228,8 @@ def _training_and_estimation(train_file, test_file, output_file) -> None:
             model_filename = filename.replace("_pz_estimate_", "_pz_model_").replace(".hdf5", ".pkl")
             model_path = os.path.join(SUBMIT_DIR, model_filename)
             pfx.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=model_path)
+            if os.path.exists(output_file) and output_file != src_file:
+                shutil.copyfile(output_file, src_file)
             return
         except Exception as e:
             print(f"[_training_and_estimation] Dynamic Pontifex training failed: {e}")

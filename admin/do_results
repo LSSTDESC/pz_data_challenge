@@ -1,3 +1,5 @@
+# export PZ_DATA_PATH=/Users/echarles/pz/data
+# export SKIP_TASKS_23=1
 python admin/evaluate.py all
 pushd docs_results
 make clean html
