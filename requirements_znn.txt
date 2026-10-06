@@ -1,0 +1,1 @@
+znn @ git+https://github.com/hangqianjun/mlpz_cnn_deepset@v26.10
