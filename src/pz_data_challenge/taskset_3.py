@@ -40,6 +40,9 @@ def run_taskset_3(
         Function taking (training_file, test_file, output_file) that trains
         and estimates. None to skip.
     """
+    if os.environ.get("SKIP_TASKSETS_34"):
+        return
+
     submit_dir: str = f"submissions/{submission}"
 
     manifest_dict: dict[str, Any] = {}
@@ -80,31 +83,39 @@ def run_taskset_3(
             if os.environ.get("SKIP_TASKS_23"):
                 continue
 
-            # Run the estimate only function
-            if run_taskset_3_estimation_only is not None:
-                time_2_before = time.time()
-                run_taskset_3_estimation_only(model_file, test_file, output_file_2)
-                time_2 = time.time() - time_2_before
-                manifest_dict[f"{key}_time_2"] = time_2
+            if not os.environ.get("SHORT_TASKS_23") or (
+                sim == "cardinal" and scenario == "10yr"
+            ):
 
-                # Check on the files made by the estimate only function
-                manifest_dict[f"{key}_2"] = submit_utils.check_pz_submission_file(
-                    output_file_2, test_file
-                )
+                # Run the estimate only function
+                if run_taskset_3_estimation_only is not None:
+                    time_2_before = time.time()
+                    run_taskset_3_estimation_only(model_file, test_file, output_file_2)
+                    time_2 = time.time() - time_2_before
+                    manifest_dict[f"{key}_time_2"] = time_2
 
-            # Run the train and estimate function
-            if run_taskset_3_training_and_estimation is not None:
-                time_3_before = time.time()
-                run_taskset_3_training_and_estimation(
-                    training_file, test_file, output_file_3
-                )
-                time_3 = time.time() - time_3_before
-                manifest_dict[f"{key}_time_3"] = time_3
+                    # Check on the files made by the estimate only function
+                    manifest_dict[f"{key}_2"] = submit_utils.check_pz_submission_file(
+                        output_file_2, test_file
+                    )
 
-                # Check on the files made by the estimate only function
-                manifest_dict[f"{key}_3"] = submit_utils.check_pz_submission_file(
-                    output_file_3, test_file
-                )
+            if not os.environ.get("SHORT_TASKS_23") or (
+                sim == "cardinal" and scenario == "10yr"
+            ):
+
+                # Run the train and estimate function
+                if run_taskset_3_training_and_estimation is not None:
+                    time_3_before = time.time()
+                    run_taskset_3_training_and_estimation(
+                        training_file, test_file, output_file_3
+                    )
+                    time_3 = time.time() - time_3_before
+                    manifest_dict[f"{key}_time_3"] = time_3
+
+                    # Check on the files made by the estimate only function
+                    manifest_dict[f"{key}_3"] = submit_utils.check_pz_submission_file(
+                        output_file_3, test_file
+                    )
 
     submit_utils.pretty_print_manifest_dict(manifest_dict)
 

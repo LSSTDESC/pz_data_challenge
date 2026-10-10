@@ -134,6 +134,7 @@ def run_taskset_1_training_and_estimation(
     informer = BPZliteInformer.make_stage(
         name="inform",
         output_HDFN=True,
+        hdf5_groupname="",        
         nt_array=[10,9,12],
     )
     model = informer.inform(train_data)

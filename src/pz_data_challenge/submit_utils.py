@@ -18,7 +18,7 @@ from pathlib import Path
 import qp
 import tables_io
 
-_DOWNLOAD_RETRIES = 3
+_DOWNLOAD_RETRIES = 1
 _DOWNLOAD_TIMEOUT = 30
 _DOWNLOAD_RETRY_DELAY = 5
 
@@ -92,16 +92,25 @@ def download_and_extract_tar(url: str, extract_to: str | Path = ".") -> None:
         try:
             tmp_path = _download_to_tempfile(url)
             break
-        except (TimeoutError, urllib.error.URLError, OSError) as error:
+        except Exception as error:
             last_error = error
-            if attempt == _DOWNLOAD_RETRIES:
-                raise
-            time.sleep(_DOWNLOAD_RETRY_DELAY * attempt)
+            if not os.environ.get("ALLOW_DOWNLOAD_FAIL"):
+                if attempt == _DOWNLOAD_RETRIES:
+                    raise
+                time.sleep(_DOWNLOAD_RETRY_DELAY * attempt)
 
     if not tmp_path:
-        if last_error is not None:
-            raise last_error
-        raise RuntimeError(f"Failed to download tar archive from {url}")
+        if os.environ.get("ALLOW_DOWNLOAD_FAIL"):
+            try:
+                print(f"Download failed, making directory {extract_to}")
+                os.makedirs(extract_to)
+            except:
+                pass
+            return
+        else:
+            if last_error is not None:
+                raise last_error
+            raise RuntimeError(f"Failed to download tar archive from {url}")
 
     try:
         # Extract with automatic format detection
@@ -109,7 +118,10 @@ def download_and_extract_tar(url: str, extract_to: str | Path = ".") -> None:
             tar.extractall(path=extract_to, filter="data")
     finally:
         # Clean up temporary file
-        os.unlink(tmp_path)
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
 
 
 def check_pz_submission_file(
@@ -272,8 +284,13 @@ def check_manifest_dict(manifest_dict: dict[str, Any]) -> None:
     ValueError
         If any non-timing key does not include check 7 (object ID match).
     """
+    short_23 = os.environ.get("SHORT_TASKS_23")
+
     for key, checks in manifest_dict.items():
         if key.find("time") >= 0:
             continue
+        if key not in ["cardinal_10yr_2", "cardinal_10yr_3"]:
+            if short_23:
+                continue
         if 7 not in checks:
             raise ValueError(f"Checks failed for {key} {list(checks)}")

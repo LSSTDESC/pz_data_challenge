@@ -1,0 +1,7 @@
+# pz-rail-flexzboost 2.0.3 calls self.log, which RailStage only gained in
+# pz-rail-base 2.0.10; anything older fails with AttributeError during inform.
+pz-rail-base>=2.0.10
+pz-rail-flexzboost>=2.0.0
+flexcode>=0.2.3
+qp-prob>=1.0.0
+tables_io>=1.0.0

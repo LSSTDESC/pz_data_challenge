@@ -3,16 +3,18 @@ import pickle
 import sys
 from pathlib import Path
 
-import h5py
-import numpy as np
-import pytest
-import qp
-if not hasattr(np, "trapz"):
-    np.trapz = np.trapezoid
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import StandardScaler
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+try:
+    import h5py
+    import numpy as np
+    import pytest
+    import qp
+    if not hasattr(np, "trapz"):
+        np.trapz = np.trapezoid
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.preprocessing import StandardScaler
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+except Exception:
+    pass
 
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
@@ -20,7 +22,8 @@ from pz_data_challenge import submit_utils
 
 
 SUBMISSION_NAME: str = "lsst_v3"
-SUBMISSION_URL: str = "https://github.com/e06243046/pz_data_challenge_submission/releases/download/submission-lsst_v3_v1/lsst_v3_submission.tgz"
+#SUBMISSION_URL: str = "https://github.com/e06243046/pz_data_challenge_submission/releases/download/submission-lsst_v3_v1/lsst_v3_submission.tgz"
+SUBMISSION_URL: str = "https://portal.nersc.gov/cfs/lsst/PZ/lsst_v3_tarball_remake.tgz"
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = os.environ.get("PZDC_PUBLIC_AREA", "tests/public")

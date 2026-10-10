@@ -1,0 +1,5 @@
+# kernelpool submission (task sets 3 and 4): the method is the pip-installable `kernelpool` package
+# (public repository https://github.com/ThomasReiprich/pz_kernelpool, tag v1.0.0).
+pz-rail-flexzboost
+pz-rail-gpz_v1
+kernelpool @ git+https://github.com/ThomasReiprich/pz_kernelpool.git@v1.0.0

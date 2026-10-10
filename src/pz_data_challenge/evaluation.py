@@ -25,6 +25,14 @@ Y_LABEL_STRINGS = [
     "taskset_2_1yr_flagship",
     "taskset_2_10yr_cardinal",
     "taskset_2_10yr_flagship",
+    "taskset_3_1yr_cardinal",
+    "taskset_3_1yr_flagship",
+    "taskset_3_10yr_cardinal",
+    "taskset_3_10yr_flagship",
+    "taskset_4_1yr_cardinal",
+    "taskset_4_1yr_flagship",
+    "taskset_4_10yr_cardinal",
+    "taskset_4_10yr_flagship",    
 ]
 
 
@@ -252,14 +260,19 @@ def make_algo_estimate_time_strip_plot(
         mean_task_2 = np.mean(times)
         std_task_2 = np.std(times)
         _ = plt.errorbar(
-            mean_task_2, i_sub, xerr=std_task_2, label=sub_, ls="", marker="."
+            min(mean_task_2, 1e3),
+            i_sub,
+            xerr=min(std_task_2, 1e2),
+            label=sub_,
+            ls="",
+            marker=".",
         )
 
     _ = plt.yticks(np.linspace(0, n_sub - 1, n_sub), submissions)
     _ = plt.xlabel(metric_label)
     _ = plt.xlim(metric_limits)
     _ = plt.ylim(y_min, y_max)
-    _ = plt.legend()
+    # _ = plt.legend()
 
     for metric_range in metric_ranges:
         _ = plt.fill_between(
@@ -275,7 +288,7 @@ def make_algo_inform_time_strip_plot(
     data: dict[str, Any],
     submissions: list[str],
     metric_label: str = "Inform time [s]",
-    metric_limits: list[float] = [10, 1e4],
+    metric_limits: list[float] = [10, 1e5],
     metric_ranges: list[list[float]] = [[1, 60], [1, 300], [1, 1800]],
 ) -> Figure:
     """
@@ -308,7 +321,8 @@ def make_algo_inform_time_strip_plot(
     Error bars are floored at 10 seconds to ensure visibility.
     X-axis uses logarithmic scale.
     """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 5))
+    ax = plt.gca()
 
     n_sub = len(submissions)
     y_min = -0.5
@@ -336,14 +350,12 @@ def make_algo_inform_time_strip_plot(
     _ = plt.xlabel("Inform time [s]")
     _ = plt.ylim(y_min, y_max)
     _ = plt.xlim(metric_limits)
-    _ = plt.legend()
 
     for metric_range in metric_ranges:
         _ = plt.fill_between(
             metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
         )
     _ = plt.xscale("log")
-
     plt.tight_layout()
     return fig
 
@@ -354,6 +366,8 @@ def make_strip_plot(
     metric_limits: list[float],
     metric_ranges: list[list[float]],
     y_label_strings: list[str] = Y_LABEL_STRINGS,
+    *,
+    is_single: bool=False,
 ) -> Figure:
     """
     Create a generic strip plot for comparing metrics across configurations.
@@ -385,27 +399,113 @@ def make_strip_plot(
     >>> fig = make_strip_plot(metric_data, "Bias", [-0.1, 0.1],
     ...                       [[-0.02, 0.02], [-0.05, 0.05]])
     """
-    fig = plt.figure()
+    fig, ax = plt.subplots(figsize=(11, 5))  # wider, and grab ax explicitly
+    method_type = {
+        # --- template-fitting ---
+        "bpz_136temps": "template-fitting",
+        "bpz_31temps": "template-fitting",
+        "bpz_31temps_4tasks": "template-fitting",
+        "bpz_136temps_4tasks": "template-fitting",
+        "rail_bpz_test": "template-fitting",
+        "lephare": "template-fitting",
+        # --- machine learning ---
+        "aion": "ml", # aion
+        "Cin_zs": "ml",  # pytorch
+        "conclave": "ml",  # ensemble of ML methods
+        "cosom": "ml",  # sklearn + SOM augmentation
+        "easy_forest": "ml",  # random forest
+        "fzb_dimmingtofaint": "ml",  # flexzboost + augmentation
+        "graysmoke": "ml", 
+        "lsst_v3": "ml",  # flexzboost + sklearn
+        "mlp_pretrained_subtask12": "ml",  # mlp
+        "mlpvae_speculator_v2": "ml", # mlp
+        "mlpvae_zsep_v4_speculator": "ml", # mlp
+        "nn_augmentation": "ml",  # flexzboost + augmentation
+        "owenqueen": "ml",  # sklearn
+        "pz_resnet_flow": "ml",  # resnet
+        "rail_knn_test": "ml",  # KNN
+        "rail_knn_4tasks": "ml",  # KNN
+        "tpz_colors_curvature": "ml",  # TPZ
+        "dnf_roman_fallback": "ml",
+        "dnf_lsst_fallback": "ml",
+        # --- mixed ---
+        "maxoptpz": "mixed",
+    }
+    method_id = {k: i for i, k in enumerate(sorted(method_type))}
+    has_augmentation = {
+        "cosom": True,
+        "fzb_dimmingtofaint": True,
+        "nn_augmentation": True,
+    }
+    # everything else defaults False
 
+    markers = {"template-fitting": "o", "ml": "D", "mixed": "s"}
     n_y_labels = len(y_label_strings)
-    y_min = -0.5
-    y_max = n_y_labels - 0.5
+    y_min, y_max = -0.5, n_y_labels - 0.5
 
-    for key, val in data.items():
-        plt.scatter(val[0], val[1], label=key)
+    scores_per_plot = {k: np.sum(v[0] ** 2) for k, v in data.items()}
+    ordered = sorted(scores_per_plot, key=scores_per_plot.get)
+    try:
+        ordered.remove("owenqueen")
+    except ValueError:
+        pass
 
-    _ = plt.yticks(np.linspace(0, n_y_labels - 1, n_y_labels), y_label_strings)
-    _ = plt.xlabel(metric_label)
-    _ = plt.ylim(y_min, y_max)
-    _ = plt.xlim(metric_limits)
-    _ = plt.legend()
+    n_methods = len(method_id)
+    colors = plt.cm.tab20(np.linspace(0, 1, n_methods))[: n_methods]
+    # colors = plt.cm.viridis(np.linspace(0, 1, len(ordered)))
 
+    # shaded bands first, so they sit under the points
     for metric_range in metric_ranges:
-        _ = plt.fill_between(
-            metric_range, [y_min, y_min], [y_max, y_max], color="gray", alpha=0.1
-        )
+        ax.fill_between(metric_range, y_min, y_max, color="gray", alpha=0.1, zorder=0)
 
-    plt.tight_layout()
+    handles = {}
+    for key in ordered[::-1]:
+        val = data[key]
+        augmented = has_augmentation.get(key, False)        
+        if is_single:
+            color='black'
+            marker='o'
+        else:
+            try:
+                color=colors[method_id[key]]
+                marker=markers[method_type[key]]
+            except KeyError:
+                color='black'
+                marker='o'
+        try:
+            handles[key] = ax.scatter(
+                val[0],
+                val[1],
+                color=color,
+                marker=marker,
+                alpha=0.7,
+                label=key,
+                zorder=3,
+                edgecolors="black" if augmented else "none",
+                linewidths=1.2 if augmented else 0.5,
+            )
+        except:
+            pass
+
+    ax.set_yticks(np.arange(n_y_labels))
+    ax.set_yticklabels(y_label_strings)
+    ax.set_xlabel(metric_label)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xlim(metric_limits)
+
+    all_handles = []
+    for k in ordered:
+        all_handles.append(handles[k])
+    ax.legend(
+        all_handles,
+        ordered,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+        fontsize=8,
+        handletextpad=0.3,
+    )
+    fig.tight_layout()
     return fig
 
 
