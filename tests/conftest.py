@@ -12,7 +12,9 @@ def setup_public_area(request: pytest.FixtureRequest) -> int:
     """
     A pytest fixture to download the public data
     """
-
+    #
+    submit_utils._DOWNLOAD_TIMEOUT = 120
+    submit_utils._DOWNLOAD_RETRY_DELAY = 30
     if not os.path.exists("tests/public"):
         # Note that the tar file has "public" as top level directory
         # so we if we extract to "tests" the files actually end

@@ -507,7 +507,9 @@ expected file they check that:
 \end{enumerate}
 
 If any of these checks fail, the GitHub action triggered by the
-submission will fail and report the cause of the failure.
+submission will fail and report the cause of the failure.  \textbf{Note that
+the github actions occasionally fail to download the data files.  If this happens
+simply rerunning the action typically succeeds.}
 
 The easiest way to test that you have correctly implemented the
 required functions is simply to run these commands.
@@ -776,6 +778,97 @@ The subtasks in this task set are:
 \end{enumerate}
   
 
+\subsection{Task set 3: Estimate redshifts on non-representative samples, including narrowband photometric redshifts}
+
+The third task is to estimate redshifts using non-representative
+training samples that more accurately emulate real reference redshift
+samples. This include some narrowband photometric redshifts from the
+COSMOS2020 dataset that go deeper than most spectroscopic redshifts, but
+have more scatter and more significant levels of catastrophic outliers.
+
+As before, the four
+\texttt{pz\_challenge\_taskset\_3\_\{simulation\}\_training\_\{scenario\}.hdf5}
+files are the training sets for the ``Flagship'' and ``Cardinal''
+simulations, emulating 1 year and 10 years of LSST data under the expected observing
+strategy and conditions and with spectroscopic selections emulated.
+These files include flags showing which spectroscopic survey particular
+objects would be associated with, and for the COSMOS2020 field, also
+include a column “redshift\_manyband” giving the narrow-band photometric
+redshifts in addition to the spectroscopic redshifts. The point of this
+taskset is to find a way to optimally use the additional information
+from the COSMOS2020 field.
+
+The corresponding 
+\texttt{pz\_challenge\_taskset\_3\_\{simulation\}\_test\_\{scenario\}.hdf5}
+files were \allowbreak from the distributions of all objects down to $i< 25.4$,
+and both the true redshifts and the narrow-band photometric redshifts
+have been removed from these files. The task is to assign $p(z)$
+estimates for all the objects in these 4 test files.
+
+The subtasks in this task set are:
+
+\begin{enumerate}
+  \item{Estimate $p(z)$ for each object in each of the test files and
+      provide the estimates in a downloadable \texttt{tar} file.}
+  \item{Provide pre-trained models appropriate to each of the training
+      files and implement a Python function (\texttt{run\_taskset\_3\_estimation\_only}) to use those
+      pre-trained models to estimate $p(z)$ for each object in the
+      associated test files.}    
+  \item{Implement a Python function (\texttt{run\_taskset\_1\_training\_and\_estimation}) to train a model for
+      each training file and use that model to estimate $p(z)$ for
+      each object in the associated test files.}    
+\end{enumerate}
+
+
+
+
+\subsection{Task set 4: Estimate redshifts on non-representative
+  samples, including narrowband photometric redshifts and unrecognized
+  blended of objects}
+
+
+The fourth and final task in the PZ challenge is to estimate redshifts
+on a sample of objects that include “unrecognized blends”. I.e.,
+multiple object that are detected as a single object by the image
+processing algorithm, and using non-representative training samples. I.e., the training samples
+are not drawn from the same distributions as the test samples. For this
+task set we applied the spectroscopic selection emulation for the
+training set, but retained all the objects down to $i < 25.4$ in
+the test set. Accordingly, the training set will not be representative
+of the fainter objects in the test set. This reflects that spectroscopic
+redshifts are typically significantly more difficult to obtain than
+photometry.
+
+The four 
+\texttt{pz\_challenge\_taskset\_4\_\{simulation\}\_training\_\{scenario\}.hdf5}
+files are the training sets for the ``Flagship'' and ``Cardinal''
+simulations, emulating 1 year and 10 years of LSST data.  These are similar to the taskset 3
+files, except with emulated object blending applied.
+
+The corresponding 
+\texttt{pz\_challenge\_taskset\_4\_\{simulation\}\_test\_\{scenario\}.hdf5}
+files were \allowbreak  drawn from the distributions of all objects down to $i <
+25.4$, and both the true redshifts and the narrow-band photometric
+redshifts have been removed from these files. The task is to assign
+$p(z)$ estimates for all the objects in these 4 test files.
+
+The subtasks in this task set are:
+
+\begin{enumerate}
+  \item{Estimate $p(z)$ for each object in each of the test files and
+      provide the estimates in a downloadable \texttt{tar} file.}
+  \item{Provide pre-trained models appropriate to each of the training
+      files and implement a Python function
+      (\texttt{run\_taskset\_4\_estimation\_only}) to use those
+      pre-trained models to estimate $p(z)$ for each object in the
+      associated test files.}    
+  \item{Implement a Python function
+      (\texttt{run\_taskset\_4\_training\_and\_estimation}) to train a model for
+      each training file and use that model to estimate $p(z)$ for
+      each object in the associated test files.}    
+\end{enumerate}
+
+
 \appendix
 
 
@@ -867,8 +960,49 @@ spectroscopic redshift surveys, including VVDSf02~\cite{2008yCat.2286....0M}, zC
 DEEP2~\cite{2013ApJS..208....5N}, and the DESI BGS, ELG, and LRG~
 \cite{desicollaboration2025datarelease1dark} samples.
 
-We can also use RAIL to emulate narrowband photometric surveys and
-include small amounts of mislabeled reference redshifts.
+We can also use RAIL to emulate narrow-band photometric surveys and
+include small amounts of mislabeled reference redshifts.   The
+performance of the narrow-band photometric redshifts is shown in Figure~\ref{fig:manyband_photoz}.
+
+\begin{figure*}[ht]
+  \centerline{
+    \includegraphics[width=0.45\textwidth]{figures/pz_challenge_taskset_3_training_10yr/foutlier_vs_mag_i}    
+    \includegraphics[width=0.45\textwidth]{figures/pz_challenge_taskset_3_training_10yr/sigma_nmad_vs_mag_i}
+  }
+  \caption{\label{fig:manyband_photoz}\small{Performance of the
+      narrow-band photometric redshift estimates as a function of i-band
+      magnitude, showing the outlier fraction (left) and width of the
+      median absolute deviation (right).}}
+\end{figure*}
+
+
+\subsection{Emulating unrecognized blending}
+
+In the files for taskset 4 we emulate the effect of unrecognized
+blending, i.e., two or more objects being detected as a single
+object.   Our blending algorithm is relatively simple: we apply a
+``friends-of-friends'' matching algorithm with a 1.0 arcsecond linking
+length replace all groups with a single object with the summed fluxes
+in each of the bands. 
+
+
+\begin{figure*}[ht]
+  \centerline{
+    \includegraphics[width=0.45\textwidth]{figures/n_objects_in_blend}    
+    \includegraphics[width=0.45\textwidth]{figures/blend_fractions}
+  }
+  \centerline{
+    \includegraphics[width=0.45\textwidth]{figures/redshift_ratio}
+    \includegraphics[width=0.45\textwidth]{figures/flux_contamination}
+  }
+  \caption{\label{fig:blending}\small{Blending behavior.  Top left:
+      distribution number of objects in the each blend.  Top right:
+      fraction of objects that are blended as a function of redshift.
+      Bottom left: ration of the redshift of the brightest object in
+      the blend to the flux-weighted mean of all the objects.  Bottom
+      right: fraction of the total flux in the blend not from the brightest object.}}      
+\end{figure*}
+
 
 
 \section{Preparing Training, Test, and Reserved Datasets}

@@ -1,0 +1,6 @@
+# conclave TS1 submission requirements.
+# The method lives in the pip-installable `conclave` package; installing it pulls the
+# RAIL estimator stack (pz-rail-{base,flexzboost,pzflow,gpz-v1}), qp-prob, tables_io,
+# numpy, scipy transitively via conclave's own pyproject dependencies.
+# Pin to the tagged release that matches the shipped pretrained models / estimates.
+conclave @ git+https://github.com/rhw/conclave@ts1-v1

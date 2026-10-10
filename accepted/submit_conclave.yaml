@@ -1,0 +1,43 @@
+---
+# This workflow will install Python dependencies and run tests
+
+name: Unit test and code coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.13']
+        submission: ['conclave']
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt install libbz2-dev
+          python -m pip install --upgrade pip
+          pip install wheel
+          pip install .
+          pip install .[dev]
+          if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install -r requirements_${{ matrix.submission }}.txt; fi
+      - name: Run unit tests with pytest
+        # conclave trains 3 estimators; a full-scale retrain (100k x4) exceeds the CI budget.
+        # Subsample the train path for CI (validity smoke); estimation runs on the full test set,
+        # and the shipped full-scale models/estimates (release tgz) carry the real performance.
+        env:
+          PZDC_CI_MAX_TRAIN: "4000"
+        run: |
+          python -m pytest tests/test_${{ matrix.submission }}.py

@@ -1,0 +1,8 @@
+numpy
+h5py
+scipy
+scikit-learn
+xgboost
+flexcode
+qp-prob
+tables-io

@@ -1,0 +1,4 @@
+numpy
+h5py
+qp-prob
+tables-io
