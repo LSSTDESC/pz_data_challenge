@@ -89,6 +89,7 @@ def get_coordinates(size_x, size_y):
 
     return xx.ravel(), yy.ravel()
 
+
 def all_neighbors(index_matrix):
     """
     Compute the fixed topological neighbors for a staggered
