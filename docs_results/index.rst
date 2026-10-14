@@ -61,5 +61,7 @@ using increasingly realistic data.  Here we present the results.
    results/rail_knn_4tasks/index
    results/rail_knn_test/index
    results/tpz_colors_curvature/index
+   results/tpz_colors_nocurve/index
    results/whitesmoke/index
+   results/znn/index
 	     
