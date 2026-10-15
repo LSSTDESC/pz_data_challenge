@@ -1,0 +1,6 @@
+numpy==2.4.6
+h5py==3.16.0
+tables-io==1.1.0
+qp-prob==1.1.0
+pz-rail-base==2.0.4
+pz-rail-dnf==2.0.1
