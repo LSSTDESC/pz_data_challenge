@@ -25,8 +25,8 @@ from pz_data_challenge import submit_utils
 # Change these to match the name of the submission
 # and a URL to download the sumission data files
 # and needed model files
-SUBMISSION_NAME: str = "fzb_knn_tuning"
-SUBMISSION_URL: str = "https://github.com/alex-strange/pz_data_challenge_fzb_knn_tuning/releases/download/v3.0.0/fzb_knn_tuning_submission.tgz"
+SUBMISSION_NAME: str = "fzb_knn_tuned"
+SUBMISSION_URL: str = "https://github.com/alex-strange/pz_data_challenge_fzb_knn_tuned/releases/download/v3.0/fzb_knn_tuned_submission.tgz"
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
