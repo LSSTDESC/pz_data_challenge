@@ -39,9 +39,12 @@ using increasingly realistic data.  Here we present the results.
    results/cosom/index
    results/dnf_lsst_fallback/index
    results/dnf_roman_fallback/index
+   results/dnf_task34_clean_lsst/index
+   results/dnf_task34_clean_roman/index
    results/easy_forest/index
    results/expiation/index
    results/fzb_dimmingtofaint/index
+   results/fzb_knn_tuned/index   
    results/fzboost_base/index
    results/fzboost_downsample/index
    results/graysmoke/index
