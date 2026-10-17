@@ -89,7 +89,6 @@ def get_coordinates(size_x, size_y):
 
     return xx.ravel(), yy.ravel()
 
-
 def all_neighbors(index_matrix):
     """
     Compute the fixed topological neighbors for a staggered
@@ -162,168 +161,187 @@ def all_neighbors(index_matrix):
 
     return neighbors
 
+
+
 def train_minibatch_som(data, size_x, size_y, sigma_0, learning_rate_0, epochs,
                         weights_gpu, step, matrix_ind_gpu, xx_gpu, yy_gpu, batch_size=65536,
-                        mini_batch_size=2048):
+                        mini_batch_size=2048, stream=None):
     """
     GPU Mini-Batch Self-Organizing Map (SOM) training.
 
-    This implementation performs SOM training entirely on the GPU using
-    hierarchical batching. The dataset is first divided into large batches,
-    which are subsequently processed as smaller mini-batches. Weight updates
-    are accumulated over each mini-batch and applied once per iteration,
-    reducing kernel launch overhead while preserving the SOM learning dynamics.
+    Compatible with the existing Co-SOM calls:
+        data, size_x, size_y, sigma_0, learning_rate_0, epochs,
+        weights_gpu, step, matrix_ind_gpu, xx_gpu, yy_gpu
 
-    Euclidean distances are computed using the inner-product formulation:
+    The original hierarchical batching is preserved:
+        batch_size      = 65536
+        mini_batch_size = 2048
 
-        ||x - w||² = ||x||² + ||w||² - 2 x·w
-
-    where the squared norms of both the dataset and the neuron weights are
-    precomputed whenever possible to reduce redundant operations.
-
-    Parameters
-    ----------
-    data : ndarray
-        Training samples.
-    size_x, size_y : int
-        SOM dimensions.
-    sigma_0 : float
-        Initial neighborhood radius.
-    learning_rate_0 : float
-        Initial learning rate.
-    epochs : int
-        Maximum number of training epochs.
-    weights_gpu : cupy.ndarray
-        Initial neuron weights stored on the GPU.
-    step : float
-        Minimum allowed neighborhood radius.
-    matrix_ind_gpu : cupy.ndarray
-        Mapping from neuron indices to 2-D coordinates.
-    xx_gpu, yy_gpu : cupy.ndarray
-        Precomputed neuron coordinate grids.
-    batch_size : int, optional
-        Size of the outer training batch.
-    mini_batch_size : int, optional
-        Size of each mini-batch used for weight updates.
-
-    Returns
-    -------
-    weights_gpu : cupy.ndarray
-        Trained SOM weights.
-
+    CUDA stream support is restored. When a stream is supplied by the caller,
+    all GPU operations are issued to that stream and synchronization is left
+    to the caller, allowing SOM-1 and SOM-2 to run concurrently.
     """
 
-    # ============================================================
-    # Dataset
-    # ============================================================
-    data_gpu = cp.asarray(data, dtype=cp.float64)
-    N = data_gpu.shape[0]
-    data_norm = cp.sum(data_gpu * data_gpu, axis=1, keepdims=True)
+    own_stream = stream is None
 
-    # ============================================================
-    # Weight initialization
-    # ============================================================
-    weights_gpu = weights_gpu.astype(cp.float64)
-    copy_weights = weights_gpu.copy()
-    weight_norm = cp.sum(weights_gpu * weights_gpu, axis=1)[None, :]
+    if own_stream:
+        stream = cp.cuda.Stream(non_blocking=True)
 
-    # ============================================================
-    # Training loop
-    # ============================================================
-    for i in range(epochs):
-
-        learning_rate = learning_rate_0 * cp.exp(-i / epochs)
-
-        sigma = sigma_0 * cp.exp(
-            -i / (epochs / cp.log(sigma_0))
+    with stream:
+        # ============================================================
+        # Dataset
+        # ============================================================
+        data_gpu = cp.asarray(data, dtype=cp.float64)
+        N = data_gpu.shape[0]
+        data_norm = cp.sum(
+            data_gpu * data_gpu,
+            axis=1,
+            keepdims=True
         )
 
-        sigma = cp.maximum(sigma, step)
-
-        perm = cp.random.permutation(N)
-
-        # ========================================================
-        # Large batches
-        # ========================================================
-        for start in range(0, N, batch_size):
-
-            end = min(start + batch_size, N)
-
-            idx_batch = perm[start:end]
-
-            batch = data_gpu[idx_batch]
-            batch_norm_full = data_norm[idx_batch]
-
-            # ====================================================
-            # Mini-batches
-            # ====================================================
-            for mb_start in range(0, batch.shape[0], mini_batch_size):
-
-                mb_end = min(mb_start + mini_batch_size, batch.shape[0])
-
-                mini_batch = batch[mb_start:mb_end]
-                mini_batch_norm = batch_norm_full[mb_start:mb_end]
-
-                # =================================================
-                # Squared Euclidean distances
-                # =================================================
-                dists = (
-                    mini_batch_norm
-                    + weight_norm
-                    - 2 * (mini_batch @ weights_gpu.T)
-                )
-
-                BMU_idx = cp.argmin(dists, axis=1)
-                BMU_coords = matrix_ind_gpu[BMU_idx]
-
-                # =================================================
-                # Gaussian neighborhood
-                # =================================================
-                dx = xx_gpu[None, :] - BMU_coords[:, 0, None]
-                dy = yy_gpu[None, :] - BMU_coords[:, 1, None]
-
-                dist2_map = dx * dx + dy * dy
-
-                hck = cp.exp(
-                    -dist2_map / (2.0 * sigma * sigma)
-                )
-
-                # =================================================
-                # Mini-batch weight update
-                # =================================================
-                delta = (
-                    learning_rate
-                    * hck[:, :, None]
-                    * (
-                        mini_batch[:, None, :]
-                        - weights_gpu[None, :, :]
-                    )
-                )
-
-                delta_mean = cp.mean(delta, axis=0)
-
-                weights_gpu += delta_mean
-
-                weight_norm = cp.sum(
-                    weights_gpu * weights_gpu,
-                    axis=1
-                )[None, :]
-
-        # ========================================================
-        # Convergence criterion
-        # ========================================================
-        umbral = cp.mean(
-            cp.abs(weights_gpu - copy_weights)
-        )
-
-        if umbral < 1e-5:
-            break
-
+        # ============================================================
+        # Weight initialization
+        # ============================================================
+        weights_gpu = weights_gpu.astype(cp.float64)
         copy_weights = weights_gpu.copy()
 
+        weight_norm = cp.sum(
+            weights_gpu * weights_gpu,
+            axis=1
+        )[None, :]
+
+        # ============================================================
+        # Training loop
+        # ============================================================
+        for i in range(epochs):
+
+            learning_rate = learning_rate_0 * cp.exp(-i / epochs)
+
+            sigma = sigma_0 * cp.exp(
+                -i / (epochs / cp.log(sigma_0))
+            )
+
+            sigma = cp.maximum(sigma, step)
+
+            perm = cp.random.permutation(N)
+
+            # ========================================================
+            # Large batches
+            # ========================================================
+            for start_batch in range(0, N, batch_size):
+
+                end_batch = min(
+                    start_batch + batch_size,
+                    N
+                )
+
+                idx_batch = perm[start_batch:end_batch]
+
+                batch = data_gpu[idx_batch]
+                batch_norm_full = data_norm[idx_batch]
+
+                # ====================================================
+                # Mini-batches
+                # ====================================================
+                for mb_start in range(
+                    0,
+                    batch.shape[0],
+                    mini_batch_size
+                ):
+
+                    mb_end = min(
+                        mb_start + mini_batch_size,
+                        batch.shape[0]
+                    )
+
+                    mini_batch = batch[mb_start:mb_end]
+                    mini_batch_norm = batch_norm_full[mb_start:mb_end]
+
+                    # =================================================
+                    # Squared Euclidean distances
+                    # =================================================
+                    dists = (
+                        mini_batch_norm
+                        + weight_norm
+                        - 2 * (
+                            mini_batch @ weights_gpu.T
+                        )
+                    )
+
+                    BMU_idx = cp.argmin(
+                        dists,
+                        axis=1
+                    )
+
+                    BMU_coords = matrix_ind_gpu[BMU_idx]
+
+                    # =================================================
+                    # Gaussian neighborhood
+                    # =================================================
+                    dx = (
+                        xx_gpu[None, :]
+                        - BMU_coords[:, 0, None]
+                    )
+
+                    dy = (
+                        yy_gpu[None, :]
+                        - BMU_coords[:, 1, None]
+                    )
+
+                    dist2_map = (
+                        dx * dx
+                        + dy * dy
+                    )
+
+                    hck = cp.exp(
+                        -dist2_map
+                        / (2.0 * sigma * sigma)
+                    )
+
+                    # =================================================
+                    # Mini-batch weight update
+                    # =================================================
+                    sum_h = cp.sum(
+                        hck,
+                        axis=0
+                    )
+
+                    sum_hx = hck.T @ mini_batch
+
+                    weights_gpu += learning_rate * (
+                        sum_hx
+                        - sum_h[:, None] * weights_gpu
+                    ) / mini_batch.shape[0]
+
+                    weight_norm = cp.sum(
+                        weights_gpu * weights_gpu,
+                        axis=1
+                    )[None, :]
+
+            # ========================================================
+            # Convergence criterion
+            # ========================================================
+            umbral = cp.mean(
+                cp.abs(
+                    weights_gpu
+                    - copy_weights
+                )
+            )
+
+            if umbral < 1e-5:
+                break
+
+            copy_weights = weights_gpu.copy()
+
+    # If this function created the stream itself, the caller has no
+    # external stream to synchronize, so synchronize before returning.
+    # When an external stream is supplied, DO NOT synchronize here:
+    # the caller synchronizes stream_1/stream_2 together to preserve
+    # parallel execution.
+    if own_stream:
+        stream.synchronize()
 
     return weights_gpu
-
 
 def label_assignment(data, weights_gpu, features,
                      batch_size=65536):
@@ -397,21 +415,41 @@ def label_assignment(data, weights_gpu, features,
     z_median = cp.zeros(N_neurons, dtype=cp.float32)
     mad_per_neuron = cp.full(N_neurons, 1e-6, dtype=cp.float32)
 
-    for i in range(N_neurons):
+    # ------------------------------------------------------------
+    # Group all objects by BMU
+    # ------------------------------------------------------------
+    sort_idx = cp.argsort(bmu_idx)
 
-        mask = (bmu_idx == i)
+    z_sorted = z_gpu[sort_idx]
+    
+    counts = cp.bincount(
+        bmu_idx,
+        minlength=N_neurons
+    )
 
-        if cp.any(mask):
+    offsets = cp.concatenate([
+        cp.array([0], dtype=cp.int32),
+        cp.cumsum(counts, dtype=cp.int32)
+    ])
 
-            z_local = z_gpu[mask]
+    active_neurons_cpu = cp.asnumpy(cp.nonzero(counts)[0])
+    offsets_cpu = cp.asnumpy(offsets)
 
-            median = cp.median(z_local)
+    # ------------------------------------------------------------
+    # Compute median and MAD per neuron
+    # ------------------------------------------------------------
+    for i in active_neurons_cpu:
+        start = offsets_cpu[i]
+        end = offsets_cpu[i + 1]
 
-            z_median[i] = median
+        z_local = z_sorted[start:end]
 
-            mad_per_neuron[i] = cp.median(
-                cp.abs(z_local - median)
-            )
+        median = cp.median(z_local)
+        z_median[i] = median
+
+        mad_per_neuron[i] = cp.median(
+            cp.abs(z_local - median)
+        )
 
     mad_per_neuron *= 1.4826
     mad_per_neuron = cp.clip(mad_per_neuron, 1e-6, None)
@@ -608,13 +646,21 @@ def sample_selection(unlabeled_set, w_train_gpu, pseudo_labels, sample_ind,
     N = unlabeled_sel_gpu.shape[0]
 
     # --- BMU por muestra (batch) ---
+    w2 = cp.sum(w_train_gpu * w_train_gpu, axis=1)
     bmu_idx_parts = []
     for start in range(0, N, batch_size):
         end = min(start + batch_size, N)
-        diff = unlabeled_sel_gpu[start:end, None, :] - w_train_gpu[None, :, :]
-        dist = cp.linalg.norm(diff, axis=2)
-        bmu_idx_parts.append(cp.argmin(dist, axis=1))
-        del diff, dist
+        batch = unlabeled_sel_gpu[start:end]
+
+        x2 = cp.sum(batch * batch, axis=1, keepdims=True)
+
+        dists = (
+            x2
+            + w2
+            - 2.0 * (batch @ w_train_gpu.T)
+        )
+
+        bmu_idx_parts.append(cp.argmin(dists, axis=1))
 
     bmu_idx = cp.concatenate(bmu_idx_parts, axis=0)
     pseudo_prediction_gpu = pseudo_labels_gpu[bmu_idx]
@@ -646,22 +692,56 @@ def sample_selection(unlabeled_set, w_train_gpu, pseudo_labels, sample_ind,
 
     # --- Filtrado por distancia al BMU más cercano (batch) ---
     min_dist_parts = []
+
     for start in range(0, len(index_pseudo_labels), batch_size):
         end = min(start + batch_size, len(index_pseudo_labels))
+
         idx_batch = index_pseudo_labels[start:end]
-        diff_select = unlabeled_gpu[idx_batch, None, :] - w_train_gpu[None, :, :]
-        dist_select = cp.linalg.norm(diff_select, axis=2)
-        min_dist_parts.append(cp.min(dist_select, axis=1))
-        del diff_select, dist_select
+
+        batch = unlabeled_gpu[idx_batch]
+
+        x2 = cp.sum(
+            batch * batch,
+            axis=1,
+            keepdims=True
+        )
+
+        dists = (
+            x2
+            + w2
+            - 2.0 * (batch @ w_train_gpu.T)
+        )
+
+        min_dist_parts.append(
+            cp.min(dists, axis=1)
+        )
 
     # Manejo del caso vacío
     if len(min_dist_parts) > 0:
-        min_dist = cp.concatenate(min_dist_parts, axis=0)
-        final_mask = min_dist <= min_dist.min() * 1.5
-        final_index = cp.asnumpy(index_pseudo_labels[final_mask])
-        pseudo_prediction_final = pseudo_labels_gpu[final_index].get()
+
+        min_dist = cp.concatenate(
+            min_dist_parts,
+            axis=0
+        )
+
+        # min_dist contiene distancia euclidiana al cuadrado.
+        # Por eso (1.5)^2 = 2.25.
+        final_mask = (
+            min_dist <= min_dist.min() * 2.25
+        )
+
+        final_index = cp.asnumpy(
+            index_pseudo_labels[final_mask]
+        )
+
+        pseudo_prediction_final = (
+            pseudo_labels_gpu[final_index].get()
+        )
+
     else:
+
         final_index = np.array([], dtype=int)
+        pseudo_prediction_final = np.array([], dtype=np.float32)
         pseudo_prediction_final = np.array([], dtype=np.float32)
 
     # --- Liberar memoria temporal GPU ---
