@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
-        submission: ['cosom_task34']
+        submission: ['cosom']
 
     steps:
       - uses: actions/checkout@v3

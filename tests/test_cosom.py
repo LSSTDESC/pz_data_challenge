@@ -63,13 +63,6 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 # Public area fixture
 # -------------------------------------------------------------------------
 
-@pytest.fixture(name="setup_public_area", scope="module")
-def setup_public_area(request):
-    """
-    Setup public challenge area.
-    """
-    return 0
-
 
 # -------------------------------------------------------------------------
 # Submission area fixture
