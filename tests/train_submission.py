@@ -20,7 +20,6 @@ and stores a reduced inference model.
 import argparse
 import pickle
 import numpy as np
-import cupy as cp
 
 
 from preprocessing import (
@@ -151,7 +150,7 @@ def train_submission(
     params["cosmos_min_base_samples"] = cosmos_min_base_samples
     params["cosmos_tail_margin"] = cosmos_tail_margin
     np.random.seed(int(seed))
-    cp.random.seed(int(seed))
+
 
 
 
