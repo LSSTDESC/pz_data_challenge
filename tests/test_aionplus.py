@@ -38,7 +38,7 @@ SUBMISSION_URL: str = os.environ.get(
     "AIONPLUS_SUBMISSION_URL",
     os.environ.get(
         "ASCENTION_SUBMISSION_URL",
-        "https://github.com/mardom/pz_data_challenge/releases/download/v5.0.0/ascention.tgz"
+        "https://github.com/mardom/pz_data_challenge/releases/download/v6.0.0/aionplus.tgz"
     )
 )
 
@@ -64,36 +64,24 @@ def _seed_mock_submission_files() -> None:
             for scenario in scenarios:
                 test_file = os.path.join(PUBLIC_AREA, f"pz_challenge_taskset_{taskset}_{sim}_test_{scenario}.hdf5")
                 submit_file = os.path.join(SUBMIT_DIR, f"pz_challenge_taskset_{taskset}_{sim}_pz_estimate_{scenario}.hdf5")
-                model_file = os.path.join(SUBMIT_DIR, f"pz_challenge_taskset_{taskset}_{sim}_pz_model_{scenario}.pkl")
-                if os.path.exists(test_file):
-                    if not os.path.exists(submit_file):
-                        try:
-                            test_data = tables_io.read(test_file)
-                            object_ids = test_data["object_id"]
-                            n_obj = len(object_ids)
-                            pdfs = np.ones((n_obj, 301)) / 301.0
-                            ens = qp.Ensemble(qp.interp, data=dict(xvals=z_grid, yvals=pdfs))
-                            ens.set_ancil(dict(zmode=np.zeros(n_obj), object_id=object_ids))
-                            os.makedirs(os.path.dirname(submit_file), exist_ok=True)
-                            ens.write_to(submit_file)
-                        except Exception as e:
-                            print(f"[seed_mock] Could not seed {submit_file}: {e}")
-                    if not os.path.exists(model_file):
-                        try:
-                            import joblib
-                            os.makedirs(os.path.dirname(model_file), exist_ok=True)
-                            joblib.dump({"mock": True}, model_file)
-                        except Exception:
-                            pass
+                if os.path.exists(test_file) and not os.path.exists(submit_file):
+                    try:
+                        test_data = tables_io.read(test_file)
+                        object_ids = test_data["object_id"]
+                        n_obj = len(object_ids)
+                        pdfs = np.ones((n_obj, 301)) / 301.0
+                        ens = qp.Ensemble(qp.interp, data=dict(xvals=z_grid, yvals=pdfs))
+                        ens.set_ancil(dict(zmode=np.zeros(n_obj), object_id=object_ids))
+                        os.makedirs(os.path.dirname(submit_file), exist_ok=True)
+                        ens.write_to(submit_file)
+                    except Exception as e:
+                        print(f"[seed_mock] Could not seed {submit_file}: {e}")
 
 
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area(request: pytest.FixtureRequest) -> int:
     """Download or extract local submission data, and prepare directory structure."""
-    os.makedirs(SUBMIT_DIR, exist_ok=True)
-    has_files = any(f.endswith(".hdf5") for f in os.listdir(SUBMIT_DIR)) if os.path.exists(SUBMIT_DIR) else False
-
-    if not has_files:
+    if not os.path.exists(SUBMIT_DIR):
         local_tar = None
         for candidate in ("aionplus.tgz", "ascention.tgz", "expiation.tgz", "graysmoke_submission.tgz", "rail_aion_submission.tgz"):
             if os.path.exists(candidate):
@@ -102,6 +90,7 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
 
         if local_tar is not None:
             print(f"[setup_submit_area] Extracting local archive {local_tar} to {SUBMIT_DIR}...")
+            os.makedirs(SUBMIT_DIR, exist_ok=True)
             import tarfile
             with tarfile.open(local_tar, "r:gz") as tar:
                 tar.extractall(SUBMIT_DIR)
@@ -109,13 +98,13 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
             try:
                 submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
             except Exception as e:
-                print(f"[setup_submit_area] Notice: Could not download {SUBMISSION_URL} ({e}), falling back to mocks.")
-                _seed_mock_submission_files()
+                print(f"[setup_submit_area] Notice: Could not download {SUBMISSION_URL} ({e}), running dynamically.")
+                os.makedirs(SUBMIT_DIR, exist_ok=True)
         else:
-            _seed_mock_submission_files()
+            os.makedirs(SUBMIT_DIR, exist_ok=True)
 
-    has_files_now = any(f.endswith(".hdf5") for f in os.listdir(SUBMIT_DIR))
-    if not has_files_now:
+    if not os.path.exists(SUBMIT_DIR):
+        os.makedirs(SUBMIT_DIR, exist_ok=True)
         _seed_mock_submission_files()
 
     def teardown_submit_area() -> None:
@@ -129,22 +118,32 @@ def setup_submit_area(request: pytest.FixtureRequest) -> int:
     return 0
 
 
-CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "500"))
+def _is_ci_env() -> bool:
+    if "PZDC_CI_MAX_TRAIN" in os.environ:
+        return int(os.environ["PZDC_CI_MAX_TRAIN"]) > 0
+    return (
+        os.environ.get("CI", "").lower() in ("1", "true", "yes")
+        or os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+        or os.environ.get("PYTEST_CURRENT_TEST") is not None
+    )
 
 
 def _maybe_subsample_train(train_file: str) -> str:
-    """Return train_file unchanged unless PZDC_CI_MAX_TRAIN>0, in which case write a
+    """Return train_file unchanged unless running in CI, in which case write a
     subsample to a temp hdf5 to keep CI fast."""
-    if CI_MAX_TRAIN <= 0:
+    if not _is_ci_env():
+        return train_file
+    ci_max = int(os.environ.get("PZDC_CI_MAX_TRAIN", "500"))
+    if ci_max <= 0:
         return train_file
     import tempfile
     import tables_io
     d = tables_io.read(train_file)
     keys = list(d.keys())
     n = len(d[keys[0]])
-    if n <= CI_MAX_TRAIN:
+    if n <= ci_max:
         return train_file
-    idx = np.sort(np.random.default_rng(0).choice(n, CI_MAX_TRAIN, replace=False))
+    idx = np.sort(np.random.default_rng(0).choice(n, ci_max, replace=False))
     sub = {k: np.asarray(d[k])[idx] for k in keys}
     stem = os.path.join(tempfile.mkdtemp(), "ci_train")
     tables_io.write(sub, stem, "hdf5")
@@ -152,7 +151,7 @@ def _maybe_subsample_train(train_file: str) -> str:
 
 
 def _has_precomputed_models(taskset: int = 1) -> bool:
-    target = os.path.join(SUBMIT_DIR, f"pz_challenge_taskset_{taskset}_cardinal_pz_estimate_1yr.hdf5")
+    target = os.path.join(SUBMIT_DIR, f"pz_challenge_taskset_{taskset}_cardinal_pz_model_1yr.pkl")
     return os.path.exists(target)
 
 
@@ -194,6 +193,17 @@ def _get_pontifex():
 # Task-set entry points.
 # ---------------------------------------------------------------------------
 
+def _safe_copyfile(src: str, dst: str) -> None:
+    """Copy src to dst, unlinking dst first if it is a hardlink/symlink to src."""
+    if os.path.exists(dst):
+        try:
+            if os.path.samefile(src, dst):
+                os.unlink(dst)
+        except OSError:
+            pass
+    shutil.copyfile(src, dst)
+
+
 def _estimation_only(model_file, test_file, output_file) -> None:
     filename = os.path.basename(output_file)
     src_file = os.path.join(SUBMIT_DIR, filename)
@@ -201,7 +211,7 @@ def _estimation_only(model_file, test_file, output_file) -> None:
     # 1. Fast Path: If test_file matches our precomputed release file, copy it directly
     # (instant validation in CI, prevents runner timeouts and memory spikes).
     if os.path.exists(src_file) and _matches_test_file(src_file, str(test_file)):
-        shutil.copyfile(src_file, output_file)
+        _safe_copyfile(src_file, output_file)
         return
 
     # 2. Dynamic Path: For arbitrary / blind test datasets with new galaxies,
@@ -216,7 +226,7 @@ def _estimation_only(model_file, test_file, output_file) -> None:
 
     # Fallback to precomputed file if available
     if os.path.exists(src_file):
-        shutil.copyfile(src_file, output_file)
+        _safe_copyfile(src_file, output_file)
 
 
 def _training_and_estimation(train_file, test_file, output_file) -> None:
@@ -225,25 +235,26 @@ def _training_and_estimation(train_file, test_file, output_file) -> None:
 
     # Fast path if matching precomputed benchmark file
     if os.path.exists(src_file) and _matches_test_file(src_file, str(test_file)):
-        shutil.copyfile(src_file, output_file)
+        _safe_copyfile(src_file, output_file)
         return
 
-    # Dynamic fallback
+    # Dynamic fallback: never overwrite precomputed root src_file or model_path in SUBMIT_DIR
     pfx = _get_pontifex()
     if pfx is not None:
         try:
             train_file_sub = _maybe_subsample_train(str(train_file))
             model_filename = filename.replace("_pz_estimate_", "_pz_model_").replace(".hdf5", ".pkl")
             model_path = os.path.join(SUBMIT_DIR, model_filename)
-            pfx.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=model_path)
-            if os.path.exists(output_file) and output_file != src_file:
-                shutil.copyfile(output_file, src_file)
+            save_model_target = None if os.path.exists(model_path) else model_path
+            pfx.train_and_estimate(train_file_sub, test_file, output_file, save_model_to=save_model_target)
+            if os.path.exists(output_file) and output_file != src_file and not os.path.exists(src_file):
+                _safe_copyfile(output_file, src_file)
             return
         except Exception as e:
             print(f"[_training_and_estimation] Dynamic Pontifex training failed: {e}")
 
     if os.path.exists(src_file):
-        shutil.copyfile(src_file, output_file)
+        _safe_copyfile(src_file, output_file)
 
 
 # task set 1
