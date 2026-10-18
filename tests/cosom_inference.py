@@ -163,14 +163,20 @@ def find_best_bmu(X, models, k_candidates=5):
 
 
     # ==========================================================
-    # Move data to GPU
+    # GPU / CPU fallback
     # ==========================================================
+    use_gpu = gpu_available()
 
-    X_gpu = cp.asarray(
-        X,
-        dtype=cp.float32
-    )
-
+    if use_gpu:
+        X_gpu = cp.asarray(
+            X,
+            dtype=cp.float32
+        )
+    else:
+        X_cpu = np.asarray(
+            X,
+            dtype=np.float32
+        )
 
     # ==========================================================
     # Search all SOMs
@@ -180,66 +186,83 @@ def find_best_bmu(X, models, k_candidates=5):
 
         for som_id in [0, 1]:
 
-
             som = model[
                 f"som_{som_id}"
             ]
 
+            if use_gpu:
 
-            weights_gpu = cp.asarray(
-                som["weights"],
-                dtype=cp.float32
-            )
+                weights_gpu = cp.asarray(
+                    som["weights"],
+                    dtype=cp.float32
+                )
 
+                w2 = cp.sum(
+                    weights_gpu * weights_gpu,
+                    axis=1
+                )
 
-            w2 = cp.sum(
-                weights_gpu * weights_gpu,
-                axis=1
-            )
+                x2 = cp.sum(
+                    X_gpu * X_gpu,
+                    axis=1,
+                    keepdims=True
+                )
 
+                dists = cp.maximum(
+                    x2
+                    + w2
+                    - 2 * X_gpu @ weights_gpu.T,
+                    0.0
+                )
 
-            x2 = cp.sum(
-                X_gpu * X_gpu,
-                axis=1,
-                keepdims=True
-            )
-
-
-            dists = cp.maximum(
-
-                x2
-                + w2
-                - 2 * X_gpu @ weights_gpu.T,
-
-                0.0
-            )
-
-
-            # BMU in this SOM
-
-            bmu = cp.argmin(
-                dists,
-                axis=1
-            )
-
-
-            distance = cp.sqrt(
-                cp.min(
+                bmu = cp.argmin(
                     dists,
                     axis=1
                 )
-            )
 
+                distance = cp.sqrt(
+                    cp.min(
+                        dists,
+                        axis=1
+                    )
+                )
 
-            bmu_cpu = cp.asnumpy(
-                bmu
-            )
+                bmu_cpu = cp.asnumpy(
+                    bmu
+                )
 
+                distance_cpu = cp.asnumpy(
+                    distance
+                )
 
-            distance_cpu = cp.asnumpy(
-                distance
-            )
+                del weights_gpu
+                del dists
 
+            else:
+
+                weights_cpu = np.asarray(
+                    som["weights"],
+                    dtype=np.float32
+                )
+
+                bmu_cpu = _cpu_bmu(
+                    X_cpu,
+                    weights_cpu
+                )
+
+                selected_weights = weights_cpu[bmu_cpu]
+
+                delta = (
+                    X_cpu
+                    - selected_weights
+                )
+
+                distance_cpu = np.sqrt(
+                    np.sum(
+                        delta * delta,
+                        axis=1
+                    )
+                ).astype(np.float32)
 
             # ==================================================
             # Update global top-k candidates
@@ -319,10 +342,6 @@ def find_best_bmu(X, models, k_candidates=5):
                     idx
                 ]
             )
-
-
-            del weights_gpu
-            del dists
 
 
 
