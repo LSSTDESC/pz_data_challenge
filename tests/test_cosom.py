@@ -44,6 +44,7 @@ from cosom_inference import (
     find_best_bmu,
     predict_objects,
     save_qp_submission,
+    gpu_available,
 )
 
 from preprocessing import preprocess_test_hdf5
@@ -276,11 +277,17 @@ def test_example_taskset_3(
     assert setup_public_area == 0
     assert setup_submit_area == 0
 
+    training_runner = (
+        run_taskset_3_training_and_estimation
+        if gpu_available()
+        else None
+    )
+
     run_taskset_3(
         PUBLIC_AREA,
         SUBMISSION_NAME,
         run_taskset_3_estimation_only,
-        run_taskset_3_training_and_estimation,
+        training_runner,
     )
 
 
@@ -299,9 +306,15 @@ def test_example_taskset_4(
     assert setup_public_area == 0
     assert setup_submit_area == 0
 
+    training_runner = (
+        run_taskset_4_training_and_estimation
+        if gpu_available()
+        else None
+    )
+
     run_taskset_4(
         PUBLIC_AREA,
         SUBMISSION_NAME,
         run_taskset_4_estimation_only,
-        run_taskset_4_training_and_estimation,
+        training_runner,
     )
