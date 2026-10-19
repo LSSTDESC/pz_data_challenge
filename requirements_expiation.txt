@@ -1,2 +1,0 @@
-git+https://github.com/mardom/Pontifex.git@main#egg=pontifex
--r requirements_rail_aion.txt

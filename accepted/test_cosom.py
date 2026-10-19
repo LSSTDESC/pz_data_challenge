@@ -1,239 +1,320 @@
+"""
+Co-SOM submission validation for the PZ Data Challenge.
+
+This file provides the required submission functions for Tasksets 3 and 4.
+"""
+
 import os
+import sys
 from pathlib import Path
+
 import pytest
 
-# Put needed import here
-try:
-    from .inference_submission import run_estimation
-    from .train_submission import train_submission
-except ImportError:
-    pass
 
-# These are used by test scripts
-from pz_data_challenge.taskset_1 import run_taskset_1
-from pz_data_challenge.taskset_2 import run_taskset_2
-from pz_data_challenge import submit_utils
+# -------------------------------------------------------------------------
+# Make local files in tests/ importable
+# -------------------------------------------------------------------------
 
-# Change these to match the name of the submission
-# and a URL to download the sumission data files
-# and needed model files
-SUBMISSION_NAME: str = "cosom"
-SUBMISSION_URL: str = "https://github.com/AlvaroCATA/files_pzchallenge/releases/download/files/models_and_predictions.tar.xz"
+TESTS_DIR = Path(__file__).resolve().parent
 
-# don't change these
-SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
-PUBLIC_AREA: str = "tests/public"
+if str(TESTS_DIR) not in sys.path:
+    sys.path.insert(0, str(TESTS_DIR))
 
+
+# -------------------------------------------------------------------------
+# Submission configuration
+# -------------------------------------------------------------------------
+
+SUBMISSION_NAME = "cosom"
+
+SUBMISSION_URL = (
+    "https://github.com/AlvaroCATA/files_pzchallenge/raw/refs/heads/main/pz_challenge_taskset_34.tar.xz"
+)
+
+SUBMIT_DIR = f"submissions/{SUBMISSION_NAME}"
+PUBLIC_AREA = "tests/public"
+
+
+# -------------------------------------------------------------------------
+# Co-SOM imports
+# -------------------------------------------------------------------------
+
+from cosom_inference import (
+    load_submission_model,
+    find_best_bmu,
+    predict_objects,
+    save_qp_submission,
+    gpu_available,
+)
+
+from preprocessing import preprocess_test_hdf5
+
+from train_submission import train_submission
+
+
+# -------------------------------------------------------------------------
+# Official challenge runners
+# -------------------------------------------------------------------------
+
+from pz_data_challenge.taskset_3 import run_taskset_3
+from pz_data_challenge.taskset_4 import run_taskset_4
+
+
+# -------------------------------------------------------------------------
+# Public area fixture
+# -------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------
+# Submission area fixture
+# -------------------------------------------------------------------------
 
 @pytest.fixture(name="setup_submit_area", scope="module")
-def setup_submit_area(request: pytest.FixtureRequest) -> int:
+def setup_submit_area(request):
     """
-    A pytest fixture to download the submission data
+    Download and extract the public submission archive if necessary.
+    """
 
-    If all the submission data are in a tar file with the
-    proper structure you should not need to change this function.
-    """
-    
     if not os.path.exists(SUBMIT_DIR):
-        if not SUBMISSION_URL:
-            raise ValueError(f"SUBMISSION_URL in tests/test_{SUBMISSION_NAME}.py has not been set")
-        submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
 
-    def teardown_submit_area() -> None:
+        if not SUBMISSION_URL:
+            raise ValueError(
+                "SUBMISSION_URL must be provided when the submission "
+                "directory does not exist."
+            )
+
+        from pz_data_challenge import submit_utils
+
+        submit_utils.download_and_extract_tar(
+            SUBMISSION_URL,
+            SUBMIT_DIR,
+        )
+
+    # Directories used by the official taskset runners
+    os.makedirs(
+        os.path.join(SUBMIT_DIR, "outputs_2"),
+        exist_ok=True,
+    )
+
+    os.makedirs(
+        os.path.join(SUBMIT_DIR, "outputs_3"),
+        exist_ok=True,
+    )
+
+    def teardown_submit_area():
         if not os.environ.get("NO_TEARDOWN"):
             os.system(f"\\rm -rf {SUBMIT_DIR}")
-
-    try:
-        os.makedirs(os.path.join(SUBMIT_DIR, "outputs_2"))
-    except Exception:
-        pass
-
-    try:
-        os.makedirs(os.path.join(SUBMIT_DIR, "outputs_3"))
-    except Exception:
-        pass
 
     request.addfinalizer(teardown_submit_area)
 
     return 0
 
 
-def run_taskset_1_estimation_only(
-    model_file: str | Path,
-    test_file: str | Path,
-    output_file: str | Path,
-) -> None:
+# -------------------------------------------------------------------------
+# Generic Co-SOM inference
+# -------------------------------------------------------------------------
+
+def _run_estimation(
+    model_file,
+    test_file,
+    output_file,
+):
     """
-    Run inference using a pretrained Co-SOM model.
+    Run Co-SOM inference using a pre-trained model.
     """
 
+    model = load_submission_model(model_file)
 
-    run_estimation(
+    X_test, object_id = preprocess_test_hdf5(
+        test_file,
+        model["metadata"]["preprocess_params"],
+    )
 
-        model_file=model_file,
+    matches = find_best_bmu(
+        X_test,
+        model["regions"],
+        k_candidates=10,
+    )
 
-        test_file=test_file,
+    predictions = predict_objects(
+        matches,
+        model,
+    )
 
-        output_file=output_file
-
+    save_qp_submission(
+        pdf=predictions["pdf"],
+        z_edges=model["metadata"]["z_edges_global"],
+        object_id=object_id,
+        filename=output_file,
     )
 
 
-def run_taskset_1_training_and_estimation(
-    train_file: str | Path,
-    test_file: str | Path,
-    output_file: str | Path,
-) -> None:
+# -------------------------------------------------------------------------
+# Generic Co-SOM training + inference
+# -------------------------------------------------------------------------
+
+def _run_training_and_estimation(
+    train_file,
+    test_file,
+    output_file,
+):
     """
-    Train Co-SOM model and run inference.
-    """
-
-    model_file = (
-        f"{SUBMIT_DIR}/cosom_model.pkl"
-    )
-
-
-    # ======================================================
-    # Train model
-    # ======================================================
-
-    train_submission(
-
-        train_file=train_file,
-
-        output_model=model_file
-
-    )
-
-
-    # ======================================================
-    # Run inference
-    # ======================================================
-
-    run_estimation(
-
-        model_file=model_file,
-
-        test_file=test_file,
-
-        output_file=output_file
-
-    )
-
-
-def run_taskset_2_estimation_only(
-    model_file: str | Path,
-    test_file: str | Path,
-    output_file: str | Path,
-) -> None:
-    """
-    Run inference using a pretrained Co-SOM model for Task 2.
+    Train Co-SOM from the supplied training data and run inference.
     """
 
-    run_estimation(
+    output_path = Path(output_file)
 
-        model_file=model_file,
-
-        test_file=test_file,
-
-        output_file=output_file
-
+    temp_model = output_path.with_name(
+        f".{output_path.stem}_cosom_model.pkl"
     )
-    
-def run_taskset_2_training_and_estimation(
-    train_file: str | Path,
-    test_file: str | Path,
-    output_file: str | Path,
-) -> None:
+
+    try:
+
+        train_submission(
+            train_file=train_file,
+            output_model=temp_model,
+            seed=42,
+        )
+
+        _run_estimation(
+            temp_model,
+            test_file,
+            output_file,
+        )
+
+    finally:
+
+        try:
+            temp_model.unlink()
+        except FileNotFoundError:
+            pass
+
+
+# -------------------------------------------------------------------------
+# Taskset 3
+# -------------------------------------------------------------------------
+
+def run_taskset_3_estimation_only(
+    model_file,
+    test_file,
+    output_file,
+):
     """
-    Train Co-SOM model for Task Set 2 and run inference.
-
-    Parameters
-    ----------
-    train_file : str or Path
-        Task 2 training HDF5 file.
-
-    test_file : str or Path
-        Task 2 test HDF5 file.
-
-    output_file : str or Path
-        Output qp file.
+    Taskset 3: estimation using a pre-trained Co-SOM model.
     """
 
-
-    model_file = (
-        f"{SUBMIT_DIR}/task2_cosom_model.pkl"
+    _run_estimation(
+        model_file,
+        test_file,
+        output_file,
     )
 
 
-    # ======================================================
-    # Train Task 2 Co-SOM model
-    # ======================================================
+def run_taskset_3_training_and_estimation(
+    train_file,
+    test_file,
+    output_file,
+):
+    """
+    Taskset 3: train Co-SOM and estimate photo-z.
+    """
 
-    train_submission(
-
-        train_file=train_file,
-
-        output_model=model_file
-
+    _run_training_and_estimation(
+        train_file,
+        test_file,
+        output_file,
     )
 
 
-    # ======================================================
-    # Run Task 2 inference
-    # ======================================================
+# -------------------------------------------------------------------------
+# Taskset 4
+# -------------------------------------------------------------------------
 
-    run_estimation(
+def run_taskset_4_estimation_only(
+    model_file,
+    test_file,
+    output_file,
+):
+    """
+    Taskset 4: estimation using a pre-trained Co-SOM model.
+    """
 
-        model_file=model_file,
-
-        test_file=test_file,
-
-        output_file=output_file
-
+    _run_estimation(
+        model_file,
+        test_file,
+        output_file,
     )
 
 
+def run_taskset_4_training_and_estimation(
+    train_file,
+    test_file,
+    output_file,
+):
+    """
+    Taskset 4: train Co-SOM and estimate photo-z.
+    """
+
+    _run_training_and_estimation(
+        train_file,
+        test_file,
+        output_file,
+    )
 
 
+# -------------------------------------------------------------------------
+# Pytest: Taskset 3
+# -------------------------------------------------------------------------
 
-def test_example_taskset_1(
+def test_example_taskset_3(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
     """
-    Test fuction to validate a submisson for Taskset 1
-
-    You should not need to change this function
-    """
-    
-    assert setup_public_area == 0
-    assert setup_submit_area == 0
-
-    run_taskset_1(
-        PUBLIC_AREA,
-        SUBMISSION_NAME,
-        run_taskset_1_estimation_only,
-        run_taskset_1_training_and_estimation,
-    )
-
-
-def test_example_taskset_2(
-    setup_public_area: int,
-    setup_submit_area: int,
-) -> None:
-    """
-    Test fuction to validate a submisson for Taskset 2
-
-    You should not need to change this function
+    Test function to validate the submission for Taskset 3.
     """
 
     assert setup_public_area == 0
     assert setup_submit_area == 0
 
-    run_taskset_2(
+    training_runner = (
+        run_taskset_3_training_and_estimation
+        if gpu_available()
+        else None
+    )
+
+    run_taskset_3(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_2_estimation_only,
-        run_taskset_2_training_and_estimation,
+        run_taskset_3_estimation_only,
+        training_runner,
+    )
+
+
+# -------------------------------------------------------------------------
+# Pytest: Taskset 4
+# -------------------------------------------------------------------------
+
+def test_example_taskset_4(
+    setup_public_area: int,
+    setup_submit_area: int,
+) -> None:
+    """
+    Test function to validate the submission for Taskset 4.
+    """
+
+    assert setup_public_area == 0
+    assert setup_submit_area == 0
+
+    training_runner = (
+        run_taskset_4_training_and_estimation
+        if gpu_available()
+        else None
+    )
+
+    run_taskset_4(
+        PUBLIC_AREA,
+        SUBMISSION_NAME,
+        run_taskset_4_estimation_only,
+        training_runner,
     )
