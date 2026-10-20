@@ -31,7 +31,7 @@ using increasingly realistic data.  Here we present the results.
    :caption: Results of individual submissions
 
    results/aion/index
-   results/aionplux/index
+   results/aionplus/index
    results/ascention/index
    results/bpz_136temps_4tasks/index
    results/bpz_31temps_4tasks/index
