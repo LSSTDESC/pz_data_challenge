@@ -937,7 +937,7 @@ def run_taskset_4_training_and_estimation(
     return
 
 
-def test_example_taskset_1(
+def test_pz_resnet_flow_taskset_1(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
@@ -958,7 +958,7 @@ def test_example_taskset_1(
     )
 
 
-def test_example_taskset_2(
+def test_pz_resnet_flow_taskset_2(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
@@ -979,7 +979,7 @@ def test_example_taskset_2(
     )
 
     
-def test_example_taskset_3(
+def test_pz_resnet_flow_taskset_3(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
@@ -991,16 +991,15 @@ def test_example_taskset_3(
     
     assert setup_public_area == 0
     assert setup_submit_area == 0
-
     run_taskset_3(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_3_estimation_only,
-        run_taskset_3_training_and_estimation,
+        run_taskset_2_estimation_only,
+        run_taskset_2_training_and_estimation,
     )
 
 
-def test_example_taskset_4(
+def test_pz_resnet_flow_taskset_4(
     setup_public_area: int,
     setup_submit_area: int,
 ) -> None:
@@ -1016,6 +1015,6 @@ def test_example_taskset_4(
     run_taskset_4(
         PUBLIC_AREA,
         SUBMISSION_NAME,
-        run_taskset_4_estimation_only,
-        run_taskset_4_training_and_estimation,
+        run_taskset_2_estimation_only,
+        run_taskset_2_training_and_estimation,
     )

@@ -6,7 +6,7 @@ Created on Wed Oct  1 19:26:11 2025
 
 @author: alvaro
 """
-import cupy as cp
+#import cupy as cp
 import numpy as np
 from cupyx.scipy.ndimage import gaussian_filter1d
 

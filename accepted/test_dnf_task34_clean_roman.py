@@ -12,10 +12,10 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 
 from pz_data_challenge import submit_utils
 
-from scripts.dnf_task34_submission import (
-    estimate_with_model,
-    train_and_estimate_clean_task34,
-)
+#from scripts.dnf_task34_submission import (
+#    estimate_with_model,
+#    train_and_estimate_clean_task34,
+#)
 
 # Change these to match the name of the submission
 # and a URL to download the sumission data files

@@ -45,7 +45,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import qp
-import torch
+#import torch
 
 from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1

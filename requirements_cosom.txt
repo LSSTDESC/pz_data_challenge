@@ -1,7 +1,0 @@
-numpy
-pandas
-h5py
-scikit-learn
-cupy-cuda12x
-qp-prob
-pyarrow

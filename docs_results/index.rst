@@ -31,6 +31,7 @@ using increasingly realistic data.  Here we present the results.
    :caption: Results of individual submissions
 
    results/aion/index
+   results/aionplux/index
    results/ascention/index
    results/bpz_136temps_4tasks/index
    results/bpz_31temps_4tasks/index
@@ -58,7 +59,6 @@ using increasingly realistic data.  Here we present the results.
    results/mlpvae_zsep_v4_speculator/index
    results/nn_augmentation/index
    results/owenqueen/index
-   results/patch/index
    results/pz_resnet_flow/index
    results/rail_bpz_test/index
    results/rail_knn_4tasks/index

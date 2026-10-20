@@ -8,8 +8,8 @@ Created on Wed Jul 15 17:55:31 2026
 
 import math
 import numpy as np
-import cupy as cp
-import gpu_som_3 as SOM
+#import cupy as cp
+#import gpu_som_3 as SOM
 
 
 def initialize_region(X, z, params):
