@@ -25,8 +25,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        env:
-          PONTIFEX_PAT: ${{ secrets.PONTIFEX_PAT }}
         run: |
           sudo apt-get update
           sudo apt install libbz2-dev
@@ -34,11 +32,7 @@ jobs:
           pip install wheel
           pip install .
           pip install .[dev]
-          if [ -n "$PONTIFEX_PAT" ]; then
-            pip install "git+https://${PONTIFEX_PAT}@github.com/mardom/Pontifex.git@aionplus#egg=pontifex"
-          fi
-          if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install -r requirements_${{ matrix.submission }}.txt || true; fi
-          if [ -f requirements_rail_aion.txt ]; then pip install -r requirements_rail_aion.txt; fi
+          if [ -f requirements_${{ matrix.submission }}.txt ]; then pip install -r requirements_${{ matrix.submission }}.txt; fi
       - name: Run unit tests with pytest
         env:
           XLA_PYTHON_CLIENT_PREALLOCATE: "false"

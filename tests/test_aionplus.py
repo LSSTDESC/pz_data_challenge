@@ -9,17 +9,10 @@ genuine ground-truth target resolution, feature guard skip list protection, and 
 import os
 import sys
 import shutil
-from pathlib import Path
 
 import numpy as np
 import pytest
 
-# Make the top-level rail_aion_pz module importable regardless of pytest's rootdir.
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
-
-import rail_aion_pz  # noqa: E402
 try:
     import pontifex
 except ImportError:
@@ -38,8 +31,8 @@ SUBMISSION_URL: str = os.environ.get(
     "AIONPLUS_SUBMISSION_URL",
     os.environ.get(
         "ASCENTION_SUBMISSION_URL",
-        "https://github.com/mardom/pz_data_challenge/releases/download/v6.0.0/aionplus.tgz"
-    )
+        "https://github.com/mardom/pz_data_challenge/releases/download/v6.0.0/aionplus.tgz",
+    ),
 )
 
 # don't change these
@@ -50,66 +43,31 @@ PUBLIC_AREA: str = "tests/public"
 _DEVICE = os.environ.get("AION_PZ_DEVICE")
 
 
-def _seed_mock_submission_files() -> None:
-    """Seed initial valid qp submission files for validation checks if remote tarball is missing."""
-    import tables_io
-    import qp
-
-    sims = ["cardinal", "flagship"]
-    scenarios = ["1yr", "10yr"]
-    z_grid = np.linspace(0.0, 3.0, 301)
-
-    for taskset in (1, 2, 3, 4):
-        for sim in sims:
-            for scenario in scenarios:
-                test_file = os.path.join(PUBLIC_AREA, f"pz_challenge_taskset_{taskset}_{sim}_test_{scenario}.hdf5")
-                submit_file = os.path.join(SUBMIT_DIR, f"pz_challenge_taskset_{taskset}_{sim}_pz_estimate_{scenario}.hdf5")
-                if os.path.exists(test_file) and not os.path.exists(submit_file):
-                    try:
-                        test_data = tables_io.read(test_file)
-                        object_ids = test_data["object_id"]
-                        n_obj = len(object_ids)
-                        pdfs = np.ones((n_obj, 301)) / 301.0
-                        ens = qp.Ensemble(qp.interp, data=dict(xvals=z_grid, yvals=pdfs))
-                        ens.set_ancil(dict(zmode=np.zeros(n_obj), object_id=object_ids))
-                        os.makedirs(os.path.dirname(submit_file), exist_ok=True)
-                        ens.write_to(submit_file)
-                    except Exception as e:
-                        print(f"[seed_mock] Could not seed {submit_file}: {e}")
-
-
 @pytest.fixture(name="setup_submit_area", scope="module")
 def setup_submit_area(request: pytest.FixtureRequest) -> int:
     """Download or extract local submission data, and prepare directory structure."""
-    if not os.path.exists(SUBMIT_DIR):
-        local_tar = None
-        for candidate in ("aionplus.tgz", "ascention.tgz", "expiation.tgz", "graysmoke_submission.tgz", "rail_aion_submission.tgz"):
-            if os.path.exists(candidate):
-                local_tar = candidate
-                break
-
-        if local_tar is not None:
-            print(f"[setup_submit_area] Extracting local archive {local_tar} to {SUBMIT_DIR}...")
-            os.makedirs(SUBMIT_DIR, exist_ok=True)
+    expected_marker = os.path.join(
+        SUBMIT_DIR, "pz_challenge_taskset_1_cardinal_pz_estimate_1yr.hdf5"
+    )
+    if not os.path.exists(expected_marker):
+        os.makedirs(SUBMIT_DIR, exist_ok=True)
+        if os.path.exists("aionplus.tgz"):
+            print(f"[setup_submit_area] Extracting local archive aionplus.tgz to {SUBMIT_DIR}...")
             import tarfile
-            with tarfile.open(local_tar, "r:gz") as tar:
+            with tarfile.open("aionplus.tgz", "r:gz") as tar:
                 tar.extractall(SUBMIT_DIR)
         elif SUBMISSION_URL:
-            try:
-                submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
-            except Exception as e:
-                print(f"[setup_submit_area] Notice: Could not download {SUBMISSION_URL} ({e}), running dynamically.")
-                os.makedirs(SUBMIT_DIR, exist_ok=True)
-        else:
-            os.makedirs(SUBMIT_DIR, exist_ok=True)
-
-    if not os.path.exists(SUBMIT_DIR):
-        os.makedirs(SUBMIT_DIR, exist_ok=True)
-        _seed_mock_submission_files()
+            for attempt in range(2):
+                try:
+                    submit_utils.download_and_extract_tar(SUBMISSION_URL, SUBMIT_DIR)
+                    break
+                except Exception as e:
+                    if attempt == 1:
+                        print(f"[setup_submit_area] Notice: Could not download {SUBMISSION_URL} ({e}), running dynamically.")
 
     def teardown_submit_area() -> None:
-        if not os.environ.get("NO_TEARDOWN") and SUBMISSION_URL and os.path.exists(SUBMIT_DIR):
-            os.system(f"\\rm -rf {SUBMIT_DIR}")
+        if os.environ.get("TEARDOWN_SUBMIT_AREA") and not os.environ.get("NO_TEARDOWN") and os.path.exists(SUBMIT_DIR):
+            shutil.rmtree(SUBMIT_DIR, ignore_errors=True)
 
     for sub in ("outputs_2", "outputs_3"):
         os.makedirs(os.path.join(SUBMIT_DIR, sub), exist_ok=True)
@@ -124,7 +82,6 @@ def _is_ci_env() -> bool:
     return (
         os.environ.get("CI", "").lower() in ("1", "true", "yes")
         or os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
-        or os.environ.get("PYTEST_CURRENT_TEST") is not None
     )
 
 
