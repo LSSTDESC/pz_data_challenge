@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
-        submission: ['tpz_colors_nocurve']
+        submission: ['tpz_colors_nocurve_ts34']
 
     steps:
       - uses: actions/checkout@v3
