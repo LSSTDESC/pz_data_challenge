@@ -31,12 +31,14 @@ using increasingly realistic data.  Here we present the results.
    :caption: Results of individual submissions
 
    results/aion/index
+   results/aionplus/index
    results/ascention/index
    results/bpz_136temps_4tasks/index
    results/bpz_31temps_4tasks/index
    results/Cin_zs/index
    results/conclave/index
    results/cosom/index
+   results/cosom_ts34/index
    results/dnf_lsst_fallback/index
    results/dnf_roman_fallback/index
    results/dnf_task34_clean_lsst/index
@@ -58,13 +60,11 @@ using increasingly realistic data.  Here we present the results.
    results/mlpvae_zsep_v4_speculator/index
    results/nn_augmentation/index
    results/owenqueen/index
-   results/patch/index
    results/pz_resnet_flow/index
    results/rail_bpz_test/index
    results/rail_knn_4tasks/index
-   results/rail_knn_test/index
    results/tpz_colors_curvature/index
-   results/tpz_colors_nocurve/index
+   results/tpz_colors_nocurve_ts34/index
    results/whitesmoke/index
    results/znn/index
 	     
