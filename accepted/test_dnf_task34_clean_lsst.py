@@ -12,16 +12,27 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 
 from pz_data_challenge import submit_utils
 
-from scripts.dnf_task34_submission import (
-    estimate_with_model,
-    train_and_estimate_clean_task34,
-)
+
+# ---- DNF fallback submission wrappers inserted by pzdc_dnf_fallback_submission_kit ----
+try:
+    from .scripts.dnf_fallback_submission import estimate_with_model as _dnf_fallback_estimate_with_model
+    from .scripts.dnf_fallback_submission import train_and_estimate as _dnf_fallback_train_and_estimate
+    from .scripts.dnf_task34_submission import (
+        estimate_with_model,
+        train_and_estimate_clean_task34,
+    )
+except:
+    pass
+
 
 # Change these to match the name of the submission
 # and a URL to download the sumission data files
 # and needed model files
 SUBMISSION_NAME: str = "dnf_task34_clean_lsst"
-SUBMISSION_URL: str = "https://github.com/jdevicente/pz_data_challenge/releases/download/dnf-task34-clean-lsst-v1/anf_task34_clean_lsst_submission.tgz"
+#SUBMISSION_URL: str = "https://github.com/jdevicente/pz_data_challenge/releases/download/dnf-task34-clean-lsst-v1/anf_task34_clean_lsst_submission.tgz"
+#SUBMISSION_URL: str = "https://github.com/jdevicente/pz_data_challenge/releases/download/dnf-lsst-fallback-v1/anf_lsst_fallback_submission_submission.tgz"
+SUBMISSION_URL: str = "https://s3df.slac.stanford.edu/people/echarles/pzdc_entries/dfn_lsst_all_tasks.tgz"
+
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -87,7 +98,7 @@ def run_taskset_1_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    return
+    _dnf_fallback_estimate_with_model(model_file, test_file, output_file)
 
 
 def run_taskset_1_training_and_estimation(
@@ -115,7 +126,7 @@ def run_taskset_1_training_and_estimation(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    return
+    _dnf_fallback_train_and_estimate(train_file, test_file, output_file, mode="anf", use_roman=False)
 
 
 def run_taskset_2_estimation_only(
@@ -144,7 +155,7 @@ def run_taskset_2_estimation_only(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    return
+    _dnf_fallback_estimate_with_model(model_file, test_file, output_file)
 
 
 def run_taskset_2_training_and_estimation(
@@ -169,7 +180,7 @@ def run_taskset_2_training_and_estimation(
         Path to write the output data to.  The output data should
         be written in qp format.
     """
-    return
+    _dnf_fallback_train_and_estimate(train_file, test_file, output_file, mode="anf", use_roman=False)
 
 
 def run_taskset_3_estimation_only(
@@ -283,7 +294,6 @@ def run_taskset_4_training_and_estimation(
     train_and_estimate_clean_task34(train_file, test_file, output_file, mode="anf", use_roman=False, threshold=0.05)
 
 
-@pytest.mark.skip(reason="Task 3/4-only submission")
 def test_example_taskset_1(
     setup_public_area: int,
     setup_submit_area: int,
@@ -305,7 +315,6 @@ def test_example_taskset_1(
     )
 
 
-@pytest.mark.skip(reason="Task 3/4-only submission")
 def test_example_taskset_2(
     setup_public_area: int,
     setup_submit_area: int,
