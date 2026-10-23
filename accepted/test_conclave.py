@@ -1,14 +1,15 @@
-"""CI test for the `conclave` TS1+TS2 submission (LSST-DESC PZ Data Challenge).
+"""CI test for the `conclave` TS1-TS4 submission (LSST-DESC PZ Data Challenge).
 
 conclave = a committee ensemble of PZFlow + GPz + FlexZBoost combined with convex-QP
-optimal weights and a per-task-set PIT recalibration (TS1 global; TS2 support-deficit-
-binned, with the frozen deficit reference carried inside the pretrained model bundles).
+optimal weights and a per-task-set PIT recalibration (TS1 global; TS2-TS4 support-deficit-
+binned, with the frozen deficit reference carried inside the pretrained model bundles; TS4
+uses the TS3 configuration unchanged).
 The method lives in the pip-installable
 `conclave` package (github.com/rhw/conclave, pinned in requirements_conclave.txt); this
 test file is the thin submission entry point that the upstream harness discovers and runs.
 
 Structure mirrors the accepted reference submissions (e.g. test_rail_knn_test.py): it defines
-the four run_taskset_* entry points and calls run_taskset_1/2 over SIMS x SCENARIOS. The two
+the eight run_taskset_* entry points and calls run_taskset_1..4 over SIMS x SCENARIOS. The two
 functions delegate to conclave.submission, which internally applies the estimators' catalog tag
 and freezes the QP weights + recalibrator (the blind test has no redshift, so recal is fit on a
 held-out slice of the training file). Pre-made estimates + pretrained models are hosted at
@@ -25,12 +26,18 @@ from rail.utils import catalog_utils
 from pz_data_challenge import submit_utils
 from pz_data_challenge.taskset_1 import run_taskset_1
 from pz_data_challenge.taskset_2 import run_taskset_2
+from pz_data_challenge.taskset_3 import run_taskset_3
+from pz_data_challenge.taskset_4 import run_taskset_4
 
 from conclave.submission import (
     run_taskset_1_training_and_estimation as _conclave_train_and_estimate,
     run_taskset_1_estimation_only as _conclave_estimate_only,
     run_taskset_2_training_and_estimation as _conclave_ts2_train_and_estimate,
     run_taskset_2_estimation_only as _conclave_ts2_estimate_only,
+    run_taskset_3_training_and_estimation as _conclave_ts3_train_and_estimate,
+    run_taskset_3_estimation_only as _conclave_ts3_estimate_only,
+    run_taskset_4_training_and_estimation as _conclave_ts4_train_and_estimate,
+    run_taskset_4_estimation_only as _conclave_ts4_estimate_only,
 )
 
 # CI concession: the full method trains 3 estimators (PZFlow/GPz/FlexZBoost) on 100k x 4
@@ -42,7 +49,7 @@ CI_MAX_TRAIN: int = int(os.environ.get("PZDC_CI_MAX_TRAIN", "0"))
 
 SUBMISSION_NAME: str = "conclave"
 # GitHub release .tgz of the pre-made estimates + pretrained models (set before opening the PR).
-SUBMISSION_URL: str = "https://github.com/rhw/conclave/releases/download/ts2-v2/conclave_submission.tgz"
+SUBMISSION_URL: str = "https://github.com/rhw/conclave/releases/download/ts34-m0/conclave_submission_ts34.tgz"
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
 PUBLIC_AREA: str = os.environ.get("PZDC_PUBLIC_AREA", "tests/public")
@@ -123,6 +130,32 @@ def run_taskset_2_training_and_estimation(
     _conclave_ts2_train_and_estimate(train_file, str(test_file), str(output_file))
 
 
+def run_taskset_3_estimation_only(
+    model_file: str | Path, test_file: str | Path, output_file: str | Path,
+) -> None:
+    _conclave_ts3_estimate_only(str(model_file), str(test_file), str(output_file))
+
+
+def run_taskset_3_training_and_estimation(
+    train_file: str | Path, test_file: str | Path, output_file: str | Path,
+) -> None:
+    train_file = _maybe_subsample_train(str(train_file))
+    _conclave_ts3_train_and_estimate(train_file, str(test_file), str(output_file))
+
+
+def run_taskset_4_estimation_only(
+    model_file: str | Path, test_file: str | Path, output_file: str | Path,
+) -> None:
+    _conclave_ts4_estimate_only(str(model_file), str(test_file), str(output_file))
+
+
+def run_taskset_4_training_and_estimation(
+    train_file: str | Path, test_file: str | Path, output_file: str | Path,
+) -> None:
+    train_file = _maybe_subsample_train(str(train_file))
+    _conclave_ts4_train_and_estimate(train_file, str(test_file), str(output_file))
+
+
 def test_example_taskset_1(setup_public_area: int, setup_submit_area: int) -> None:
     assert setup_public_area == 0
     assert setup_submit_area == 0
@@ -138,8 +171,8 @@ def test_example_taskset_2(setup_public_area: int, setup_submit_area: int) -> No
     # TS2: same ensemble, TRAINED ON ALL provided (spec-selected) training objects,
     # with support-deficit-binned PIT recalibration (conclave.submission.TS2_CONFIG);
     # the pretrained bundles carry the frozen deficit_ref the label-free kNN deficit
-    # is computed against. The release tarball at SUBMISSION_URL contains BOTH task
-    # sets' pre-made estimates + models (16 files, tag ts2-v2).
+    # is computed against. The release tarball at SUBMISSION_URL contains all four task
+    # sets' pre-made estimates + models (tag ts34-m0 asset).
     assert setup_public_area == 0
     assert setup_submit_area == 0
     run_taskset_2(
@@ -147,4 +180,30 @@ def test_example_taskset_2(setup_public_area: int, setup_submit_area: int) -> No
         SUBMISSION_NAME,
         run_taskset_2_estimation_only,
         run_taskset_2_training_and_estimation,
+    )
+
+
+def test_example_taskset_3(setup_public_area: int, setup_submit_area: int) -> None:
+    # TS3 (narrowband): the TS2 combination unchanged (TS3_CONFIG), with the training-label
+    # fallback redshift -> redshift_manyband (manyband labels > z=3 dropped). The release
+    # tarball at SUBMISSION_URL holds TS1-TS4 pre-made estimates + models (32 files, ts34-m0).
+    assert setup_public_area == 0
+    assert setup_submit_area == 0
+    run_taskset_3(
+        PUBLIC_AREA,
+        SUBMISSION_NAME,
+        run_taskset_3_estimation_only,
+        run_taskset_3_training_and_estimation,
+    )
+
+
+def test_example_taskset_4(setup_public_area: int, setup_submit_area: int) -> None:
+    # TS4 (unrecognized blending): M0 fallback = TS3_CONFIG unchanged (TS4_CONFIG).
+    assert setup_public_area == 0
+    assert setup_submit_area == 0
+    run_taskset_4(
+        PUBLIC_AREA,
+        SUBMISSION_NAME,
+        run_taskset_4_estimation_only,
+        run_taskset_4_training_and_estimation,
     )
