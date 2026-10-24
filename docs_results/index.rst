@@ -37,13 +37,12 @@ using increasingly realistic data.  Here we present the results.
    results/bpz_31temps_4tasks/index
    results/Cin_zs/index
    results/conclave/index
-   results/cosom/index
    results/cosom_ts34/index
    results/dnf_task34_clean_lsst/index
    results/dnf_task34_clean_roman/index
    results/easy_forest/index
    results/expiation/index
-   results/fzb_knn_tuned/index   
+   results/fzb_knn_tuned/index
    results/fzboost_base/index
    results/fzboost_downsample/index
    results/graysmoke/index
@@ -60,7 +59,7 @@ using increasingly realistic data.  Here we present the results.
    results/pz_resnet_flow/index
    results/rail_bpz_test/index
    results/rail_knn_4tasks/index
-   results/tpz_colors_curvature/index
+   results/tpz_colors_curve_ts34/index
    results/tpz_colors_nocurve_ts34/index
    results/whitesmoke/index
    results/znn/index
