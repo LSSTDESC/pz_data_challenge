@@ -830,7 +830,7 @@ def make_PIT_summaries(
     fig_ksamp = evaluation.make_strip_plot(
         dd_ksamp,
         r"PIT Q-Q ksamp",
-        [0, 1e4],
+        [-2e4, 2e4],
         scoring.metric_dict["ksamp"],
     )
     fig_ksamp.savefig(f"{results_dir}/plot_summary_pit_ksamp.png")
