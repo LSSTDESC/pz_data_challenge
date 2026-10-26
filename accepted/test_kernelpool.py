@@ -1,11 +1,14 @@
-"""CI test for the `kernelpool` task-set-3/4 submission (LSST-DESC PZ Data Challenge).
+"""CI test for the `kernelpool` submission (LSST-DESC PZ Data Challenge), all four task sets.
 
-kernelpool = a pool of FlexZBoost (two settings) + GPz with per-i-band-bin weights and a per-bin calibration,
-both fitted by the likelihood of the many-band labels of a COSMOS hold-out seen through the organizers'
-label-noise kernel; raw-pool point estimate. Method: pz_method_writeup.md in the kernelpool repository.
+kernelpool = a pool of FlexZBoost (two settings) + GPz with per-i-band-bin weights and a per-bin calibration.
+Task sets 3/4 (v1.0.0, PR #80): weights and calibration fitted by the likelihood of the many-band labels of a COSMOS
+hold-out seen through the organizers' label-noise kernel. Task sets 1/2 (v1.1.0, added at the organizers' invitation
+of 2026-10-22): the same pool with weights and calibration fitted against a held-out part of the task set's own
+training file (exact labels, no kernel); nothing but that training file and the unlabelled test photometry enters
+the fit. Raw-pool point estimate. Method: pz_method_writeup.md in the kernelpool repository.
 
 The method lives in the pip-installable `kernelpool` package (pinned in requirements_kernelpool.txt); this file
-is the thin entry point the harness discovers. Task sets 1 and 2 are not part of this submission.
+is the thin entry point the harness discovers. The task-set-3/4 files are those of v1.0.0, unchanged.
 
 Pre-made estimates + model bundles are hosted at SUBMISSION_URL and unpacked into submissions/kernelpool/.
 The train+estimate path trains three estimators per combination (~15 min each on 4 cores at full size);
@@ -30,7 +33,7 @@ from kernelpool import estimate_only, train_and_estimate
 # and a URL to download the sumission data files
 # and needed model files
 SUBMISSION_NAME: str = "kernelpool"
-SUBMISSION_URL: str = "https://github.com/ThomasReiprich/pz_kernelpool/releases/download/v1.0.0/kernelpool_submission.tgz"   # GitHub release .tgz of the pre-made estimates + model bundles
+SUBMISSION_URL: str = "https://github.com/ThomasReiprich/pz_kernelpool/releases/download/v1.2.0/kernelpool_submission.tgz"   # GitHub release .tgz of the pre-made estimates + model bundles
 
 # don't change these
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -76,24 +79,25 @@ def _estimation_only(model_file: str | Path, test_file: str | Path, output_file:
 
 
 def _training_and_estimation(train_file: str | Path, test_file: str | Path, output_file: str | Path) -> None:
-    """Train the three members, fit pool weights and calibration through the kernel, estimate test_file."""
+    """Train the three members, fit pool weights and calibration (through the kernel on task sets 3/4, against the
+    held-out exact labels on task sets 1/2 -- the package decides from the training file), estimate test_file."""
     train_and_estimate(train_file, test_file, output_file)
 
 
 def run_taskset_1_estimation_only(model_file, test_file, output_file) -> None:
-    raise NotImplementedError("task set 1 is not part of the kernelpool submission")
+    _estimation_only(model_file, test_file, output_file)
 
 
 def run_taskset_1_training_and_estimation(train_file, test_file, output_file) -> None:
-    raise NotImplementedError("task set 1 is not part of the kernelpool submission")
+    _training_and_estimation(train_file, test_file, output_file)
 
 
 def run_taskset_2_estimation_only(model_file, test_file, output_file) -> None:
-    raise NotImplementedError("task set 2 is not part of the kernelpool submission")
+    _estimation_only(model_file, test_file, output_file)
 
 
 def run_taskset_2_training_and_estimation(train_file, test_file, output_file) -> None:
-    raise NotImplementedError("task set 2 is not part of the kernelpool submission")
+    _training_and_estimation(train_file, test_file, output_file)
 
 
 def run_taskset_3_estimation_only(model_file, test_file, output_file) -> None:
@@ -112,15 +116,15 @@ def run_taskset_4_training_and_estimation(train_file, test_file, output_file) ->
     _training_and_estimation(train_file, test_file, output_file)
 
 
-@pytest.mark.skip(reason="Task sets 1 and 2 are not part of this submission; only the task set 3 and 4 run functions are provided.")
 def test_example_taskset_1(setup_public_area: int, setup_submit_area: int) -> None:
+    """Test fuction to validate a submisson for Taskset 1 (added in v1.1.0)."""
     assert setup_public_area == 0
     assert setup_submit_area == 0
     run_taskset_1(PUBLIC_AREA, SUBMISSION_NAME, run_taskset_1_estimation_only, run_taskset_1_training_and_estimation)
 
 
-@pytest.mark.skip(reason="Task sets 1 and 2 are not part of this submission; only the task set 3 and 4 run functions are provided.")
 def test_example_taskset_2(setup_public_area: int, setup_submit_area: int) -> None:
+    """Test fuction to validate a submisson for Taskset 2 (added in v1.1.0; faint-end BPZ mixture since v1.2.0)."""
     assert setup_public_area == 0
     assert setup_submit_area == 0
     run_taskset_2(PUBLIC_AREA, SUBMISSION_NAME, run_taskset_2_estimation_only, run_taskset_2_training_and_estimation)

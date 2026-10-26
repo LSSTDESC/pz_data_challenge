@@ -1,7 +1,0 @@
-# kernelpool submission (all four task sets; 3/4 since v1.0.0, 1/2 since v1.1.0, task-set-2 faint-end BPZ mixture since v1.2.0):
-# the method is the pip-installable `kernelpool` package (public repository https://github.com/ThomasReiprich/pz_kernelpool, tag v1.2.0).
-pz-rail-flexzboost
-pz-rail-gpz_v1
-pz-rail-bpz
-desc-bpz
-kernelpool @ git+https://github.com/ThomasReiprich/pz_kernelpool.git@v1.2.0
