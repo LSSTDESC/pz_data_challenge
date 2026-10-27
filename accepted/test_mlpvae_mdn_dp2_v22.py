@@ -83,10 +83,14 @@ def ensure_model_deps() -> tuple[str, str, str]:
 
     return str(baseline_ckpt), str(speculator_dir), str(filter_dir)
 
-BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
 
-from obs_catalog.dataloader import build_features  # noqa: E402
-from photoz_mlpvae.model.photoz_mlpvae_mdn import PhotozMLPVAE  # noqa: E402
+try:
+    BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
+
+    from obs_catalog.dataloader import build_features  # noqa: E402
+    from photoz_mlpvae.model.photoz_mlpvae_mdn import PhotozMLPVAE  # noqa: E402
+except:
+    pass
 
 LSST_BANDS = ["u", "g", "r", "i", "z", "y"]
 TARGET_COL = "redshift"
