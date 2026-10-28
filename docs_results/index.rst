@@ -51,13 +51,12 @@ using increasingly realistic data.  Here we present the results.
    results/lsst_v3/index
    results/maxoptpz/index
    results/mlp_pretrained_subtask12/index
+   results/mlpvae_mdn_dp2_lbg_v17/index
    results/mlpvae_mdn_dp2_v22/index
    results/mlpvae_speculator_v2/index
    results/mlpvae_zsep_v4_speculator/index
    results/nn_augmentation/index
-   results/owenqueen/index
    results/pz_resnet_flow/index
-   results/rail_bpz_test/index
    results/rail_knn_4tasks/index
    results/tpz_colors_curve_ts34/index
    results/tpz_colors_nocurve_ts34/index
