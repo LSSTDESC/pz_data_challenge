@@ -51,6 +51,7 @@ using increasingly realistic data.  Here we present the results.
    results/lsst_v3/index
    results/maxoptpz/index
    results/mlp_pretrained_subtask12/index
+   results/mlpvae_mdn_dp2_lbg_v17/index
    results/mlpvae_mdn_dp2_v22/index
    results/mlpvae_speculator_v2/index
    results/mlpvae_zsep_v4_speculator/index
