@@ -22,7 +22,7 @@ from pz_data_challenge.taskset_4 import run_taskset_4
 
 SUBMISSION_NAME: str = "mlpvae_zsep_v4_speculator"
 SUBMISSION_URL: str = (
-    "https://github.com/Klinjin/photoz_mlpvae/raw/refs/heads/main/pz_challenge_submission/mlpvae_zsep_v4_speculator_submission.tgz"
+    "https://github.com/Klinjin/photoz_mlpvae/raw/refs/heads/main/pz_challenge_submission/mlpvae_zsep_v4_speculator_4tasks.tgz"
 )
 
 SUBMIT_DIR: str = f"submissions/{SUBMISSION_NAME}"
@@ -84,7 +84,8 @@ try:
     BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR = ensure_model_deps()
 
     from obs_catalog.dataloader import (  # noqa: E402
-        build_features, raw_mags_errs_mask, LSST_GAAP_MAG_COLS, LSST_GAAP_ERR_COLS,
+        build_features, raw_mags_errs_mask, compute_z_weights,
+        LSST_GAAP_MAG_COLS, LSST_GAAP_ERR_COLS,
     )
     from photoz_mlpvae.model.photoz_mlpvae_fixedprior import PhotozMLPVAE  # noqa: E402
 except:
@@ -133,13 +134,17 @@ def load_and_adapt(path: str | Path, is_test: bool) -> pd.DataFrame:
 
 Z_GRID = np.linspace(0.0, 6.0, 301, dtype=np.float32)
 
-DEFAULT_FINETUNE_EPOCHS = 60
+DEFAULT_FINETUNE_EPOCHS = 15
 DEFAULT_FINETUNE_LR = 1e-4
 DEFAULT_FINETUNE_BATCH = 256
-DEFAULT_FINETUNE_PATIENCE = 15
+DEFAULT_FINETUNE_PATIENCE = 5
 FINETUNE_LAM_Z = 20.0
 FINETUNE_LAM_R = 0.1
 FINETUNE_SIGMA_FLOOR = 0.3
+FINETUNE_BETA_MAX = 0.1
+FINETUNE_Z_WEIGHT_CAP = 10.0
+FINETUNE_WARMUP_EPOCHS = max(1, round(0.1 * DEFAULT_FINETUNE_EPOCHS))
+FINETUNE_RAMP_EPOCHS = max(2, round(0.6 * (DEFAULT_FINETUNE_EPOCHS - FINETUNE_WARMUP_EPOCHS)))
 
 def _device() -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
@@ -201,10 +206,12 @@ def _run_training_and_estimation(
     patience: int = DEFAULT_FINETUNE_PATIENCE,
     val_frac: float = 0.1,
     seed: int = 42,
+    save_model_to: str | Path | None = None,
 ) -> None:
     device = _device()
 
     train_df = load_and_adapt(train_file, is_test=False)
+    train_df = train_df[train_df[TARGET_COL].notna()].reset_index(drop=True)
     test_df = load_and_adapt(test_file, is_test=True)
 
     rng = np.random.RandomState(seed)
@@ -224,7 +231,16 @@ def _run_training_and_estimation(
     mags_val, errs_val, mask_val = raw_mags_errs_mask(val_df, LSST_GAAP_MAG_COLS, LSST_GAAP_ERR_COLS)
 
     model, _, _ = PhotozMLPVAE.load(BASELINE_CKPT, SPECULATOR_DIR, FILTER_DIR, device=device)
-    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    model.encoder.freeze_vae_head()
+    opt = torch.optim.Adam(
+        [p for n, p in model.named_parameters() if "vae_head" not in n], lr=lr
+    )
+    phase2_started = False
+
+    zw_tr = compute_z_weights(z_tr)
+    zw_tr = np.clip(zw_tr, None, FINETUNE_Z_WEIGHT_CAP)
+    zw_tr = (zw_tr / zw_tr.mean()).astype(np.float32)
+    zw_val = np.ones_like(z_val, dtype=np.float32)
 
     def _batches(n, bs):
         order = rng.permutation(n)
@@ -236,36 +252,54 @@ def _run_training_and_estimation(
     errs_tr_t = torch.from_numpy(errs_tr).to(device)
     mask_tr_t = torch.from_numpy(mask_tr).to(device)
     z_tr_t = torch.from_numpy(z_tr).to(device)
+    zw_tr_t = torch.from_numpy(zw_tr).to(device)
 
     x_val_t = torch.from_numpy(X_val).to(device)
     mags_val_t = torch.from_numpy(mags_val).to(device)
     errs_val_t = torch.from_numpy(errs_val).to(device)
     mask_val_t = torch.from_numpy(mask_val).to(device)
     z_val_t = torch.from_numpy(z_val).to(device)
+    zw_val_t = torch.from_numpy(zw_val).to(device)
 
     best_val = float("inf")
     best_state = None
     epochs_no_improve = 0
 
-    for epoch in range(epochs):
+    for epoch in range(1, epochs + 1):
+        if epoch == FINETUNE_WARMUP_EPOCHS + 1 and not phase2_started:
+            model.encoder.unfreeze_vae_head()
+            opt.add_param_group({"params": list(model.encoder.vae_head.parameters()), "lr": lr})
+            phase2_started = True
+            epochs_no_improve = 0
+
+        kl_epoch = max(0, epoch - FINETUNE_WARMUP_EPOCHS)
+        if epoch <= FINETUNE_WARMUP_EPOCHS:
+            lam_r_eff = 0.0
+        elif epoch <= FINETUNE_WARMUP_EPOCHS + FINETUNE_RAMP_EPOCHS:
+            lam_r_eff = FINETUNE_LAM_R * (epoch - FINETUNE_WARMUP_EPOCHS) / FINETUNE_RAMP_EPOCHS
+        else:
+            lam_r_eff = FINETUNE_LAM_R
+        beta = min(FINETUNE_BETA_MAX, FINETUNE_BETA_MAX * kl_epoch / max(FINETUNE_RAMP_EPOCHS - 1, 1))
+
         model.train()
         for batch_idx in _batches(len(X_tr), batch_size):
             loss_dict = model.loss(
                 x_tr_t[batch_idx], mags_tr_t[batch_idx], errs_tr_t[batch_idx],
                 mask_tr_t[batch_idx], z_tr_t[batch_idx],
-                lam_z=FINETUNE_LAM_Z, lam_r=FINETUNE_LAM_R, beta=0.0,
-                sigma_floor=FINETUNE_SIGMA_FLOOR, use_nll_z=True,
+                lam_z=FINETUNE_LAM_Z, lam_r=lam_r_eff, beta=beta,
+                sigma_floor=FINETUNE_SIGMA_FLOOR, z_weights=zw_tr_t[batch_idx], use_nll_z=True,
             )
             opt.zero_grad(set_to_none=True)
             loss_dict["total"].backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=2.0)
             opt.step()
 
         model.eval()
         with torch.no_grad():
             val_loss = model.loss(
                 x_val_t, mags_val_t, errs_val_t, mask_val_t, z_val_t,
-                lam_z=FINETUNE_LAM_Z, lam_r=FINETUNE_LAM_R, beta=0.0,
-                sigma_floor=FINETUNE_SIGMA_FLOOR, use_nll_z=True,
+                lam_z=FINETUNE_LAM_Z, lam_r=lam_r_eff, beta=beta,
+                sigma_floor=FINETUNE_SIGMA_FLOOR, z_weights=zw_val_t, use_nll_z=True,
             )["z_sup"].item()
 
         if val_loss < best_val:
@@ -279,6 +313,8 @@ def _run_training_and_estimation(
 
     if best_state is not None:
         model.load_state_dict(best_state)
+    if save_model_to is not None:
+        model.save(str(save_model_to), scaler, col_medians)
 
     X_test, *_ = build_features(
         test_df, use_colors=True, use_euclid=False, use_gaap=True,
