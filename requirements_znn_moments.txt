@@ -1,0 +1,1 @@
+znn @ git+https://github.com/JaimeRZP/znn@v26.11
